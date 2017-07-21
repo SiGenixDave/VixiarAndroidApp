@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Insert scroll views if support for "zoom" in new version of Android is not needed -->
+
+<!--
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"> -->
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/darker_gray"
+                android:text="  Patient Entry"
+                android:textAlignment="textStart"
+                android:textColor="@android:color/white"
+                android:textSize="28sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:text="Vixiar"
+                android:textAlignment="center"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="350dp"
+                android:stretchColumns="1">
+
+                <TableRow
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <TextView
+                        android:layout_width="@dimen/patient_entry_first_col_width"
+                        android:layout_height="wrap_content"
+                        android:text="@string/subject_id"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size"
+                        android:textStyle="bold" />
+
+
+                    <EditText
+                        android:id="@+id/edTxtSubjectId"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/edittext_rectangle"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/subject_id"
+                        android:inputType="text"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                </TableRow>
+
+
+                <TableRow
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <TextView
+                        android:layout_width="@dimen/patient_entry_first_col_width"
+                        android:layout_height="wrap_content"
+                        android:text="@string/subject_info"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edTxtSubjectInfo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/edittext_rectangle"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/subject_info"
+                        android:inputType="text"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                </TableRow>
+
+                <TableRow
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <TextView
+                        android:layout_width="@dimen/patient_entry_first_col_width"
+                        android:layout_height="wrap_content"
+                        android:text="@string/systolic_blood_pressure"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edTxtSystolicBloodPressure"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:background="@drawable/edittext_rectangle"
+                        android:digits="0123456789"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/systolic_blood_pressure"
+                        android:inputType="number"
+                        android:maxLength="3"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="0.15"
+                        android:text="@string/milligrams_mercury"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                </TableRow>
+
+
+                <TableRow
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <TextView
+
+                        android:layout_width="@dimen/patient_entry_first_col_width"
+                        android:layout_height="wrap_content"
+                        android:text="@string/diastolic_blood_pressure"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edTxtDiastolicBloodPressure"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:background="@drawable/edittext_rectangle"
+                        android:digits="0123456789"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/diastolic_blood_pressure"
+                        android:inputType="number"
+                        android:maxLength="3"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="0.15"
+                        android:text="@string/milligrams_mercury"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                </TableRow>
+
+
+                <TableRow
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <TextView
+                        android:layout_width="@dimen/patient_entry_first_col_width"
+                        android:layout_height="wrap_content"
+                        android:text="@string/height"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edTxtHeightFeet"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.3"
+                        android:background="@drawable/edittext_rectangle"
+                        android:digits="0123456789"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/feet"
+                        android:inputType="number"
+                        android:maxLength="1"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="0.1"
+                        android:text="@string/ft"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <EditText
+                        android:id="@+id/edTxtHeightInches"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.25"
+                        android:background="@drawable/edittext_rectangle"
+                        android:digits="0123456789"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/inches"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="0.2"
+                        android:text="@string/in"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                </TableRow>
+
+
+                <TableRow
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <TextView
+                        android:layout_width="@dimen/patient_entry_first_col_width"
+                        android:layout_height="wrap_content"
+                        android:text="@string/weight"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edTxtWeight"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:background="@drawable/edittext_rectangle"
+                        android:digits="0123456789"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/weight"
+                        android:inputType="number"
+                        android:maxLength="3"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="0.15"
+                        android:text="@string/lbs"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                </TableRow>
+
+
+                <TableRow
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <TextView
+                        android:layout_width="@dimen/patient_entry_first_col_width"
+                        android:layout_height="wrap_content"
+                        android:text="@string/birthdate"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edTxtBirthdateMonth"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.5"
+                        android:background="@drawable/edittext_rectangle"
+                        android:digits="0123456789"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/month_txt"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/month"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <EditText
+                        android:id="@+id/edTxtBirthdateDay"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.5"
+                        android:background="@drawable/edittext_rectangle"
+                        android:digits="0123456789"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/day_txt"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/day"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <EditText
+                        android:id="@+id/edTxtBirthdateYear"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:background="@drawable/edittext_rectangle"
+                        android:digits="0123456789"
+                        android:ellipsize="start"
+                        android:gravity="center"
+                        android:hint="@string/year_txt"
+                        android:inputType="number"
+                        android:maxLength="4"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="2"
+                        android:text="@string/year"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size" />
+
+                </TableRow>
+
+                <TableRow
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <TextView
+                        android:layout_width="@dimen/patient_entry_first_col_width"
+                        android:layout_height="wrap_content"
+                        android:text="@string/gender"
+                        android:textAlignment="viewStart"
+                        android:textSize="@dimen/patient_entry_font_size"
+                        android:textStyle="bold" />
+
+                    <RadioGroup
+                        android:id="@+id/radioGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation='horizontal'>
+
+                        <RadioButton
+                            android:id="@+id/radioButton82"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/male"
+                            android:textAlignment="viewStart"
+                            android:textSize="@dimen/patient_entry_font_size" />
+
+                        <RadioButton
+                            android:id="@+id/radioButton83"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/female"
+                            android:textAlignment="viewStart"
+                            android:textSize="@dimen/patient_entry_font_size" />
+
+                    </RadioGroup>
+                </TableRow>
+
+            </TableLayout>
+
+            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="70dp"
+                android:background="@color/colorLightGray"
+                android:orientation="vertical">
+
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:text="@string/procedure_steps"
+                    android:textAlignment="center"
+                    android:textSize="@dimen/procedure_step_font_size"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:text="@string/procedure_step_1"
+                    android:textSize="@dimen/procedure_steps_font_size" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:text="@string/procedure_step_2"
+                    android:textSize="@dimen/procedure_steps_font_size" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginStart="30dp"
+                    android:text="@string/procedure_step_3"
+                    android:textSize="@dimen/procedure_steps_font_size" />
+
+            </LinearLayout>
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="100dp">
+
+                <TableRow
+                    android:layout_height="60dp"
+                    android:layout_margin="@dimen/patient_entry_row_margin">
+
+                    <ImageView
+                        android:id="@+id/imViewTrainingButton"
+                        android:layout_width="100dp"
+                        android:layout_marginStart="325dp"
+                        android:clickable="true"
+                        android:onClick="imageTrainingClick"
+                        android:src="@drawable/training_button" />
+
+                    <ImageView
+                        android:id="@+id/imViewNextButton"
+                        android:layout_width="100dp"
+                        android:layout_marginStart="50dp"
+                        android:clickable="true"
+                        android:onClick="imageNextClick"
+                        android:src="@drawable/arrow_right" />
+
+                </TableRow>
+
+            </TableLayout>
+
+            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/darker_gray"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+<!--
+    </HorizontalScrollView>
+</ScrollView>
+
+-->
+
+
+
+
+

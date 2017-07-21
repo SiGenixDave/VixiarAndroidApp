@@ -1,0 +1,36 @@
+<resources>
+    <!-- Main Activity -->
+    <string name="app_name">Indicor</string>
+    <string name="subject_id">Subject ID</string>
+    <string name="subject_info">Subject Info</string>
+    <string name="systolic_blood_pressure">Systolic Blood Pressure</string>
+    <string name="diastolic_blood_pressure">Diastolic Blood Pressure</string>
+    <string name="feet">Feet</string>
+    <string name="inches">Inches</string>
+    <string name="ft">ft</string>
+    <string name="in">in</string>
+    <string name="weight">Weight</string>
+    <string name="lbs">lbs</string>
+    <string name="milligrams_mercury">mmHg</string>
+    <string name="birthdate">Birthdate</string>
+    <string name="month_txt">MM</string>
+    <string name="month">m</string>
+    <string name="day_txt">DD</string>
+    <string name="day">d</string>
+    <string name="year_txt">YYYY</string>
+    <string name="year">year</string>
+    <string name="gender">Gender</string>
+    <string name="height">Height</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="procedure_steps">Procedure Steps</string>
+    <string name="procedure_step_1">1. Enter patient information.</string>
+    <string name="procedure_step_2">2. Position probe on index finger or thumb</string>
+    <string name="procedure_step_3">3. Press the onscreen proceed button.</string>
+
+    <!-- Training Activity -->
+    <string name="pressure">Pressure</string>
+    <string name="timer">Timer</string>
+
+
+</resources>
