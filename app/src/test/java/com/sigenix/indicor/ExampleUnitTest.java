@@ -1,4 +1,4 @@
-package com.example.sigenix.indicor;
+package com.sigenix.indicor;
 
 import org.junit.Test;
 

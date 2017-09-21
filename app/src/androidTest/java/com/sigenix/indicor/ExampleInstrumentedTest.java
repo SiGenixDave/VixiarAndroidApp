@@ -1,4 +1,4 @@
-package com.example.sigenix.indicor;
+package com.sigenix.indicor;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

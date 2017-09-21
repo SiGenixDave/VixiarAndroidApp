@@ -1,4 +1,4 @@
-package com.example.sigenix.indicor;
+package com.sigenix.indicor;
 
 /**
  * Created by Dave on 7/12/2017.
