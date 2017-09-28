@@ -174,6 +174,8 @@ public class MainActivity extends Activity
     // User clicks on "next" image
     public void imageNextClick(View view)
     {
+        Intent intent = new Intent(this, DataCollectionActivity.class);
+        startActivity(intent);
     }
 
     // quick stuff to check that BLE is supported and turned on
