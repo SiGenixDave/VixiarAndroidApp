@@ -23,10 +23,12 @@ import android.widget.EditText;
 
 public class MainActivity extends Activity
 {
-
+    // this is a request code that is used if BLE isn't turned on...
+    // it tells the response handlet to start the data collection intent if the user enables ble
+    private static final int REQUEST_START_CONNECTION_BLE = 1;
+    
     // TAG is used for informational messages
     private final static String TAG = MainActivity.class.getSimpleName();
-    private static final int REQUEST_ENABLE_BLE = 1;
     //This is required for Android 6.0 (Marshmallow)
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
@@ -175,7 +177,10 @@ public class MainActivity extends Activity
     public void imageNextClick(View view)
     {
         Intent intent = new Intent(this, DataCollectionActivity.class);
-        startActivity(intent);
+        if (IsBLEEnabled())
+        {
+            startActivity(intent);
+        }
     }
 
     // quick stuff to check that BLE is supported and turned on
@@ -201,12 +206,27 @@ public class MainActivity extends Activity
             if (!adapter.isEnabled())
             {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLE);
+                startActivityForResult(enableBtIntent, REQUEST_START_CONNECTION_BLE);
             }
             return adapter.isEnabled();
         } else
         {
             return false;
+        }
+    }
+
+    // this get's called after the user either accepts or denys turning ble on
+    // it they accept, the data collection activity starts
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (requestCode == REQUEST_START_CONNECTION_BLE)
+        {
+            if (resultCode == Activity.RESULT_OK)
+            {
+                Intent intent = new Intent(this, DataCollectionActivity.class);
+                startActivity(intent);
+            }
         }
     }
 
