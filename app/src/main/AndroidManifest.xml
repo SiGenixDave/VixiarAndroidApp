@@ -23,6 +23,7 @@
         <activity android:name=".TrainingActivity"/>
         <activity android:name=".DataCollectionActivity">
         </activity>
+        <service android:name=".VixiarHandheldBLEService" android:enabled="true"/>
     </application>
 
 </manifest>

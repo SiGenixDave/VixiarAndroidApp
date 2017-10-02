@@ -77,25 +77,32 @@ public class VixiarHandheldBLEService extends Service
             "com.sigenix.indicor.ACTION_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_RECEIVED =
             "com.sigenix.indicor.ACTION_DATA_RECEIVED";
+
     private final static String TAG = VixiarHandheldBLEService.class.getSimpleName();
-    // UUIDs for the service and characteristics that the custom CapSenseLED service uses
-    private final static String baseUUID = "00000000-0000-1000-8000-00805f9b34f";
-    public final static String ledCharacteristicUUID = baseUUID + "1";
-    public final static String capsenseCharacteristicUUID = baseUUID + "2";
-    private final static String capsenseLedServiceUUID = baseUUID + "0";
-    private final static String CccdUUID = "00002902-0000-1000-8000-00805f9b34fb";
+
+    // UUIDs for the service and characteristics that the Vixiar service uses
+    public final static String PPGRTDataCharacteristicUUID = "7991CF92-D18B-40EB-AFBE-4EECB596C677";
+    public final static String pressureRTDataCharacteristicUUID = "A6615852-FCC1-41B3-AC42-3BF78B5E77DE";
+    public final static String batteryLevelDataCharacteristicUUID = "590D5C82-2999-4C12-9D75-A3BC343FBCA5";
+
+    private final static String CCCDUUID = "00002902-0000-1000-8000-00805f9b34fb";
+
+    private final static String vixiarRealTimeServiceUUID = "83638348-96D8-455A-8451-0630BCD02558";
+
     // Bluetooth objects that we need to interact with
     private static BluetoothManager mBluetoothManager;
     private static BluetoothAdapter mBluetoothAdapter;
     private static BluetoothLeScanner mLEScanner;
     private static BluetoothDevice mLeDevice;
     private static BluetoothGatt mBluetoothGatt;
+
     // Bluetooth characteristics that we need to read/write
-    private static BluetoothGattCharacteristic mLedCharacterisitc;
-    private static BluetoothGattCharacteristic mCapsenseCharacteristic;
-    private static BluetoothGattDescriptor mCapSenseCccd;
+    private static BluetoothGattCharacteristic mPPGRealTimeData;
+    private static BluetoothGattCharacteristic mPressureRealTimeData;
+    private static BluetoothGattDescriptor mPPGNotificationCCCD;
+
     // Variables to keep track of the LED switch state and CapSense Value
-    private static boolean mLedSwitchState = false;
+    private static boolean mBatteryLevel = false;
     private static String mCapSenseValue = "-1"; // This is the No Touch value (0xFFFF)
     private final IBinder mBinder = new LocalBinder();
     /**
@@ -147,15 +154,16 @@ public class VixiarHandheldBLEService extends Service
         public void onServicesDiscovered(BluetoothGatt gatt, int status)
         {
             // Get just the service that we are looking for
-            BluetoothGattService mService = gatt.getService(UUID.fromString(capsenseLedServiceUUID));
-            /* Get characteristics from our desired service */
-            mLedCharacterisitc = mService.getCharacteristic(UUID.fromString(ledCharacteristicUUID));
-            mCapsenseCharacteristic = mService.getCharacteristic(UUID.fromString(capsenseCharacteristicUUID));
-            /* Get the CapSense CCCD */
-            mCapSenseCccd = mCapsenseCharacteristic.getDescriptor(UUID.fromString(CccdUUID));
+            BluetoothGattService mService = gatt.getService(UUID.fromString(vixiarRealTimeServiceUUID));
+            // Get characteristics from our desired service
+            mPPGRealTimeData = mService.getCharacteristic(UUID.fromString(PPGRTDataCharacteristicUUID));
+            mPressureRealTimeData = mService.getCharacteristic(UUID.fromString(pressureRTDataCharacteristicUUID));
+
+            // Get the PPGData CCCD
+            mPPGNotificationCCCD = mPPGRealTimeData.getDescriptor(UUID.fromString(CCCDUUID));
 
             // Read the current state of the LED from the device
-            readLedCharacteristic();
+            //readLedCharacteristic();
 
             // Broadcast that service/characteristic/descriptor discovery is done
             broadcastUpdate(ACTION_SERVICES_DISCOVERED);
@@ -176,16 +184,16 @@ public class VixiarHandheldBLEService extends Service
 
             if (status == BluetoothGatt.GATT_SUCCESS)
             {
-                // Verify that the read was the LED state
+                // Verify that the read was the battery level
                 String uuid = characteristic.getUuid().toString();
-                // In this case, the only read the app does is the LED state.
+                // In this case, the only read the app does is the battery level.
                 // If the application had additional characteristics to read we could
                 // use a switch statement here to operate on each one separately.
-                if (uuid.equals(ledCharacteristicUUID))
+                if (uuid.equals(batteryLevelDataCharacteristicUUID))
                 {
                     final byte[] data = characteristic.getValue();
                     // Set the LED switch state variable based on the characteristic value ttat was read
-                    mLedSwitchState = ((data[0] & 0xff) != 0x00);
+                    mBatteryLevel = ((data[0] & 0xff) != 0x00);
                 }
                 // Notify the main activity that new data is available
                 broadcastUpdate(ACTION_DATA_RECEIVED);
@@ -206,12 +214,20 @@ public class VixiarHandheldBLEService extends Service
 
             String uuid = characteristic.getUuid().toString();
 
-            // In this case, the only notification the apps gets is the CapSense value.
+            // In this case, the notifications the apps gets are the PPG and pressure data.
             // If the application had additional notifications we could
             // use a switch statement here to operate on each one separately.
-            if (uuid.equals(capsenseCharacteristicUUID))
+            switch (uuid)
             {
-                mCapSenseValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, 0).toString();
+                case pressureRTDataCharacteristicUUID:
+                    break;
+
+                case PPGRTDataCharacteristicUUID:
+                    break;
+            }
+            if (uuid.equals(pressureRTDataCharacteristicUUID))
+            {
+                //mCapSenseValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, 0).toString();
             }
 
             // Notify the main activity that new data is available
@@ -290,7 +306,7 @@ public class VixiarHandheldBLEService extends Service
     public void scan()
     {
         /* Scan for devices and look for the one with the service that we want */
-        UUID capsenseLedService = UUID.fromString(capsenseLedServiceUUID);
+        UUID capsenseLedService = UUID.fromString(vixiarRealTimeServiceUUID);
         UUID[] capsenseLedServiceArray = {capsenseLedService};
 
         // Use old scan method for versions older than lollipop
@@ -398,7 +414,7 @@ public class VixiarHandheldBLEService extends Service
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        mBluetoothGatt.readCharacteristic(mLedCharacterisitc);
+        mBluetoothGatt.readCharacteristic(mPPGRealTimeData);
     }
 
     /**
@@ -417,9 +433,9 @@ public class VixiarHandheldBLEService extends Service
             byteVal[0] = (byte) (0);
         }
         Log.i(TAG, "LED " + value);
-        mLedSwitchState = value;
-        mLedCharacterisitc.setValue(byteVal);
-        mBluetoothGatt.writeCharacteristic(mLedCharacterisitc);
+        mBatteryLevel = value;
+        mPPGRealTimeData.setValue(byteVal);
+        mBluetoothGatt.writeCharacteristic(mPPGRealTimeData);
     }
 
     /**
@@ -427,22 +443,15 @@ public class VixiarHandheldBLEService extends Service
      *
      * @param value Turns notifications on (1) or off (0)
      */
-    public void writeCapSenseNotification(boolean value)
+    public void writePPGDataNotification(boolean value)
     {
         // Set notifications locally in the CCCD
-        mBluetoothGatt.setCharacteristicNotification(mCapsenseCharacteristic, value);
-        byte[] byteVal = new byte[1];
-        if (value)
-        {
-            byteVal[0] = 1;
-        } else
-        {
-            byteVal[0] = 0;
-        }
+        mBluetoothGatt.setCharacteristicNotification(mPPGRealTimeData, value);
+
         // Write Notification value to the device
-        Log.i(TAG, "CapSense Notification " + value);
-        mCapSenseCccd.setValue(byteVal);
-        mBluetoothGatt.writeDescriptor(mCapSenseCccd);
+        Log.i(TAG, "PPG Notification " + value);
+        mPPGNotificationCCCD.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        mBluetoothGatt.writeDescriptor(mPPGNotificationCCCD);
     }
 
     /**
@@ -452,7 +461,7 @@ public class VixiarHandheldBLEService extends Service
      */
     public boolean getLedSwitchState()
     {
-        return mLedSwitchState;
+        return mBatteryLevel;
     }
 
     /**
@@ -486,5 +495,4 @@ public class VixiarHandheldBLEService extends Service
             return VixiarHandheldBLEService.this;
         }
     }
-
 }
