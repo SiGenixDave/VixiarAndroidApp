@@ -101,10 +101,12 @@ public class VixiarHandheldBLEService extends Service
     private static BluetoothGattCharacteristic mPressureRealTimeData;
     private static BluetoothGattDescriptor mPPGNotificationCCCD;
 
-    // Variables to keep track of the LED switch state and CapSense Value
-    private static boolean mBatteryLevel = false;
-    private static String mCapSenseValue = "-1"; // This is the No Touch value (0xFFFF)
     private final IBinder mBinder = new LocalBinder();
+
+    // realtime data
+    private static ArrayList<Integer> mPPGData = new ArrayList<Integer>();
+    private static ArrayList<Integer> mPressureData = new ArrayList<Integer>();
+    private static Integer mBatteryLevel;
     /**
      * Implements the callback for when scanning for devices has faound a device with
      * the service we are looking for.
@@ -193,7 +195,7 @@ public class VixiarHandheldBLEService extends Service
                 {
                     final byte[] data = characteristic.getValue();
                     // Set the LED switch state variable based on the characteristic value ttat was read
-                    mBatteryLevel = ((data[0] & 0xff) != 0x00);
+                    mBatteryLevel = (data[0] & 0xff);
                 }
                 // Notify the main activity that new data is available
                 broadcastUpdate(ACTION_DATA_RECEIVED);
@@ -217,13 +219,20 @@ public class VixiarHandheldBLEService extends Service
             // In this case, the notifications the apps gets are the PPG and pressure data.
             // If the application had additional notifications we could
             // use a switch statement here to operate on each one separately.
-            switch (uuid)
+            String temp = uuid.toUpperCase();
+            if (uuid.toUpperCase().equals(pressureRTDataCharacteristicUUID))
             {
-                case pressureRTDataCharacteristicUUID:
-                    break;
-
-                case PPGRTDataCharacteristicUUID:
-                    break;
+                Log.i(TAG, "Got a pressure packet");
+            }
+            else if (uuid.toUpperCase().equals(PPGRTDataCharacteristicUUID))
+            {
+                for (int i = 0; i < characteristic.getValue().length; i+=2)
+                {
+                    int result=(int)characteristic.getValue()[i]&0xff;
+                    result += 256*((int)characteristic.getValue()[i+1]&0xff);
+                    mPPGData.add(result);
+                }
+                Log.i(TAG, "Got a PPG packet");
             }
             if (uuid.equals(pressureRTDataCharacteristicUUID))
             {
@@ -418,28 +427,7 @@ public class VixiarHandheldBLEService extends Service
     }
 
     /**
-     * This method is used to turn the LED on or off
-     *
-     * @param value Turns the LED on (1) or off (0)
-     */
-    public void writeLedCharacteristic(boolean value)
-    {
-        byte[] byteVal = new byte[1];
-        if (value)
-        {
-            byteVal[0] = (byte) (1);
-        } else
-        {
-            byteVal[0] = (byte) (0);
-        }
-        Log.i(TAG, "LED " + value);
-        mBatteryLevel = value;
-        mPPGRealTimeData.setValue(byteVal);
-        mBluetoothGatt.writeCharacteristic(mPPGRealTimeData);
-    }
-
-    /**
-     * This method enables or disables notifications for the CapSense slider
+     * This method enables or disables notifications for the PPG data
      *
      * @param value Turns notifications on (1) or off (0)
      */
@@ -455,23 +443,13 @@ public class VixiarHandheldBLEService extends Service
     }
 
     /**
-     * This method returns the state of the LED switch
-     *
-     * @return the value of the LED swtich state
-     */
-    public boolean getLedSwitchState()
-    {
-        return mBatteryLevel;
-    }
-
-    /**
      * This method returns the value of th CapSense Slider
      *
      * @return the value of the CapSense Slider
      */
-    public String getCapSenseValue()
+    // public String getCapSenseValue()
     {
-        return mCapSenseValue;
+        // return mCapSenseValue;
     }
 
     /**
