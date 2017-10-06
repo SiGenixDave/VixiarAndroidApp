@@ -75,14 +75,13 @@ public class VixiarHandheldBLEService extends Service
             "com.sigenix.indicor.ACTION_DISCONNECTED";
     public final static String ACTION_SERVICES_DISCOVERED =
             "com.sigenix.indicor.ACTION_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_RECEIVED =
-            "com.sigenix.indicor.ACTION_DATA_RECEIVED";
+    public final static String ACTION_RTDATA_RECEIVED =
+            "com.sigenix.indicor.ACTION_RTDATA_RECEIVED";
 
     private final static String TAG = VixiarHandheldBLEService.class.getSimpleName();
 
     // UUIDs for the service and characteristics that the Vixiar service uses
-    public final static String PPGRTDataCharacteristicUUID = "7991CF92-D18B-40EB-AFBE-4EECB596C677";
-    public final static String pressureRTDataCharacteristicUUID = "A6615852-FCC1-41B3-AC42-3BF78B5E77DE";
+    public final static String RTDataCharacteristicUUID = "7991CF92-D18B-40EB-AFBE-4EECB596C677";
     public final static String batteryLevelDataCharacteristicUUID = "590D5C82-2999-4C12-9D75-A3BC343FBCA5";
 
     private final static String CCCDUUID = "00002902-0000-1000-8000-00805f9b34fb";
@@ -97,15 +96,14 @@ public class VixiarHandheldBLEService extends Service
     private static BluetoothGatt mBluetoothGatt;
 
     // Bluetooth characteristics that we need to read/write
-    private static BluetoothGattCharacteristic mPPGRealTimeData;
-    private static BluetoothGattCharacteristic mPressureRealTimeData;
-    private static BluetoothGattDescriptor mPPGNotificationCCCD;
+    private static BluetoothGattCharacteristic mRTDataCharacteristic;
+    private static BluetoothGattDescriptor mRTNotificationCCCD;
 
     private final IBinder mBinder = new LocalBinder();
 
     // realtime data
-    private static ArrayList<Integer> mPPGData = new ArrayList<Integer>();
     private static ArrayList<Integer> mPressureData = new ArrayList<Integer>();
+    private static ArrayList<Integer> mPPGData = new ArrayList<Integer>();
     private static Integer mBatteryLevel;
     /**
      * Implements the callback for when scanning for devices has faound a device with
@@ -157,12 +155,12 @@ public class VixiarHandheldBLEService extends Service
         {
             // Get just the service that we are looking for
             BluetoothGattService mService = gatt.getService(UUID.fromString(vixiarRealTimeServiceUUID));
-            // Get characteristics from our desired service
-            mPPGRealTimeData = mService.getCharacteristic(UUID.fromString(PPGRTDataCharacteristicUUID));
-            mPressureRealTimeData = mService.getCharacteristic(UUID.fromString(pressureRTDataCharacteristicUUID));
 
-            // Get the PPGData CCCD
-            mPPGNotificationCCCD = mPPGRealTimeData.getDescriptor(UUID.fromString(CCCDUUID));
+            // Get characteristics from our desired service
+            mRTDataCharacteristic = mService.getCharacteristic(UUID.fromString(RTDataCharacteristicUUID));
+
+            // Get the descriptors
+            mRTNotificationCCCD = mRTDataCharacteristic.getDescriptor(UUID.fromString(CCCDUUID));
 
             // Read the current state of the LED from the device
             //readLedCharacteristic();
@@ -198,7 +196,7 @@ public class VixiarHandheldBLEService extends Service
                     mBatteryLevel = (data[0] & 0xff);
                 }
                 // Notify the main activity that new data is available
-                broadcastUpdate(ACTION_DATA_RECEIVED);
+                //broadcastUpdate(ACTION_DATA_RECEIVED);
             }
         }
 
@@ -220,27 +218,26 @@ public class VixiarHandheldBLEService extends Service
             // If the application had additional notifications we could
             // use a switch statement here to operate on each one separately.
             String temp = uuid.toUpperCase();
-            if (uuid.toUpperCase().equals(pressureRTDataCharacteristicUUID))
+
+            if (uuid.toUpperCase().equals(RTDataCharacteristicUUID))
             {
-                Log.i(TAG, "Got a pressure packet");
-            }
-            else if (uuid.toUpperCase().equals(PPGRTDataCharacteristicUUID))
-            {
-                for (int i = 0; i < characteristic.getValue().length; i+=2)
+                mPPGData.clear();
+                mPressureData.clear();
+                for (int i = 1; i < characteristic.getValue().length; i+=4)
                 {
-                    int result=(int)characteristic.getValue()[i]&0xff;
-                    result += 256*((int)characteristic.getValue()[i+1]&0xff);
+                    int result = (int)characteristic.getValue()[i+1]&0xff;
+                    result += 256*((int)characteristic.getValue()[i]&0xff);
+                    mPressureData.add(result);
+
+                    result = (int)characteristic.getValue()[i+3]&0xff;
+                    result += 256*((int)characteristic.getValue()[i+2]&0xff);
                     mPPGData.add(result);
                 }
                 Log.i(TAG, "Got a PPG packet");
-            }
-            if (uuid.equals(pressureRTDataCharacteristicUUID))
-            {
-                //mCapSenseValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, 0).toString();
+                broadcastUpdate(ACTION_RTDATA_RECEIVED);
             }
 
             // Notify the main activity that new data is available
-            broadcastUpdate(ACTION_DATA_RECEIVED);
         }
     }; // End of GATT event callback methods
     /**
@@ -416,6 +413,7 @@ public class VixiarHandheldBLEService extends Service
     /**
      * This method is used to read the state of the LED from the device
      */
+    /*
     public void readLedCharacteristic()
     {
         if (mBluetoothAdapter == null || mBluetoothGatt == null)
@@ -425,21 +423,21 @@ public class VixiarHandheldBLEService extends Service
         }
         mBluetoothGatt.readCharacteristic(mPPGRealTimeData);
     }
-
+    */
     /**
      * This method enables or disables notifications for the PPG data
      *
      * @param value Turns notifications on (1) or off (0)
      */
-    public void writePPGDataNotification(boolean value)
+    public void writeRTDataNotification(boolean value)
     {
         // Set notifications locally in the CCCD
-        mBluetoothGatt.setCharacteristicNotification(mPPGRealTimeData, value);
+        mBluetoothGatt.setCharacteristicNotification(mRTDataCharacteristic, value);
 
         // Write Notification value to the device
-        Log.i(TAG, "PPG Notification " + value);
-        mPPGNotificationCCCD.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        mBluetoothGatt.writeDescriptor(mPPGNotificationCCCD);
+        Log.i(TAG, "Realtime Notification " + value);
+        mRTNotificationCCCD.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        mBluetoothGatt.writeDescriptor(mRTNotificationCCCD);
     }
 
     /**
@@ -463,6 +461,15 @@ public class VixiarHandheldBLEService extends Service
         sendBroadcast(intent);
     }
 
+    public ArrayList<Integer> GetPPGData()
+    {
+        return mPPGData;
+    }
+
+    public ArrayList<Integer> GetPressureData()
+    {
+        return mPressureData;
+    }
     /**
      * This is a binder for the VixiarHandheldBLEService
      */
