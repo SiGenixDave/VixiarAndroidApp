@@ -156,7 +156,7 @@ public class DataCollectionActivity extends AppCompatActivity
         mPPGSeries.setColor(Color.BLACK);
         mPPGSeries.setThickness(2);
         PPGgraph.getGridLabelRenderer().setVerticalAxisTitle("PPG");
-        PPGgraph.getGridLabelRenderer().setVerticalLabelsVisible(false);
+        //PPGgraph.getGridLabelRenderer().setVerticalLabelsVisible(false);
         PPGgraph.getGridLabelRenderer().setHorizontalAxisTitle("Time (s)");
         PPGgraph.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
         PPGgraph.getGridLabelRenderer().setVerticalAxisTitleTextSize(30f);
