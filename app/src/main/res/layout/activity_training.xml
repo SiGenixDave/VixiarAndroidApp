@@ -58,19 +58,6 @@
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true">
 
-                <ImageView
-                    android:layout_width="100dp"
-                    android:layout_height="600dp"
-                    android:layout_marginStart="120dp"
-                    android:src="@drawable/vertical_bar" />
-
-                <ImageView
-                    android:id="@+id/imViewPressureDetector"
-                    android:layout_width="70dp"
-                    android:layout_height="70dp"
-                    android:layout_marginStart="135dp"
-                    android:layout_marginTop="480dp"
-                    android:background="@drawable/demo_face_green" />
 
                 <!--
 

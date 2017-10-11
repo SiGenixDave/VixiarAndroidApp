@@ -1,6 +1,6 @@
 <resources>
     <!-- Main Activity -->
-    <string name="app_name">Indicor</string>
+    <string name="app_name">Indicor Navigator</string>
     <string name="subject_id">Subject ID</string>
     <string name="subject_info">Subject Info</string>
     <string name="systolic_blood_pressure">Systolic Blood Pressure</string>
@@ -24,13 +24,19 @@
     <string name="male">Male</string>
     <string name="female">Female</string>
     <string name="procedure_steps">Procedure Steps</string>
-    <string name="procedure_step_1">1. Enter patient information.</string>
-    <string name="procedure_step_2">2. Position probe on index finger or thumb</string>
-    <string name="procedure_step_3">3. Press the onscreen proceed button.</string>
 
     <!-- Training Activity -->
     <string name="pressure">Pressure</string>
     <string name="timer">Timer</string>
 
+    <!-- Main Screen -->
+    <string name="starttest">Start New Test</string>
+    <string name="settings">Settings</string>
+    <string name="manual">Manual</string>
+    <string name="training">Training Video</string>
+    <string name="co_name">Vixiar Medical Inc.</string>
+    <string name="tag_line">Non Invasive LVEDP Measurement</string>
+    <string name="application_name">Indicor Navigator </string>
+    <string name="vixiar_web">www.vixiar.com</string>
 
 </resources>

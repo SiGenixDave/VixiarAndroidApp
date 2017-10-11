@@ -1,7 +1,6 @@
 package com.sigenix.indicor;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,10 +10,8 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.IntegerRes;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
@@ -24,10 +21,10 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.util.ArrayList;
 
-public class DataCollectionActivity extends AppCompatActivity
+public class DataCollectionActivity extends Activity
 {
     // TAG is used for informational messages
-    private final static String TAG = MainActivity.class.getSimpleName();
+    private final static String TAG = PatInfoActivity.class.getSimpleName();
     private static final int REQUEST_ENABLE_BLE = 1;
     private static LineGraphSeries mPPGSeries;
     private static LineGraphSeries mPressureSeries;

@@ -35,7 +35,7 @@ public class TrainingActivity extends Activity
     {
 
         yOrig = ConvertDptoPixels(480);
-        pressureDetector = (ImageView) findViewById(R.id.imViewPressureDetector);
+        //pressureDetector = (ImageView) findViewById(R.id.imViewPressureDetector);
 
         handler.postDelayed(r, 1000);
     }

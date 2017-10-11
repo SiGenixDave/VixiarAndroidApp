@@ -2,7 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.sigenix.indicor">
 
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true"/>
+
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -23,7 +26,13 @@
         <activity android:name=".TrainingActivity"/>
         <activity android:name=".DataCollectionActivity">
         </activity>
-        <service android:name=".VixiarHandheldBLEService" android:enabled="true"/>
+
+        <service
+            android:name=".VixiarHandheldBLEService"
+            android:enabled="true"/>
+
+        <activity android:name=".PatInfoActivity">
+        </activity>
     </application>
 
 </manifest>
