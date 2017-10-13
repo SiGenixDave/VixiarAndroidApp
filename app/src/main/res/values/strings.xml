@@ -1,30 +1,5 @@
 <resources>
-    <!-- Main Activity -->
-    <string name="app_name">Indicor Navigator</string>
-    <string name="subject_id">Subject ID</string>
-    <string name="subject_info">Subject Info</string>
-    <string name="systolic_blood_pressure">Systolic Blood Pressure</string>
-    <string name="diastolic_blood_pressure">Diastolic Blood Pressure</string>
-    <string name="feet">Feet</string>
-    <string name="inches">Inches</string>
-    <string name="ft">ft</string>
-    <string name="in">in</string>
-    <string name="weight">Weight</string>
-    <string name="lbs">lbs</string>
-    <string name="milligrams_mercury">mmHg</string>
-    <string name="birthdate">Birthdate</string>
-    <string name="month_txt">MM</string>
-    <string name="month">m</string>
-    <string name="day_txt">DD</string>
-    <string name="day">d</string>
-    <string name="year_txt">YYYY</string>
-    <string name="year">year</string>
-    <string name="gender">Gender</string>
-    <string name="height">Height</string>
-    <string name="male">Male</string>
-    <string name="female">Female</string>
-    <string name="procedure_steps">Procedure Steps</string>
-
+    <string name="app_name">Indicor</string>
     <!-- Training Activity -->
     <string name="pressure">Pressure</string>
     <string name="timer">Timer</string>
@@ -39,4 +14,17 @@
     <string name="application_name">Indicor Navigator </string>
     <string name="vixiar_web">www.vixiar.com</string>
 
+    <!-- PI Screen -->
+    <string name="pat_info">Patient Information</string>
+    <string name="connect_dev">Connect Handheld Device</string>
+    <string name="setting_label_pi">Patient ID</string>
+    <string name="setting_label_dob">Date of Birth</string>
+    <string name="setting_label_height">Height</string>
+    <string name="setting_label_weight">Weight</string>
+    <string name="setting_label_syst">Systolic Pressure</string>
+    <string name="setting_label_diast">Diastolic Pressure</string>
+    <string name="setting_label_notes">Notes</string>
+    <string name="setting_ft">ft./in.</string>
+    <string name="setting_lbs">lbs.</string>
+    <string name="setting_mmhg">mmHg</string>
 </resources>

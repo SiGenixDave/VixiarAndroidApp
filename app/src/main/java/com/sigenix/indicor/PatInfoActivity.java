@@ -32,17 +32,6 @@ public class PatInfoActivity extends Activity
     //This is required for Android 6.0 (Marshmallow)
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
-    private EditText subjectId;
-    private EditText subjectInfo;
-    private EditText systolicBloodPressure;
-    private EditText diastolicBloodPressure;
-    private EditText heightfeet;
-    private EditText heightinches;
-    private EditText weight;
-    private EditText birthdateMonth;
-    private EditText birthdateDay;
-    private EditText birthdateYear;
-
     @TargetApi(Build.VERSION_CODES.M) // This is required for Android 6.0 (Marshmallow) to work
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -55,9 +44,9 @@ public class PatInfoActivity extends Activity
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         */
         setContentView(R.layout.activity_pat_info);
-        InitPatientInfoViews();
 
         // verify that this device supports bluetooth and it's turned on
+        /*
         if (!IsBLEAvailable())
         {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -96,6 +85,7 @@ public class PatInfoActivity extends Activity
                 }
             } //End of section for Android 6.0 (Marshmallow)
         }
+        */
     }
 
     //This method required for Android 6.0 (Marshmallow)
@@ -138,39 +128,6 @@ public class PatInfoActivity extends Activity
     protected void onResume()
     {
         super.onResume();
-    }
-
-    private void InitPatientInfoViews()
-    {
-
-        // Used to change border color when text is entered by user
-        subjectId.addTextChangedListener(new GenericTextWatcher(subjectId));
-        subjectInfo.addTextChangedListener(new GenericTextWatcher(subjectInfo));
-        systolicBloodPressure.addTextChangedListener(new GenericTextWatcher(systolicBloodPressure));
-        diastolicBloodPressure.addTextChangedListener(new GenericTextWatcher(diastolicBloodPressure));
-        heightfeet.addTextChangedListener(new GenericTextWatcher(heightfeet));
-        heightinches.addTextChangedListener(new GenericTextWatcher(heightinches));
-        weight.addTextChangedListener(new GenericTextWatcher(weight));
-        birthdateMonth.addTextChangedListener(new GenericTextWatcher(birthdateMonth));
-        birthdateDay.addTextChangedListener(new GenericTextWatcher(birthdateDay));
-        birthdateYear.addTextChangedListener(new GenericTextWatcher(birthdateYear));
-    }
-
-    // User clicks on Training image
-    public void imageTrainingClick(View view)
-    {
-        Intent intent = new Intent(this, TrainingActivity.class);
-        startActivity(intent);
-    }
-
-    // User clicks on "next" image
-    public void imageNextClick(View view)
-    {
-        Intent intent = new Intent(this, DataCollectionActivity.class);
-        if (IsBLEEnabled())
-        {
-            startActivity(intent);
-        }
     }
 
     // quick stuff to check that BLE is supported and turned on
@@ -220,29 +177,5 @@ public class PatInfoActivity extends Activity
         }
     }
 
-    // This class is used to change the rectangle border color when text is added
-    private class GenericTextWatcher implements TextWatcher
-    {
-        private View view;
-
-        private GenericTextWatcher(View view)
-        {
-            this.view = view;
-        }
-
-        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2)
-        {
-        }
-
-        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2)
-        {
-        }
-
-        public void afterTextChanged(Editable editable)
-        {
-            GradientDrawable myGrad = (GradientDrawable) view.getBackground();
-            myGrad.setStroke(2, Color.BLUE);
-        }
-    }
 }
 

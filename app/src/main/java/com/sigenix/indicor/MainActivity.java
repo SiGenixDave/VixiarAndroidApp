@@ -1,7 +1,9 @@
 package com.sigenix.indicor;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 
 public class MainActivity extends Activity
@@ -19,5 +21,11 @@ public class MainActivity extends Activity
 
         TextView versionText = (TextView)findViewById(R.id.textViewVersion);
         versionText.setText(nameAndVersion);
+    }
+
+    public void onImageStartClick(View view)
+    {
+        Intent intent = new Intent(this, PatInfoActivity.class);
+        startActivity(intent);
     }
 }

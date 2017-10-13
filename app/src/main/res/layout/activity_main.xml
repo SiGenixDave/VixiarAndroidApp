@@ -63,6 +63,7 @@
                 android:layout_width="@dimen/main_screen_icon_size"
                 android:layout_height="@dimen/main_screen_icon_size"
                 android:background="@null"
+                android:onClick="onImageStartClick"
                 android:scaleType="fitXY"
                 android:src="@drawable/start_button"
                 android:visibility="visible"/>

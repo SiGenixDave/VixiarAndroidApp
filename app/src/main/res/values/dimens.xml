@@ -7,4 +7,9 @@
     <dimen name="main_screen_icon_size">50dp</dimen>
     <dimen name="main_screen_label_size">24sp</dimen>
     <dimen name="main_screen_vertical_spacing">20dp</dimen>
+
+    <dimen name="pi_screen_vertical_spacing">20dp</dimen>
+    <dimen name="pi_screen_font_size">24sp</dimen>
+
+    <dimen name="bottom_bar_font_size">24sp</dimen>
 </resources>
