@@ -23,6 +23,7 @@
     <string name="setting_label_weight">Weight</string>
     <string name="setting_label_syst">Systolic Pressure</string>
     <string name="setting_label_diast">Diastolic Pressure</string>
+    <string name="setting_label_gender">Gender</string>
     <string name="setting_label_notes">Notes</string>
     <string name="setting_ft">ft./in.</string>
     <string name="setting_lbs">lbs.</string>

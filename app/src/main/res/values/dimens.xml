@@ -1,15 +1,12 @@
 <resources>
-    <dimen name="patient_entry_font_size">20dp</dimen>
+    <dimen name="patient_entry_value_font_size">28dp</dimen>
     <dimen name="patient_entry_first_col_width">200dp</dimen>
     <dimen name="patient_entry_row_margin">10dp</dimen>
+    <dimen name="patient_entry_vertical_spacing">20dp</dimen>
     <dimen name="procedure_step_font_size">16dp</dimen>
     <dimen name="procedure_steps_font_size">14dp</dimen>
     <dimen name="main_screen_icon_size">50dp</dimen>
     <dimen name="main_screen_label_size">24sp</dimen>
     <dimen name="main_screen_vertical_spacing">20dp</dimen>
-
-    <dimen name="pi_screen_vertical_spacing">20dp</dimen>
-    <dimen name="pi_screen_font_size">24sp</dimen>
-
     <dimen name="bottom_bar_font_size">24sp</dimen>
 </resources>

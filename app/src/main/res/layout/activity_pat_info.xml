@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.widget.LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:background="@color/colorTopBar"
+
         android:orientation="horizontal">
 
         <ImageButton
@@ -22,6 +22,8 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="20dp"
             android:background="@null"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             android:scaleType="fitCenter"
             android:src="@drawable/back_arrow"/>
 
@@ -33,6 +35,9 @@
             android:fontFamily="fonts/Roboto-Light.ttf"
             android:paddingStart="10dp"
             android:textSize="@dimen/main_screen_label_size"/>
+
+        <requestFocus/>
+
 
         <ImageButton
             android:id="@+id/imageButton5"
@@ -83,13 +88,13 @@
                 android:id="@+id/txtPatientID"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="left"
                 android:layout_weight="6"
                 android:background="@null"
-                android:elevation="2dp"
-                android:ems="10"
                 android:inputType="textPersonName"
-                android:textColor="@color/colorBottomBar"
-                android:textSize="@dimen/patient_entry_font_size"/>
+                android:textColor="@null"
+                android:textColorHighlight="@null"
+                android:textAppearance="@style/PatInfoValue"/>
 
         </LinearLayout>
 
@@ -119,10 +124,17 @@
                 android:text="@string/setting_label_dob"
                 android:textSize="@dimen/main_screen_label_size"/>
 
-            <NumberPicker
+            <EditText
+                android:id="@+id/txtDOB"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="5"></NumberPicker>
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:layout_weight="6"
+                android:background="@null"
+                android:inputType="textPersonName"
+                android:textColor="@null"
+                android:textAppearance="@style/PatInfoValue"/>
+
 
         </LinearLayout>
 
@@ -157,13 +169,12 @@
                 android:id="@+id/txtHeight"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="left"
                 android:layout_weight="4"
                 android:background="@null"
-                android:elevation="2dp"
-                android:ems="10"
                 android:inputType="textPersonName"
-                android:textColor="@color/colorBottomBar"
-                android:textSize="@dimen/patient_entry_font_size"/>
+                android:textColor="@null"
+                android:textAppearance="@style/PatInfoValue"/>
 
             <TextView
                 android:id="@+id/textView"
@@ -173,11 +184,8 @@
                 android:fontFamily="fonts/Roboto-Light.ttf"
                 android:paddingStart="10dp"
                 android:text="@string/setting_ft"
-                android:textSize="@dimen/main_screen_label_size"/><![CDATA[
+                android:textSize="@dimen/main_screen_label_size"/>
 
-            />
-
-        ]]>
         </LinearLayout>
 
         <ImageView
@@ -208,16 +216,15 @@
                 android:textSize="@dimen/main_screen_label_size"/>
 
             <EditText
-                android:id="@+id/txteight"
+                android:id="@+id/txtWeight"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="left"
                 android:layout_weight="4"
                 android:background="@null"
-                android:elevation="2dp"
-                android:ems="10"
                 android:inputType="textPersonName"
-                android:textColor="@color/colorBottomBar"
-                android:textSize="@dimen/patient_entry_font_size"/>
+                android:textColor="@null"
+                android:textAppearance="@style/PatInfoValue"/>
 
             <TextView
                 android:id="@+id/textView3"
@@ -263,13 +270,12 @@
                 android:id="@+id/txtSystolic"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="left"
                 android:layout_weight="4"
                 android:background="@null"
-                android:elevation="2dp"
-                android:ems="10"
                 android:inputType="textPersonName"
-                android:textColor="@color/colorBottomBar"
-                android:textSize="@dimen/patient_entry_font_size"/>
+                android:textColor="@null"
+                android:textAppearance="@style/PatInfoValue"/>
 
             <TextView
                 android:id="@+id/textView4"
@@ -312,16 +318,15 @@
                 android:textSize="@dimen/main_screen_label_size"/>
 
             <EditText
-                android:id="@+id/editText6"
+                android:id="@+id/txtDiast"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="left"
                 android:layout_weight="4"
                 android:background="@null"
-                android:elevation="2dp"
-                android:ems="10"
                 android:inputType="textPersonName"
-                android:textColor="@color/colorBottomBar"
-                android:textSize="@dimen/patient_entry_font_size"/>
+                android:textColor="@null"
+                android:textAppearance="@style/PatInfoValue"/>
 
             <TextView
                 android:id="@+id/textView7"
@@ -355,12 +360,24 @@
 
             <TextView
                 android:id="@+id/textView6"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="5"
                 android:fontFamily="fonts/Roboto-Light.ttf"
                 android:paddingStart="10dp"
-                android:text="@string/setting_label_notes"
+                android:text="@string/setting_label_gender"
                 android:textSize="@dimen/main_screen_label_size"/>
+
+            <EditText
+                android:id="@+id/txtGender"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:layout_weight="6"
+                android:background="@null"
+                android:inputType="textPersonName"
+                android:textColor="@null"
+                android:textAppearance="@style/PatInfoValue"/>
             />
 
         </LinearLayout>
@@ -368,6 +385,47 @@
         <ImageView
             android:id="@+id/imageView3"
             android:layout_width="550dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:paddingBottom="@dimen/main_screen_vertical_spacing"
+            android:paddingTop="@dimen/main_screen_vertical_spacing"
+            android:src="@drawable/divider_line"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            tools:layout_editor_absoluteX="8dp"
+            tools:layout_editor_absoluteY="6dp">
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:fontFamily="fonts/Roboto-Light.ttf"
+                android:paddingStart="10dp"
+                android:text="@string/setting_label_notes"
+                android:textSize="@dimen/main_screen_label_size"/>
+
+            <EditText
+                android:id="@+id/txtNotes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:layout_weight="6"
+                android:background="@null"
+                android:inputType="textPersonName"
+                android:textColor="@null"
+                android:textAppearance="@style/PatInfoValue"/>
+            />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/imageView4"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:paddingBottom="@dimen/main_screen_vertical_spacing"

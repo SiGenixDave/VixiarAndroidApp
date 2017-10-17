@@ -32,18 +32,39 @@ public class PatInfoActivity extends Activity
     //This is required for Android 6.0 (Marshmallow)
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
+    private EditText txtPatientID;
+
     @TargetApi(Build.VERSION_CODES.M) // This is required for Android 6.0 (Marshmallow) to work
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.activity_pat_info);
+
+        txtPatientID = (EditText) findViewById(R.id.txtPatientID);
+        txtPatientID.setOnFocusChangeListener(new View.OnFocusChangeListener()
+        {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus)
+            {
+                if (hasFocus)
+                {
+                    txtPatientID.setTextColor(getResources().getColor(R.color.colorPatientEntryHighlightedValue));
+                }
+                else
+                {
+                    txtPatientID.setTextColor(getResources().getColor(R.color.colorPatientEntryNormalValue));
+                }
+            }
+        });
+
+
         // FULL SCREEN (add if FS is desired)
         /*
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         */
-        setContentView(R.layout.activity_pat_info);
 
         // verify that this device supports bluetooth and it's turned on
         /*

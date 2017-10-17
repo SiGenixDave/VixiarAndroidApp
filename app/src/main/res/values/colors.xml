@@ -6,5 +6,7 @@
     <color name="colorLightGray">#D3D3D3</color>
     <color name="colorTopBar">#58595b</color>
     <color name="colorBottomBar">#33a6d4</color>
+    <color name="colorPatientEntryHighlightedValue">#33a6d4</color>
+    <color name="colorPatientEntryNormalValue">#69747d</color>
     <color name="colorTitleBar">#61C1D2</color>
 </resources>

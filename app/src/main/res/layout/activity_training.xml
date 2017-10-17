@@ -36,7 +36,6 @@
                         android:layout_height="wrap_content"
                         android:text="@string/pressure"
                         android:textAlignment="center"
-                        android:textSize="@dimen/patient_entry_font_size"
                         android:textStyle="bold" />
 
                     <TextView
@@ -44,7 +43,6 @@
                         android:layout_height="wrap_content"
                         android:text="@string/timer"
                         android:textAlignment="center"
-                        android:textSize="@dimen/patient_entry_font_size"
                         android:textStyle="bold" />
 
                 </TableRow>
