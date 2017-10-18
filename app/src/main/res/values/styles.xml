@@ -18,6 +18,13 @@
         <item name="android:textColor">@color/colorPatientEntryNormalValue</item>
         <item name="colorAccent">@color/colorPatientEntryHighlightedValue</item>
     </style>
+    <style name="PatInfoNumberPicker" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textSize">@dimen/patient_entry_value_font_size</item>
+        <item name="android:fontFamily">"fonts/Roboto-Light.ttf"</item>
+        <item name="android:textColorHighlight">@color/colorPatientEntryHighlightedValue</item>
+        <item name="android:textColor">@color/colorPatientEntryNormalValue</item>
+        <item name="colorAccent">@color/colorPatientEntryHighlightedValue</item>
+    </style>
 
-
+    patient_entry_number_picker_font_size
 </resources>

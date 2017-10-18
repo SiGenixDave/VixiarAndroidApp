@@ -28,4 +28,25 @@
     <string name="setting_ft">ft./in.</string>
     <string name="setting_lbs">lbs.</string>
     <string name="setting_mmhg">mmHg</string>
+
+    <string-array name="months_array">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+
+    <string-array name="gender_array">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+
 </resources>
