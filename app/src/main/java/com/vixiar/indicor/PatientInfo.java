@@ -1,4 +1,4 @@
-package com.sigenix.indicor;
+package com.vixiar.indicor;
 
 /**
  * Created by Dave on 7/12/2017.

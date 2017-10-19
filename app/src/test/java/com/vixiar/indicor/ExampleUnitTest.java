@@ -1,4 +1,4 @@
-package com.sigenix.indicor;
+package com.vixiar.indicor;
 
 import org.junit.Test;
 

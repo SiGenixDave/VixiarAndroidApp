@@ -1,4 +1,4 @@
-package com.sigenix.indicor;
+package com.vixiar.indicor;
 
 import android.app.Activity;
 import android.content.Intent;

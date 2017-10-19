@@ -34,7 +34,7 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/textView5"
+            android:id="@+id/textView55"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|center_horizontal"
@@ -105,7 +105,7 @@
                 android:visibility="visible"/>
 
             <TextView
-                android:id="@+id/textView6"
+                android:id="@+id/textView56"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="fonts/Roboto-Light.ttf"
@@ -143,7 +143,7 @@
                 android:visibility="visible"/>
 
             <TextView
-                android:id="@+id/textView6"
+                android:id="@+id/textView66"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="fonts/Roboto-Light.ttf"
@@ -155,7 +155,7 @@
         </LinearLayout>
 
         <ImageView
-            android:id="@+id/imageView3"
+            android:id="@+id/imageView73"
             android:layout_width="400dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -182,7 +182,7 @@
                 android:visibility="visible"/>
 
             <TextView
-                android:id="@+id/textView6"
+                android:id="@+id/textView96"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="fonts/Roboto-Light.ttf"

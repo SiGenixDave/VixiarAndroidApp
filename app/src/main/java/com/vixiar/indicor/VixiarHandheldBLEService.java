@@ -29,7 +29,7 @@ For more information on Cypress BLE products visit:
 http://www.cypress.com/products/bluetooth-low-energy-ble
  */
 
-package com.sigenix.indicor;
+package com.vixiar.indicor;
 
 import android.annotation.TargetApi;
 import android.app.Service;

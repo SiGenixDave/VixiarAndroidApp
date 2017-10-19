@@ -1,4 +1,4 @@
-package com.sigenix.indicor;
+package com.vixiar.indicor;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -10,7 +10,6 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 

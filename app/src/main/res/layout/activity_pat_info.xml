@@ -138,6 +138,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
                     android:layout_weight="6"
+                    android:cursorVisible="false"
                     android:background="@null"
                     android:inputType="textPersonName"
                     android:textAppearance="@style/PatInfoValue"
@@ -155,7 +156,7 @@
                     android:id="@+id/textView22"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="5"
+                    android:layout_weight="4"
                     android:fontFamily="fonts/Roboto-Light.ttf"
                     android:paddingStart="10dp"
                     android:textSize="@dimen/main_screen_label_size"/>
@@ -164,22 +165,31 @@
                     android:id="@+id/npDOBMonth"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/PatInfoNumberPicker"
-                    android:layout_weight="1"/>
+                    android:layout_weight="2"
+                    android:theme="@style/PatInfoNumberPicker"/>
 
                 <NumberPicker
                     android:id="@+id/npDOBDay"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/PatInfoNumberPicker"
-                    android:layout_weight="1"/>
+                    android:layout_weight="2"
+                    android:theme="@style/PatInfoNumberPicker"/>
 
                 <NumberPicker
                     android:id="@+id/npDOBYear"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/PatInfoNumberPicker"
-                    android:layout_weight="1"/>
+                    android:layout_weight="2"
+                    android:theme="@style/PatInfoNumberPicker"/>
+
+                <TextView
+                    android:id="@+id/textView222"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:fontFamily="fonts/Roboto-Light.ttf"
+                    android:textSize="@dimen/main_screen_label_size"/>
+
             </LinearLayout>
 
             <ImageView
@@ -215,6 +225,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
                     android:layout_weight="4"
+                    android:cursorVisible="false"
                     android:background="@null"
                     android:inputType="textPersonName"
                     android:textAppearance="@style/PatInfoValue"
@@ -240,32 +251,28 @@
                 <TextView
                     android:id="@+id/textView32"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="5"/>
 
                 <NumberPicker
                     android:id="@+id/npFeet"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2"/>
+                    android:layout_weight="2"
+                    android:theme="@style/PatInfoNumberPicker"/>
 
                 <NumberPicker
                     android:id="@+id/npInches"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2"/>
+                    android:layout_weight="2"
+                    android:theme="@style/PatInfoNumberPicker"/>
 
                 <TextView
                     android:id="@+id/textView27"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="2"/>
             </LinearLayout>
 
 
@@ -302,6 +309,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
                     android:layout_weight="4"
+                    android:cursorVisible="false"
                     android:background="@null"
                     android:inputType="textPersonName"
                     android:textAppearance="@style/PatInfoValue"
@@ -326,28 +334,23 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/textView222"
+                    android:id="@+id/textView312"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="5"/>
 
                 <NumberPicker
                     android:id="@+id/npWeight"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="4"/>
+                    android:layout_weight="4"
+                    android:theme="@style/PatInfoNumberPicker"/>
 
                 <TextView
-                    android:id="@+id/textView47"
+                    android:id="@+id/textView322"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="2"/>
             </LinearLayout>
 
 
@@ -384,6 +387,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
                     android:layout_weight="4"
+                    android:cursorVisible="false"
                     android:background="@null"
                     android:inputType="textPersonName"
                     android:textAppearance="@style/PatInfoValue"
@@ -408,30 +412,24 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/textView52"
+                    android:id="@+id/textView342"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="5"/>
 
                 <NumberPicker
                     android:id="@+id/npSystolic"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="4"/>
+                    android:layout_weight="4"
+                    android:theme="@style/PatInfoNumberPicker"/>
 
                 <TextView
-                    android:id="@+id/textView57"
+                    android:id="@+id/textView352"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="2"/>
             </LinearLayout>
-
 
 
             <ImageView
@@ -467,6 +465,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
                     android:layout_weight="4"
+                    android:cursorVisible="false"
                     android:background="@null"
                     android:inputType="textPersonName"
                     android:textAppearance="@style/PatInfoValue"
@@ -491,28 +490,23 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/textView62"
+                    android:id="@+id/textView232"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="5"/>
 
                 <NumberPicker
                     android:id="@+id/npDiastolic"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="4"/>
+                    android:layout_weight="4"
+                    android:theme="@style/PatInfoNumberPicker"/>
 
                 <TextView
-                    android:id="@+id/textView17"
+                    android:id="@+id/textView132"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="2"/>
             </LinearLayout>
 
 
@@ -549,6 +543,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
                     android:layout_weight="6"
+                    android:cursorVisible="false"
                     android:background="@null"
                     android:inputType="textPersonName"
                     android:textAppearance="@style/PatInfoValue"
@@ -563,28 +558,23 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/textView72"
+                    android:id="@+id/textView382"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="5"/>
 
                 <NumberPicker
                     android:id="@+id/npGender"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="4"/>
+                    android:layout_weight="4"
+                    android:theme="@style/PatInfoNumberPicker"/>
 
                 <TextView
-                    android:id="@+id/textView87"
+                    android:id="@+id/textView326"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
-                    android:paddingStart="10dp"
-                    android:textSize="@dimen/main_screen_label_size"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="2"/>
             </LinearLayout>
 
 
