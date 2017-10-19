@@ -17,7 +17,12 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
+import android.widget.TextView;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class PatInfoActivity extends Activity
 {
@@ -221,6 +226,17 @@ public class PatInfoActivity extends Activity
             }
         });
 
+        // make sure a touch anywhere in the area sets the focus to the edittext
+        LinearLayout patIDGroup = (LinearLayout) findViewById(R.id.patientIDGroup);
+        patIDGroup.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                txtPatientID.requestFocus();
+            }
+        });
+
         // --------------------------------------------------------------------------------------------------------
         // DOB
         txtDOB = (EditText) findViewById(R.id.txtDOB);
@@ -236,7 +252,10 @@ public class PatInfoActivity extends Activity
                     npDOBDay.setVisibility(View.VISIBLE);
                     npDOBMonth.setVisibility(View.VISIBLE);
                     npDOBYear.setVisibility(View.VISIBLE);
-
+                    int nMonth = npDOBMonth.getValue();
+                    int nDay = npDOBDay.getValue();
+                    int nYear = npDOBYear.getValue();
+                    txtDOB.setText(monthString[nMonth] + " " + String.valueOf(nDay) + " " + String.valueOf(nYear));
                 }
                 else
                 {
@@ -269,15 +288,29 @@ public class PatInfoActivity extends Activity
         npDOBDay.setOnValueChangedListener(dobChangeListener);
 
         npDOBMonth = (NumberPicker) findViewById(R.id.npDOBMonth);
-        npDOBMonth.setMinValue(0);
-        npDOBMonth.setMaxValue(monthString.length-1);
         npDOBMonth.setFormatter(new NumberPicker.Formatter() {
             @Override
             public String format(int value) {
                 return monthString[value];
             }
         });
-        npDOBMonth.callOnClick();
+        // this code fixes bug in numberpicker where when first opening a numberpicker with a formatter,
+        // the string is not shown until the picker is touched
+        try {
+            Method method = npDOBMonth.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
+            method.setAccessible(true);
+            method.invoke(npDOBMonth, true);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        npDOBMonth.setMinValue(0);
+        npDOBMonth.setMaxValue(monthString.length-1);
         npDOBMonth.setVisibility(View.GONE);
         npDOBMonth.setOnValueChangedListener(dobChangeListener);
 
@@ -288,6 +321,16 @@ public class PatInfoActivity extends Activity
         npDOBYear.setValue(1960);
         npDOBYear.setOnValueChangedListener(dobChangeListener);
 
+        // make sure a touch anywhere in the area sets the focus to the edittext
+        LinearLayout DOBGroup = (LinearLayout) findViewById(R.id.DOBGroup);
+        DOBGroup.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                txtDOB.requestFocus();
+            }
+        });
         // --------------------------------------------------------------------------------------------------------
         // Height
         txtHeight = (EditText) findViewById(R.id.txtHeight);
@@ -302,6 +345,9 @@ public class PatInfoActivity extends Activity
                     txtHeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                     npHeightFeet.setVisibility(View.VISIBLE);
                     npHeightInches.setVisibility(View.VISIBLE);
+                    int nFeet = npHeightFeet.getValue();
+                    int nInches = npHeightInches.getValue();
+                    txtHeight.setText(String.valueOf(nFeet) + " / " + String.valueOf(nInches));
                 }
                 else
                 {
@@ -335,7 +381,17 @@ public class PatInfoActivity extends Activity
         npHeightInches.setMaxValue(11);
         npHeightInches.setOnValueChangedListener(heightChangeListener);
 
-        // --------------------------------------------------------------------------------------------------------
+        // make sure a touch anywhere in the area sets the focus to the edittext
+        LinearLayout heightGroup = (LinearLayout) findViewById(R.id.heightGroup);
+        heightGroup.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                txtHeight.requestFocus();
+            }
+        });
+// --------------------------------------------------------------------------------------------------------
         // Weight
         txtWeight = (EditText) findViewById(R.id.txtWeight);
         txtWeight.setShowSoftInputOnFocus(false);
@@ -348,6 +404,8 @@ public class PatInfoActivity extends Activity
                 {
                     txtWeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                     npWeight.setVisibility(View.VISIBLE);
+                    int nWeight = npWeight.getValue();
+                    txtWeight.setText(String.valueOf(nWeight));
                 }
                 else
                 {
@@ -373,6 +431,16 @@ public class PatInfoActivity extends Activity
         npWeight.setMaxValue(250);
         npWeight.setOnValueChangedListener(weightChangeListener);
 
+        // make sure a touch anywhere in the area sets the focus to the edittext
+        LinearLayout weightGroup = (LinearLayout) findViewById(R.id.weightGroup);
+        weightGroup.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                txtWeight.requestFocus();
+            }
+        });
         // --------------------------------------------------------------------------------------------------------
         // Systolic
         txtSystolic = (EditText) findViewById(R.id.txtSystolic);
@@ -386,6 +454,8 @@ public class PatInfoActivity extends Activity
                 {
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                     npSystolic.setVisibility(View.VISIBLE);
+                    int nDiastolic = npSystolic.getValue();
+                    txtSystolic.setText(String.valueOf(nDiastolic));
                 }
                 else
                 {
@@ -412,6 +482,16 @@ public class PatInfoActivity extends Activity
         npSystolic.setOnValueChangedListener(systolicChangeListener);
 
 
+        // make sure a touch anywhere in the area sets the focus to the edittext
+        LinearLayout systolicGroup = (LinearLayout) findViewById(R.id.systolicGroup);
+        systolicGroup.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                txtSystolic.requestFocus();
+            }
+        });
         // --------------------------------------------------------------------------------------------------------
         // Diastolic
         txtDiastolic = (EditText) findViewById(R.id.txtDiast);
@@ -425,6 +505,8 @@ public class PatInfoActivity extends Activity
                 {
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                     npDiastolic.setVisibility(View.VISIBLE);
+                    int nDiastolic = npDiastolic.getValue();
+                    txtDiastolic.setText(String.valueOf(nDiastolic));
                 }
                 else
                 {
@@ -450,6 +532,16 @@ public class PatInfoActivity extends Activity
         npDiastolic.setMaxValue(250);
         npDiastolic.setOnValueChangedListener(diastolicChangeListener);
 
+        // make sure a touch anywhere in the area sets the focus to the edittext
+        LinearLayout diastolicGroup = (LinearLayout) findViewById(R.id.diastolicGroup);
+        diastolicGroup.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                txtDiastolic.requestFocus();
+            }
+        });
         // --------------------------------------------------------------------------------------------------------
         // Gender
         txtGender = (EditText) findViewById(R.id.txtGender);
@@ -463,7 +555,8 @@ public class PatInfoActivity extends Activity
                 {
                     txtGender.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                     npGender.setVisibility(View.VISIBLE);
-
+                    int nGender = npGender.getValue();
+                    txtGender.setText(genderString[nGender]);
                 }
                 else
                 {
@@ -496,7 +589,32 @@ public class PatInfoActivity extends Activity
             }
         });
         npGender.setOnValueChangedListener(genderChangeListener);
+        // this code fixes bug in numberpicker where when first opening a numberpicker with a formatter,
+        // the string is not shown until the picker is touched
+        try {
+            Method method = npGender.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
+            method.setAccessible(true);
+            method.invoke(npGender, true);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
 
+        // make sure a touch anywhere in the area sets the focus to the edittext
+        LinearLayout genderGroup = (LinearLayout) findViewById(R.id.genderGroup);
+        genderGroup.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                txtGender.requestFocus();
+            }
+        });
 
         // --------------------------------------------------------------------------------------------------------
         // Notes
@@ -515,6 +633,17 @@ public class PatInfoActivity extends Activity
                     txtNotes.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     hideKeyBoard(v);
                 }
+            }
+        });
+
+        // make sure a touch anywhere in the area sets the focus to the edittext
+        LinearLayout notesGroup = (LinearLayout) findViewById(R.id.notesGroup);
+        notesGroup.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                txtNotes.requestFocus();
             }
         });
 

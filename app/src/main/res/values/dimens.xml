@@ -1,6 +1,6 @@
 <resources>
     <dimen name="patient_entry_value_font_size">28dp</dimen>
-    <dimen name="patient_entry_number_picker_font_size">28dp</dimen>
+    <dimen name="patient_entry_number_picker_font_size">16dp</dimen>
     <dimen name="patient_entry_first_col_width">200dp</dimen>
     <dimen name="patient_entry_row_margin">10dp</dimen>
     <dimen name="patient_entry_vertical_spacing">20dp</dimen>
