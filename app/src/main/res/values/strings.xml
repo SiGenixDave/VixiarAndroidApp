@@ -16,7 +16,8 @@
 
     <!-- PI Screen -->
     <string name="pat_info">Patient Information</string>
-    <string name="connect_dev">Connect Handheld Device</string>
+    <string name="complete_data_entry">Complete Patient Data Entry</string>
+    <string name="continue_practice_or_test">Continue to practice or begin test</string>
     <string name="setting_label_pi">Patient ID</string>
     <string name="setting_label_dob">Date of Birth</string>
     <string name="setting_label_height">Height</string>

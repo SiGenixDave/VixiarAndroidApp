@@ -9,13 +9,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -23,6 +24,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -32,7 +34,7 @@ public class PatInfoActivity extends Activity
     // this is a request code that is used if BLE isn't turned on...
     // it tells the response handlet to start the data collection intent if the user enables ble
     private static final int REQUEST_START_CONNECTION_BLE = 1;
-    
+
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
     //This is required for Android 6.0 (Marshmallow)
@@ -46,6 +48,7 @@ public class PatInfoActivity extends Activity
     private EditText txtDiastolic;
     private EditText txtGender;
     private EditText txtNotes;
+    private TextView txtMessage;
 
     private NumberPicker npDOBMonth;
     private NumberPicker npDOBDay;
@@ -59,6 +62,8 @@ public class PatInfoActivity extends Activity
 
     private String[] monthString;
     private String[] genderString;
+
+    private ImageButton btnStartTest;
 
     @TargetApi(Build.VERSION_CODES.M) // This is required for Android 6.0 (Marshmallow) to work
     @Override
@@ -100,6 +105,23 @@ public class PatInfoActivity extends Activity
                 navigateUpTo(main);
             }
         });
+
+        btnStartTest = (ImageButton) findViewById(R.id.startTestButton);
+        btnStartTest.setEnabled(false);
+        btnStartTest.setAlpha((float)0.5);
+        btnStartTest.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Toast toast = Toast.makeText(getApplicationContext(), "Start test screen coming soon",
+                        Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.CENTER_HORIZONTAL|Gravity.CENTER_VERTICAL, 0, 0);
+                toast.show();            }
+        });
+
+        txtMessage = (TextView) findViewById(R.id.txtMessage);
+        txtMessage.setText(getString(R.string.complete_data_entry));
 
         // FULL SCREEN (add if FS is desired)
         /*
@@ -244,6 +266,7 @@ public class PatInfoActivity extends Activity
         // --------------------------------------------------------------------------------------------------------
         // patient ID
         txtPatientID = (EditText) findViewById(R.id.txtPatientID);
+        txtPatientID.addTextChangedListener(fieldChangeWatcher);
         txtPatientID.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
             @Override
@@ -252,8 +275,7 @@ public class PatInfoActivity extends Activity
                 if (hasFocus)
                 {
                     txtPatientID.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
-                }
-                else
+                } else
                 {
                     txtPatientID.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     hideKeyBoard(v);
@@ -275,6 +297,7 @@ public class PatInfoActivity extends Activity
         // --------------------------------------------------------------------------------------------------------
         // DOB
         txtDOB = (EditText) findViewById(R.id.txtDOB);
+        txtDOB.addTextChangedListener(fieldChangeWatcher);
         txtDOB.setShowSoftInputOnFocus(false);
         txtDOB.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
@@ -291,8 +314,7 @@ public class PatInfoActivity extends Activity
                     int nDay = npDOBDay.getValue();
                     int nYear = npDOBYear.getValue();
                     txtDOB.setText(monthString[nMonth] + " " + String.valueOf(nDay) + " " + String.valueOf(nYear));
-                }
-                else
+                } else
                 {
                     txtDOB.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npDOBDay.setVisibility(View.GONE);
@@ -323,29 +345,36 @@ public class PatInfoActivity extends Activity
         npDOBDay.setOnValueChangedListener(dobChangeListener);
 
         npDOBMonth = (NumberPicker) findViewById(R.id.npDOBMonth);
-        npDOBMonth.setFormatter(new NumberPicker.Formatter() {
+        npDOBMonth.setFormatter(new NumberPicker.Formatter()
+        {
             @Override
-            public String format(int value) {
+            public String format(int value)
+            {
                 return monthString[value];
             }
         });
         // this code fixes bug in numberpicker where when first opening a numberpicker with a formatter,
         // the string is not shown until the picker is touched
-        try {
+        try
+        {
             Method method = npDOBMonth.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
             method.setAccessible(true);
             method.invoke(npDOBMonth, true);
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e)
+        {
             e.printStackTrace();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e)
+        {
             e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException e)
+        {
             e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (InvocationTargetException e)
+        {
             e.printStackTrace();
         }
         npDOBMonth.setMinValue(0);
-        npDOBMonth.setMaxValue(monthString.length-1);
+        npDOBMonth.setMaxValue(monthString.length - 1);
         npDOBMonth.setVisibility(View.GONE);
         npDOBMonth.setOnValueChangedListener(dobChangeListener);
 
@@ -369,6 +398,7 @@ public class PatInfoActivity extends Activity
         // --------------------------------------------------------------------------------------------------------
         // Height
         txtHeight = (EditText) findViewById(R.id.txtHeight);
+        txtHeight.addTextChangedListener(fieldChangeWatcher);
         txtHeight.setShowSoftInputOnFocus(false);
         txtHeight.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
@@ -383,8 +413,7 @@ public class PatInfoActivity extends Activity
                     int nFeet = npHeightFeet.getValue();
                     int nInches = npHeightInches.getValue();
                     txtHeight.setText(String.valueOf(nFeet) + " / " + String.valueOf(nInches));
-                }
-                else
+                } else
                 {
                     txtHeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npHeightFeet.setVisibility(View.GONE);
@@ -429,6 +458,7 @@ public class PatInfoActivity extends Activity
 // --------------------------------------------------------------------------------------------------------
         // Weight
         txtWeight = (EditText) findViewById(R.id.txtWeight);
+        txtWeight.addTextChangedListener(fieldChangeWatcher);
         txtWeight.setShowSoftInputOnFocus(false);
         txtWeight.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
@@ -441,8 +471,7 @@ public class PatInfoActivity extends Activity
                     npWeight.setVisibility(View.VISIBLE);
                     int nWeight = npWeight.getValue();
                     txtWeight.setText(String.valueOf(nWeight));
-                }
-                else
+                } else
                 {
                     txtWeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npWeight.setVisibility(View.GONE);
@@ -479,6 +508,7 @@ public class PatInfoActivity extends Activity
         // --------------------------------------------------------------------------------------------------------
         // Systolic
         txtSystolic = (EditText) findViewById(R.id.txtSystolic);
+        txtSystolic.addTextChangedListener(fieldChangeWatcher);
         txtSystolic.setShowSoftInputOnFocus(false);
         txtSystolic.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
@@ -491,8 +521,7 @@ public class PatInfoActivity extends Activity
                     npSystolic.setVisibility(View.VISIBLE);
                     int nDiastolic = npSystolic.getValue();
                     txtSystolic.setText(String.valueOf(nDiastolic));
-                }
-                else
+                } else
                 {
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npSystolic.setVisibility(View.GONE);
@@ -530,6 +559,7 @@ public class PatInfoActivity extends Activity
         // --------------------------------------------------------------------------------------------------------
         // Diastolic
         txtDiastolic = (EditText) findViewById(R.id.txtDiast);
+        txtDiastolic.addTextChangedListener(fieldChangeWatcher);
         txtDiastolic.setShowSoftInputOnFocus(false);
         txtDiastolic.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
@@ -542,8 +572,7 @@ public class PatInfoActivity extends Activity
                     npDiastolic.setVisibility(View.VISIBLE);
                     int nDiastolic = npDiastolic.getValue();
                     txtDiastolic.setText(String.valueOf(nDiastolic));
-                }
-                else
+                } else
                 {
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npDiastolic.setVisibility(View.GONE);
@@ -580,6 +609,7 @@ public class PatInfoActivity extends Activity
         // --------------------------------------------------------------------------------------------------------
         // Gender
         txtGender = (EditText) findViewById(R.id.txtGender);
+        txtGender.addTextChangedListener(fieldChangeWatcher);
         txtGender.setShowSoftInputOnFocus(false);
         txtGender.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
@@ -592,8 +622,7 @@ public class PatInfoActivity extends Activity
                     npGender.setVisibility(View.VISIBLE);
                     int nGender = npGender.getValue();
                     txtGender.setText(genderString[nGender]);
-                }
-                else
+                } else
                 {
                     txtGender.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npGender.setVisibility(View.GONE);
@@ -616,27 +645,34 @@ public class PatInfoActivity extends Activity
         npGender = (NumberPicker) findViewById(R.id.npGender);
         npGender.setVisibility(View.GONE);
         npGender.setMinValue(0);
-        npGender.setMaxValue(genderString.length-1);
-        npGender.setFormatter(new NumberPicker.Formatter() {
+        npGender.setMaxValue(genderString.length - 1);
+        npGender.setFormatter(new NumberPicker.Formatter()
+        {
             @Override
-            public String format(int value) {
+            public String format(int value)
+            {
                 return genderString[value];
             }
         });
         npGender.setOnValueChangedListener(genderChangeListener);
         // this code fixes bug in numberpicker where when first opening a numberpicker with a formatter,
         // the string is not shown until the picker is touched
-        try {
+        try
+        {
             Method method = npGender.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
             method.setAccessible(true);
             method.invoke(npGender, true);
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e)
+        {
             e.printStackTrace();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e)
+        {
             e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException e)
+        {
             e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (InvocationTargetException e)
+        {
             e.printStackTrace();
         }
 
@@ -662,8 +698,7 @@ public class PatInfoActivity extends Activity
                 if (hasFocus)
                 {
                     txtNotes.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
-                }
-                else
+                } else
                 {
                     txtNotes.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     hideKeyBoard(v);
@@ -692,5 +727,39 @@ public class PatInfoActivity extends Activity
             imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
         }
     }
+
+    // this function gets called whenever any text fields change
+    // it will enable the start test button once all the required fields are filled in
+    private final TextWatcher fieldChangeWatcher = new TextWatcher()
+    {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after)
+        {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count)
+        {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s)
+        {
+            if (txtPatientID.getText().toString().length() != 0 && txtDOB.getText().toString().length() != 0 &&
+                    txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
+                    txtDiastolic.toString().trim().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
+                    txtGender.getText().toString().length() != 0)
+            {
+                btnStartTest.setEnabled(true);
+                btnStartTest.setAlpha((float) 1.0);
+                txtMessage.setText(getString(R.string.continue_practice_or_test));
+            } else
+            {
+                btnStartTest.setEnabled(false);
+                btnStartTest.setAlpha((float) 0.5);
+                txtMessage.setText(getString(R.string.complete_data_entry));
+            }
+        }
+    };
 }
 
