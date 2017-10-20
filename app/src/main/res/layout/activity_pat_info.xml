@@ -8,48 +8,37 @@
     android:gravity="center_horizontal"
     android:orientation="vertical">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:background="@color/colorTopBar"
-
         android:orientation="horizontal">
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/backButton"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="20dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="10dp"
             android:background="@null"
             android:focusable="true"
             android:focusableInTouchMode="true"
             android:scaleType="fitCenter"
             android:src="@drawable/back_arrow"/>
 
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:fontFamily="fonts/Roboto-Light.ttf"
-            android:paddingStart="10dp"
-            android:textSize="@dimen/main_screen_label_size"/>
-
-        <requestFocus/>
-
-
         <ImageButton
-            android:id="@+id/imageButton5"
+            android:id="@+id/exitButton"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="20dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="10dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/exit_app"/>
 
-    </LinearLayout>
+    </RelativeLayout>
 
     <ScrollView
         android:layout_width="match_parent"

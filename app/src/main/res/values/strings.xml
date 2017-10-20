@@ -49,4 +49,7 @@
         <item>Female</item>
     </string-array>
 
+    <string name="exit_confirmation_title">Confirm Exit</string>
+    <string name="exit_confirmation_message">Are you sure you want to exit Navigator</string>
+
 </resources>

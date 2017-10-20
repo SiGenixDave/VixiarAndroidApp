@@ -9,14 +9,17 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
@@ -65,6 +68,38 @@ public class PatInfoActivity extends Activity
         setContentView(R.layout.activity_pat_info);
         initializeControls();
 
+        ImageButton btnExit = (ImageButton) findViewById(R.id.exitButton);
+        btnExit.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                AlertDialog.Builder adb = new AlertDialog.Builder(PatInfoActivity.this);
+                adb.setTitle(getString(R.string.exit_confirmation_title));
+                adb.setMessage(getString(R.string.exit_confirmation_message));
+                adb.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        System.exit(0);
+                    }
+                });
+                adb.setNegativeButton(android.R.string.cancel, null);
+                adb.show();
+            }
+        });
+
+        ImageButton btnBack = (ImageButton) findViewById(R.id.backButton);
+        btnBack.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Intent main = new Intent(PatInfoActivity.this, MainActivity.class);
+                navigateUpTo(main);
+            }
+        });
 
         // FULL SCREEN (add if FS is desired)
         /*
