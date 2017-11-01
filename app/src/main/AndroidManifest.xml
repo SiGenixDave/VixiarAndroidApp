@@ -16,22 +16,24 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.vixiar.indicor.MainActivity">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.vixiar.indicor.TrainingActivity"/>
-        <activity android:name="com.vixiar.indicor.DataCollectionActivity">
+        <activity android:name=".TrainingActivity"/>
+        <activity android:name=".DataCollectionActivity">
         </activity>
 
         <service
-            android:name="com.vixiar.indicor.VixiarHandheldBLEService"
+            android:name=".VixiarHandheldBLEService"
             android:enabled="true"/>
 
-        <activity android:name="com.vixiar.indicor.PatInfoActivity">
+        <activity android:name=".PatInfoActivity">
+        </activity>
+        <activity android:name=".PracticeActivity">
         </activity>
     </application>
 

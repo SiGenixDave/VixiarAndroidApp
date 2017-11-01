@@ -120,6 +120,18 @@ public class PatInfoActivity extends Activity
                 toast.show();            }
         });
 
+        ImageButton btnPractice = (ImageButton) findViewById(R.id.practiceButton);
+        btnPractice.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Intent intent = new Intent(PatInfoActivity.this, PracticeActivity.class);
+                startActivity(intent);
+            }
+        });
+
+
         txtMessage = (TextView) findViewById(R.id.txtMessage);
         txtMessage.setText(getString(R.string.complete_data_entry));
 
@@ -438,12 +450,14 @@ public class PatInfoActivity extends Activity
         npHeightFeet.setMinValue(3);
         npHeightFeet.setMaxValue(7);
         npHeightFeet.setOnValueChangedListener(heightChangeListener);
+        npHeightFeet.setValue(5);
 
         npHeightInches = (NumberPicker) findViewById(R.id.npInches);
         npHeightInches.setVisibility(View.GONE);
         npHeightInches.setMinValue(0);
         npHeightInches.setMaxValue(11);
         npHeightInches.setOnValueChangedListener(heightChangeListener);
+        npHeightInches.setValue(8);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout heightGroup = (LinearLayout) findViewById(R.id.heightGroup);
@@ -491,9 +505,10 @@ public class PatInfoActivity extends Activity
 
         npWeight = (NumberPicker) findViewById(R.id.npWeight);
         npWeight.setVisibility(View.GONE);
-        npWeight.setMinValue(50);
+        npWeight.setMinValue(88);
         npWeight.setMaxValue(250);
         npWeight.setOnValueChangedListener(weightChangeListener);
+        npWeight.setValue(150);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout weightGroup = (LinearLayout) findViewById(R.id.weightGroup);
@@ -541,10 +556,10 @@ public class PatInfoActivity extends Activity
 
         npSystolic = (NumberPicker) findViewById(R.id.npSystolic);
         npSystolic.setVisibility(View.GONE);
-        npSystolic.setMinValue(50);
-        npSystolic.setMaxValue(250);
+        npSystolic.setMinValue(90);
+        npSystolic.setMaxValue(160);
         npSystolic.setOnValueChangedListener(systolicChangeListener);
-
+        npSystolic.setValue(120);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout systolicGroup = (LinearLayout) findViewById(R.id.systolicGroup);
@@ -592,9 +607,10 @@ public class PatInfoActivity extends Activity
 
         npDiastolic = (NumberPicker) findViewById(R.id.npDiastolic);
         npDiastolic.setVisibility(View.GONE);
-        npDiastolic.setMinValue(50);
-        npDiastolic.setMaxValue(250);
+        npDiastolic.setMinValue(80);
+        npDiastolic.setMaxValue(100);
         npDiastolic.setOnValueChangedListener(diastolicChangeListener);
+        npDiastolic.setValue(80);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout diastolicGroup = (LinearLayout) findViewById(R.id.diastolicGroup);
