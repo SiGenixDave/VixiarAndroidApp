@@ -5,8 +5,12 @@
     <color name="colorAccent">#ff4081</color>
     <color name="colorLightGray">#D3D3D3</color>
     <color name="colorTopBar">#58595b</color>
+    <color name="colorTopBarText">#f5f5f5</color>
     <color name="colorBottomBar">#33a6d4</color>
     <color name="colorPatientEntryHighlightedValue">#33a6d4</color>
     <color name="colorPatientEntryNormalValue">#69747d</color>
-    <color name="colorTitleBar">#61C1D2</color>
+    <color name="colorTitleBar">#61c1d2</color>
+    <color name="colorBarOrange">#F26431</color>
+    <color name="colorBarGreen">#8AC640</color>
+
 </resources>

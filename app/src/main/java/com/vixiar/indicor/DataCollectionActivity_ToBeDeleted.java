@@ -20,7 +20,7 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.util.ArrayList;
 
-public class DataCollectionActivity extends Activity
+public class DataCollectionActivity_ToBeDeleted extends Activity
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
@@ -137,7 +137,7 @@ public class DataCollectionActivity extends Activity
     {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_data_collection);
+        setContentView(R.layout.activity_data_collection_tobedeleted);
         mStatusText = (TextView) findViewById(R.id.statusText);
         startBluetoothService();
 

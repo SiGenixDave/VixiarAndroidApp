@@ -3,9 +3,6 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="android:Theme.Holo.Light.NoActionBar.Fullscreen">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
     </style>
     <style name="PatInfoLabel" parent="@android:style/TextAppearance.Medium">
         <item name="android:textColor">#00FF00</item>
@@ -22,6 +19,4 @@
         <item name="android:textSize">@dimen/patient_entry_number_picker_font_size</item>
         <item name="android:textColorPrimary">@color/colorPatientEntryNormalValue</item>
     </style>
-
-    patient_entry_number_picker_font_size
 </resources>

@@ -9,16 +9,19 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -64,6 +67,7 @@ public class PatInfoActivity extends Activity
     private String[] genderString;
 
     private ImageButton btnStartTest;
+    private ImageButton btnPractice;
 
     @TargetApi(Build.VERSION_CODES.M) // This is required for Android 6.0 (Marshmallow) to work
     @Override
@@ -71,32 +75,12 @@ public class PatInfoActivity extends Activity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pat_info);
+        SetFontFamily();
         initializeControls();
 
-        ImageButton btnExit = (ImageButton) findViewById(R.id.exitButton);
-        btnExit.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                AlertDialog.Builder adb = new AlertDialog.Builder(PatInfoActivity.this);
-                adb.setTitle(getString(R.string.exit_confirmation_title));
-                adb.setMessage(getString(R.string.exit_confirmation_message));
-                adb.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        System.exit(0);
-                    }
-                });
-                adb.setNegativeButton(android.R.string.cancel, null);
-                adb.show();
-            }
-        });
-
-        ImageButton btnBack = (ImageButton) findViewById(R.id.backButton);
-        btnBack.setOnClickListener(new View.OnClickListener()
+        Button btnCancel = (Button) findViewById(R.id.navButton);
+        btnCancel.setText(R.string.Cancel);
+        btnCancel.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
@@ -106,6 +90,9 @@ public class PatInfoActivity extends Activity
             }
         });
 
+        TextView txtScreenName = (TextView) findViewById(R.id.txtScreenName);
+        txtScreenName.setText(R.string.pat_info);
+
         btnStartTest = (ImageButton) findViewById(R.id.startTestButton);
         btnStartTest.setEnabled(false);
         btnStartTest.setAlpha((float)0.5);
@@ -114,13 +101,14 @@ public class PatInfoActivity extends Activity
             @Override
             public void onClick(View v)
             {
-                Toast toast = Toast.makeText(getApplicationContext(), "Start test screen coming soon",
-                        Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.CENTER_HORIZONTAL|Gravity.CENTER_VERTICAL, 0, 0);
-                toast.show();            }
+                Intent intent = new Intent(PatInfoActivity.this , StabilityActivity.class);
+                startActivity(intent);
+            }
         });
 
-        ImageButton btnPractice = (ImageButton) findViewById(R.id.practiceButton);
+        btnPractice = (ImageButton) findViewById(R.id.practiceButton);
+        btnPractice.setEnabled(false);
+        btnPractice.setAlpha((float)0.5);
         btnPractice.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -267,7 +255,7 @@ public class PatInfoActivity extends Activity
         {
             if (resultCode == Activity.RESULT_OK)
             {
-                Intent intent = new Intent(this, DataCollectionActivity.class);
+                Intent intent = new Intent(this, DataCollectionActivity_ToBeDeleted.class);
                 startActivity(intent);
             }
         }
@@ -768,14 +756,91 @@ public class PatInfoActivity extends Activity
             {
                 btnStartTest.setEnabled(true);
                 btnStartTest.setAlpha((float) 1.0);
+                btnPractice.setEnabled(true);
+                btnPractice.setAlpha((float) 1.0);
                 txtMessage.setText(getString(R.string.continue_practice_or_test));
             } else
             {
                 btnStartTest.setEnabled(false);
                 btnStartTest.setAlpha((float) 0.5);
+                btnPractice.setEnabled(false);
+                btnPractice.setAlpha((float) 0.5);
                 txtMessage.setText(getString(R.string.complete_data_entry));
             }
         }
     };
+
+    public void SetFontFamily()
+    {
+        Typeface robotoTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
+
+        TextView v = (TextView) findViewById(R.id.patIDLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.dobLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.heightLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.ftinLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.weightLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.lbsLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.diasLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.mmhg1Lbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.systLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.mmhg2Lbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.genderLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.notesLbl);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtPatientID);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtDOB);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtHeight);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtWeight);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtDiast);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtSystolic);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtGender);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtNotes);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtMessage);
+        v.setTypeface(robotoTypeface);
+
+        v = (TextView) findViewById(R.id.txtScreenName);
+        v.setTypeface(robotoTypeface);
+
+
+    }
 }
 

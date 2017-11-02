@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-public class TrainingActivity extends Activity
+public class TrainingActivity_ToBeDeleted extends Activity
 {
 
     int yOrig = 640;
@@ -27,7 +27,7 @@ public class TrainingActivity extends Activity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_training);
+        setContentView(R.layout.activity_training_tobedeleted);
         InitViews();
     }
 
