@@ -2,43 +2,14 @@
 <android.widget.LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLinearLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:foregroundGravity="bottom"
     android:gravity="center_horizontal"
     android:orientation="vertical">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:background="@color/colorTopBar"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/backButton"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="10dp"
-            android:background="@null"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/back_arrow"/>
-
-        <ImageButton
-            android:id="@+id/exitButton"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="10dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/exit_app"/>
-
-    </RelativeLayout>
+    <include layout="@layout/top_bar_layout"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -48,7 +19,7 @@
         android:minHeight="155dp">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_weight="1"
@@ -74,11 +45,11 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/patIDLabel"
+                    android:id="@+id/patIDLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
+                    android:fontFamily="@font/roboto_light"
                     android:paddingStart="10dp"
                     android:text="@string/setting_label_pi"
                     android:textSize="@dimen/main_screen_label_size"/>
@@ -115,11 +86,11 @@
 
 
                 <TextView
-                    android:id="@+id/textView8"
+                    android:id="@+id/dobLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
+                    android:fontFamily="@font/roboto_light"
                     android:paddingStart="10dp"
                     android:text="@string/setting_label_dob"
                     android:textSize="@dimen/main_screen_label_size"/>
@@ -203,11 +174,11 @@
                 tools:layout_editor_absoluteY="6dp">
 
                 <TextView
-                    android:id="@+id/textView10"
+                    android:id="@+id/heightLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
+                    android:fontFamily="@font/roboto_light"
                     android:paddingStart="10dp"
                     android:text="@string/setting_label_height"
                     android:textSize="@dimen/main_screen_label_size"/>
@@ -225,11 +196,11 @@
                     android:textColor="@null"/>
 
                 <TextView
-                    android:id="@+id/textView"
+                    android:id="@+id/ftinLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
+                    android:fontFamily="@font/roboto_light"
                     android:paddingStart="10dp"
                     android:text="@string/setting_ft"
                     android:textSize="@dimen/main_screen_label_size"/>
@@ -288,7 +259,7 @@
                 tools:layout_editor_absoluteY="6dp">
 
                 <TextView
-                    android:id="@+id/textView11"
+                    android:id="@+id/weightLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
@@ -310,7 +281,7 @@
                     android:textColor="@null"/>
 
                 <TextView
-                    android:id="@+id/textView3"
+                    android:id="@+id/lbsLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
@@ -328,7 +299,7 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/textView312"
+                    android:id="@+id/weightLbl1"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     android:layout_weight="5"/>
@@ -341,7 +312,7 @@
                     android:theme="@style/PatInfoNumberPicker"/>
 
                 <TextView
-                    android:id="@+id/textView322"
+                    android:id="@+id/lbsLbl1"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     android:layout_weight="6"/>
@@ -367,7 +338,7 @@
                 tools:layout_editor_absoluteY="6dp">
 
                 <TextView
-                    android:id="@+id/textView13"
+                    android:id="@+id/systLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
@@ -389,7 +360,7 @@
                     android:textColor="@null"/>
 
                 <TextView
-                    android:id="@+id/textView4"
+                    android:id="@+id/mmhg1Lbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
@@ -446,11 +417,10 @@
                 tools:layout_editor_absoluteY="6dp">
 
                 <TextView
-                    android:id="@+id/textView15"
+                    android:id="@+id/diasLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
                     android:paddingStart="10dp"
                     android:text="@string/setting_label_diast"
                     android:textSize="@dimen/main_screen_label_size"/>
@@ -468,7 +438,7 @@
                     android:textColor="@null"/>
 
                 <TextView
-                    android:id="@+id/textView16"
+                    android:id="@+id/mmhg2Lbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
@@ -525,11 +495,10 @@
                 tools:layout_editor_absoluteY="6dp">
 
                 <TextView
-                    android:id="@+id/textView18"
+                    android:id="@+id/genderLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
                     android:paddingStart="10dp"
                     android:text="@string/setting_label_gender"
                     android:textSize="@dimen/main_screen_label_size"/>
@@ -594,11 +563,10 @@
                 tools:layout_editor_absoluteY="6dp">
 
                 <TextView
-                    android:id="@+id/textView6"
+                    android:id="@+id/notesLbl"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
-                    android:fontFamily="fonts/Roboto-Light.ttf"
                     android:paddingStart="10dp"
                     android:text="@string/setting_label_notes"
                     android:textSize="@dimen/main_screen_label_size"/>
@@ -610,6 +578,7 @@
                     android:layout_gravity="left"
                     android:layout_weight="6"
                     android:background="@null"
+                    android:fontFamily="@font/roboto_light"
                     android:gravity="top|left"
                     android:inputType="text|textMultiLine"
                     android:textAppearance="@style/PatInfoValue"
@@ -631,48 +600,7 @@
 
     </ScrollView>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:background="@color/colorBottomBar"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingBottom="15dp"
-        android:paddingEnd="15dp"
-        android:paddingStart="15dp"
-        android:paddingTop="15dp">
+    <include layout="@layout/bottom_bar_layout"/>
 
-        <TextView
-            android:id="@+id/txtMessage"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|center_horizontal"
-            android:layout_weight="5"
-            android:fontFamily="fonts/Roboto-Light.ttf"
-            android:gravity="center_horizontal"
-            android:textColor="@android:color/background_light"
-            android:textSize="@dimen/bottom_bar_font_size"/>
-
-        <ImageButton
-            android:id="@+id/practiceButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:alpha=".5"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/training_button"/>
-
-        <ImageButton
-            android:id="@+id/startTestButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:alpha="1"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/next_button"/>
-
-    </LinearLayout>
 
 </android.widget.LinearLayout>

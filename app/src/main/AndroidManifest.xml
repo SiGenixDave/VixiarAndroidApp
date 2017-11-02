@@ -23,8 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".TrainingActivity"/>
-        <activity android:name=".DataCollectionActivity">
+        <activity android:name=".TrainingActivity_ToBeDeleted"/>
+        <activity android:name=".DataCollectionActivity_ToBeDeleted">
         </activity>
 
         <service
@@ -34,6 +34,8 @@
         <activity android:name=".PatInfoActivity">
         </activity>
         <activity android:name=".PracticeActivity">
+        </activity>
+        <activity android:name=".StabilityActivity">
         </activity>
     </application>
 
