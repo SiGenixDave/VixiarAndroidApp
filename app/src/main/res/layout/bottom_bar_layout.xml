@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|center_horizontal"
             android:layout_weight="5"
-            android:fontFamily="fonts/Roboto-Light.ttf"
+            android:fontFamily="@font/roboto_light"
             android:gravity="center_horizontal"
             android:textColor="@android:color/background_light"
             android:textSize="@dimen/bottom_bar_font_size"/>

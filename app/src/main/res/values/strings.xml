@@ -11,11 +11,11 @@
     <string name="training">Training Video</string>
     <string name="co_name">Vixiar Medical Inc.</string>
     <string name="tag_line">LVEDP Estimation Diagnostic Test</string>
-    <string name="application_name">Indicor Navigator </string>
+    <string name="main_screen_title">Indicor Navigator </string>
     <string name="vixiar_web">www.vixiar.com</string>
 
     <!-- PI Screen -->
-    <string name="pat_info">Patient Information</string>
+    <string name="pat_info_screen_title">Patient Information</string>
     <string name="complete_data_entry">Complete Patient Data Entry</string>
     <string name="continue_practice_or_test">Practice or continue to test</string>
     <string name="setting_label_pi">Patient ID</string>
@@ -50,6 +50,12 @@
         <item>Female</item>
     </string-array>
 
-    <string name="Cancel">Cancel</string>
+    <string name="practice_screen_title">Practice</string>
+    <string name="keep_ball">Keep ball in target zone</string>
+
+    <string name="measurement">Measurement </string>
+    <string name="keep_arm_steady">Keep arm steady</string>
+
+    <string name="cancel">Cancel</string>
 
 </resources>

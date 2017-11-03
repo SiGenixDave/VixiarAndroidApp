@@ -18,16 +18,13 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -76,52 +73,9 @@ public class PatInfoActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pat_info);
         SetFontFamily();
+        InitializeHeaderAndFooter();
         initializeControls();
 
-        Button btnCancel = (Button) findViewById(R.id.navButton);
-        btnCancel.setText(R.string.Cancel);
-        btnCancel.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                Intent main = new Intent(PatInfoActivity.this, MainActivity.class);
-                navigateUpTo(main);
-            }
-        });
-
-        TextView txtScreenName = (TextView) findViewById(R.id.txtScreenName);
-        txtScreenName.setText(R.string.pat_info);
-
-        btnStartTest = (ImageButton) findViewById(R.id.startTestButton);
-        btnStartTest.setEnabled(false);
-        btnStartTest.setAlpha((float)0.5);
-        btnStartTest.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                Intent intent = new Intent(PatInfoActivity.this , StabilityActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        btnPractice = (ImageButton) findViewById(R.id.practiceButton);
-        btnPractice.setEnabled(false);
-        btnPractice.setAlpha((float)0.5);
-        btnPractice.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                Intent intent = new Intent(PatInfoActivity.this, PracticeActivity.class);
-                startActivity(intent);
-            }
-        });
-
-
-        txtMessage = (TextView) findViewById(R.id.txtMessage);
-        txtMessage.setText(getString(R.string.complete_data_entry));
 
         // FULL SCREEN (add if FS is desired)
         /*
@@ -754,18 +708,14 @@ public class PatInfoActivity extends Activity
                     txtDiastolic.toString().trim().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
                     txtGender.getText().toString().length() != 0)
             {
-                btnStartTest.setEnabled(true);
-                btnStartTest.setAlpha((float) 1.0);
-                btnPractice.setEnabled(true);
-                btnPractice.setAlpha((float) 1.0);
-                txtMessage.setText(getString(R.string.continue_practice_or_test));
+                HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
+                HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
+                HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
             } else
             {
-                btnStartTest.setEnabled(false);
-                btnStartTest.setAlpha((float) 0.5);
-                btnPractice.setEnabled(false);
-                btnPractice.setAlpha((float) 0.5);
-                txtMessage.setText(getString(R.string.complete_data_entry));
+                HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
+                HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
+                HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
             }
         }
     };
@@ -833,14 +783,44 @@ public class PatInfoActivity extends Activity
 
         v = (TextView) findViewById(R.id.txtNotes);
         v.setTypeface(robotoTypeface);
+    }
 
-        v = (TextView) findViewById(R.id.txtMessage);
-        v.setTypeface(robotoTypeface);
-
-        v = (TextView) findViewById(R.id.txtScreenName);
-        v.setTypeface(robotoTypeface);
-
-
+    private void InitializeHeaderAndFooter()
+    {
+        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().HideBatteryIcon(this);
+        HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
+        HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.pat_info_screen_title));
+        HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.complete_data_entry));
+        HeaderFooterControl.getInstance().DimNextButton(this);
+        HeaderFooterControl.getInstance().DimPracticeButton(this);
+        HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                Intent main = new Intent(PatInfoActivity.this, MainActivity.class);
+                navigateUpTo(main);
+            }
+        });
+        HeaderFooterControl.getInstance().SetNextButtonListner(this, new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                Intent intent = new Intent(PatInfoActivity.this, StabilityActivity.class);
+                startActivity(intent);
+            }
+        });
+        HeaderFooterControl.getInstance().SetPracticeButtonListner(this, new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                Intent intent = new Intent(PatInfoActivity.this, PracticeActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 }
 

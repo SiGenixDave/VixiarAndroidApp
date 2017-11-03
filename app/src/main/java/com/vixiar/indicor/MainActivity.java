@@ -21,20 +21,16 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
 
         // setup the top bar
-        Button navButton = (Button)findViewById(R.id.navButton);
-        navButton.setText("");
-        ImageView batteryIcon = (ImageView) findViewById(R.id.batteryIcon);
-        batteryIcon.setVisibility(View.INVISIBLE);
-
-        Typeface robotoTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
-
-        TextView titleTxt = (TextView)findViewById(R.id.txtScreenName);
-        titleTxt.setText(R.string.application_name);
-        titleTxt.setTypeface(robotoTypeface);
+        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().HideBatteryIcon(this);
+        HeaderFooterControl.getInstance().SetNavButtonTitle(this, "");
+        HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.main_screen_title));
 
         // put the version number into the bottom status bar
-        String nameAndVersion = getString(R.string.application_name) +
+        String nameAndVersion = getString(R.string.main_screen_title) +
                 " V" + BuildConfig.VERSION_NAME;
+
+        Typeface robotoTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
 
         TextView versionText = (TextView)findViewById(R.id.textViewVersion);
         versionText.setText(nameAndVersion);
@@ -42,6 +38,7 @@ public class MainActivity extends Activity
 
         TextView v = (TextView) findViewById(R.id.websiteLbl);
         v.setTypeface(robotoTypeface);
+        v.setText(R.string.vixiar_web);
 
         v = (TextView) findViewById(R.id.startTestLbl);
         v.setTypeface(robotoTypeface);

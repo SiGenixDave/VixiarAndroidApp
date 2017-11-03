@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
@@ -184,7 +185,7 @@ public class PressureViewGraph extends View
 
     public void DrawLabels(Canvas canvas)
     {
-        Typeface tf = Typeface.createFromAsset(getContext().getAssets(), "fonts/Roboto-Light.ttf");
+        Typeface tf = ResourcesCompat.getFont(getContext().getApplicationContext(), R.font.roboto_light_family);
 
         textPaint = new TextPaint();
         textPaint.setTypeface(tf);
