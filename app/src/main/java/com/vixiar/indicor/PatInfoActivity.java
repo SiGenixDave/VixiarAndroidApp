@@ -20,6 +20,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -75,6 +76,7 @@ public class PatInfoActivity extends Activity
         SetFontFamily();
         InitializeHeaderAndFooter();
         initializeControls();
+
 
 
         // FULL SCREEN (add if FS is desired)
@@ -166,6 +168,10 @@ public class PatInfoActivity extends Activity
     protected void onResume()
     {
         super.onResume();
+        Button et = findViewById(R.id.navButton);
+        //et.setFocusable(true);
+        et.setFocusableInTouchMode(true );
+        et.requestFocus();
     }
 
     // quick stuff to check that BLE is supported and turned on
