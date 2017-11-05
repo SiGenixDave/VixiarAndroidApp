@@ -1,9 +1,14 @@
 package com.vixiar.indicor;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
@@ -155,6 +160,18 @@ public class PressureViewGraph extends View
         Paint orangePaint = new Paint(0);
         orangePaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorBarOrange));
         orangePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+
+        //Initialize the bitmap object by loading an image from the resources folder
+        Bitmap fillBMP = BitmapFactory.decodeResource(getResources(), R.drawable.diagonal_bars);
+
+        Matrix matrix = new Matrix();
+        matrix.postScale((float)0.1, (float)0.1);
+        Bitmap scaledBitmap = Bitmap.createBitmap(fillBMP, 0, 0, fillBMP.getWidth(), fillBMP.getHeight(), matrix, true);
+        //Initialize the BitmapShader with the Bitmap object and set the texture tile mode
+        BitmapShader fillBMPshader = new BitmapShader(fillBMP, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
+
+        orangePaint.setStyle(Paint.Style.FILL);
+        orangePaint.setShader(fillBMPshader);
 
         Paint greenPaint = new Paint(0);
         greenPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorBarGreen));
