@@ -171,7 +171,7 @@ public class PressureViewGraph extends View
         BitmapShader fillBMPshader = new BitmapShader(fillBMP, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
 
         orangePaint.setStyle(Paint.Style.FILL);
-        orangePaint.setShader(fillBMPshader);
+        // orangePaint.setShader(fillBMPshader);
 
         Paint greenPaint = new Paint(0);
         greenPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorBarGreen));

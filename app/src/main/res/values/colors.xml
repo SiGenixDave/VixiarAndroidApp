@@ -12,5 +12,5 @@
     <color name="colorTitleBar">#61c1d2</color>
     <color name="colorBarOrange">#F26431</color>
     <color name="colorBarGreen">#8AC640</color>
-
+    <color name="colorChartLine">#808080</color>
 </resources>

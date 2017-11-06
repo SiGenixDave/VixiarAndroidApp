@@ -77,6 +77,9 @@ public class PatInfoActivity extends Activity
         InitializeHeaderAndFooter();
         initializeControls();
 
+        HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
+        HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
+        HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
 
 
         // FULL SCREEN (add if FS is desired)
@@ -719,9 +722,14 @@ public class PatInfoActivity extends Activity
                 HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
             } else
             {
+                HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
+                HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
+                HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
+/*
                 HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
+*/
             }
         }
     };
