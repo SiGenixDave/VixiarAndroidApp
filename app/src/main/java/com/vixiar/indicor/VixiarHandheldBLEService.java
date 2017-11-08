@@ -73,7 +73,6 @@ public class VixiarHandheldBLEService extends Service
     // UUIDs for the service and characteristics that the Vixiar service uses
     public final static String RTDataCharacteristicUUID = "7991CF92-D18B-40EB-AFBE-4EECB596C677";
     public final static String batteryLevelDataCharacteristicUUID = "590D5C82-2999-4C12-9D75-A3BC343FBCA5";
-
     private final static String CCCDUUID = "00002902-0000-1000-8000-00805f9b34fb";
 
     private final static String vixiarRealTimeServiceUUID = "83638348-96D8-455A-8451-0630BCD02558";
@@ -82,7 +81,6 @@ public class VixiarHandheldBLEService extends Service
     private static BluetoothManager mBluetoothManager;
     private static BluetoothAdapter mBluetoothAdapter;
     private static BluetoothLeScanner mLEScanner;
-    private static BluetoothDevice mLeDevice;
     private static BluetoothGatt mBluetoothGatt;
 
     // Bluetooth characteristics that we need to read/write
@@ -91,21 +89,29 @@ public class VixiarHandheldBLEService extends Service
 
     private final IBinder mBinder = new LocalBinder();
 
-    // realtime data
-    private static ArrayList<Integer> mPressureData = new ArrayList<Integer>();
-    private static ArrayList<Integer> mPPGData = new ArrayList<Integer>();
-    private static Integer mBatteryLevel;
+    // this is the callback used for older devices
+    private BluetoothAdapter.LeScanCallback mLeScanCallback =
+            new BluetoothAdapter.LeScanCallback()
+            {
+                @Override
+                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
+                {
+                    if (mCallbackInterface != null)
+                    {
+                        mCallbackInterface.iBLEScanCallback(null);
+                    }
+                }
+            };
 
+    // this is the callback used for newer devices
     private final ScanCallback mScanCallback = new ScanCallback()
     {
         @Override
         public void onScanResult(int callbackType, ScanResult result)
         {
-            mLeDevice = result.getDevice();
-            mLEScanner.stopScan(mScanCallback); // Stop scanning after the first device is found
             if (mCallbackInterface != null)
             {
-                mCallbackInterface.BLEScanCallback();
+                mCallbackInterface.iBLEScanCallback(result);
             }
         }
     };
@@ -117,17 +123,17 @@ public class VixiarHandheldBLEService extends Service
         {
             if (newState == BluetoothProfile.STATE_CONNECTED)
             {
-                Log.i(TAG, "Connected to GATT server.");
+                Log.i(TAG, "iConnected to GATT server.");
                 if (mCallbackInterface != null)
                 {
-                    mCallbackInterface.BLEConnected();
+                    mCallbackInterface.iBLEConnected();
                 }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED)
             {
                 Log.i(TAG, "Disconnected from GATT server.");
                 if (mCallbackInterface != null)
                 {
-                    mCallbackInterface.BLEDisconnected();
+                    mCallbackInterface.iBLEDisconnected();
                 }
             }
         }
@@ -147,7 +153,7 @@ public class VixiarHandheldBLEService extends Service
             // Broadcast that service/characteristic/descriptor discovery is done
             if (mCallbackInterface != null)
             {
-                mCallbackInterface.BLEServicesDiscovered();
+                mCallbackInterface.iBLEServicesDiscovered();
             }
         }
 
@@ -167,13 +173,11 @@ public class VixiarHandheldBLEService extends Service
                 if (uuid.equals(batteryLevelDataCharacteristicUUID))
                 {
                     final byte[] data = characteristic.getValue();
-                    // Set the LED switch state variable based on the characteristic value ttat was read
-                    mBatteryLevel = (data[0] & 0xff);
                 }
-                // Notify the main activity that new data is available
+                // iNotify the main activity that new data is available
                 if (mCallbackInterface != null)
                 {
-                    mCallbackInterface.BLEDataReceived();
+                    mCallbackInterface.iBLEServicesDiscovered();
                 }
             }
         }
@@ -192,42 +196,13 @@ public class VixiarHandheldBLEService extends Service
 
             if (uuid.toUpperCase().equals(RTDataCharacteristicUUID))
             {
-                mPPGData.clear();
-                mPressureData.clear();
-                for (int i = 1; i < characteristic.getValue().length; i+=4)
-                {
-                    int result = (int)characteristic.getValue()[i+1]&0xff;
-                    result += 256*((int)characteristic.getValue()[i]&0xff);
-                    mPressureData.add(result);
-
-                    result = (int)characteristic.getValue()[i+3]&0xff;
-                    result += 256*((int)characteristic.getValue()[i+2]&0xff);
-                    mPPGData.add(result);
-                }
-                Log.i(TAG, "Got a PPG packet");
                 if (mCallbackInterface != null)
                 {
-                    mCallbackInterface.BLEDataReceived();
+                    mCallbackInterface.iBLEDataReceived(characteristic.getValue());
                 }
             }
         }
     };
-
-    private BluetoothAdapter.LeScanCallback mLeScanCallback =
-            new BluetoothAdapter.LeScanCallback()
-            {
-                @Override
-                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
-                {
-                    mLeDevice = device;
-                    //noinspection deprecation
-                    mBluetoothAdapter.stopLeScan(mLeScanCallback); // Stop scanning after the first device is found
-                    if (mCallbackInterface != null)
-                    {
-                        mCallbackInterface.BLEScanCallback();
-                    }
-                }
-            };
 
     @Override
     public IBinder onBind(Intent intent)
@@ -238,12 +213,12 @@ public class VixiarHandheldBLEService extends Service
     @Override
     public boolean onUnbind(Intent intent)
     {
-        // The BLE close method is called when we unbind the service to free up the resources.
-        close();
+        // The BLE Close method is called when we unbind the service to free up the resources.
+        Close();
         return super.onUnbind(intent);
     }
 
-    public boolean initialize(IndicorBLEServiceInterface i)
+    public boolean Initialize(IndicorBLEServiceInterface i)
     {
         mCallbackInterface = i;
 
@@ -254,7 +229,7 @@ public class VixiarHandheldBLEService extends Service
             mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             if (mBluetoothManager == null)
             {
-                Log.e(TAG, "Unable to initialize BluetoothManager.");
+                Log.e(TAG, "Unable to Initialize BluetoothManager.");
                 return false;
             }
         }
@@ -272,14 +247,14 @@ public class VixiarHandheldBLEService extends Service
     public void ScanForIndicorHandhelds()
     {
         /* Scan for devices and look for the one with the service that we want */
-        UUID capsenseLedService = UUID.fromString(vixiarRealTimeServiceUUID);
-        UUID[] capsenseLedServiceArray = {capsenseLedService};
+        UUID handheldService = UUID.fromString(vixiarRealTimeServiceUUID);
+        UUID[] handheldServiceArray = {handheldService};
 
         // Use old ScanForIndicorHandhelds method for versions older than lollipop
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
         {
             //noinspection deprecation
-            mBluetoothAdapter.startLeScan(capsenseLedServiceArray, mLeScanCallback);
+            mBluetoothAdapter.startLeScan(handheldServiceArray, mLeScanCallback);
         } else
         { // New BLE scanning introduced in LOLLIPOP
             ScanSettings settings;
@@ -290,14 +265,14 @@ public class VixiarHandheldBLEService extends Service
                     .build();
             filters = new ArrayList<>();
             // We will ScanForIndicorHandhelds just for the CAR's UUID
-            ParcelUuid PUuid = new ParcelUuid(capsenseLedService);
+            ParcelUuid PUuid = new ParcelUuid(handheldService);
             ScanFilter filter = new ScanFilter.Builder().setServiceUuid(PUuid).build();
             filters.add(filter);
             mLEScanner.startScan(filters, settings, mScanCallback);
         }
     }
 
-    public boolean ConnectToIndicor()
+    public boolean ConnectToSpecificIndicor(BluetoothDevice device)
     {
         if (mBluetoothAdapter == null)
         {
@@ -312,9 +287,9 @@ public class VixiarHandheldBLEService extends Service
             return mBluetoothGatt.connect();
         }
 
-        // We want to directly ConnectToIndicor to the device, so we are setting the autoConnect
+        // We want to directly ConnectToSpecificIndicor to the device, so we are setting the autoConnect
         // parameter to false.
-        mBluetoothGatt = mLeDevice.connectGatt(this, false, mGattCallback);
+        mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
         Log.d(TAG, "Trying to create a new connection.");
         return true;
     }
@@ -339,7 +314,7 @@ public class VixiarHandheldBLEService extends Service
         mBluetoothGatt.disconnect();
     }
 
-    public void close()
+    public void Close()
     {
         if (mBluetoothGatt == null)
         {
@@ -349,7 +324,7 @@ public class VixiarHandheldBLEService extends Service
         mBluetoothGatt = null;
     }
 
-    public void writeRTDataNotification(boolean value)
+    public void WriteRTDataNotification(boolean value)
     {
         // Set notifications locally in the CCCD
         mBluetoothGatt.setCharacteristicNotification(mRTDataCharacteristic, value);
@@ -360,20 +335,12 @@ public class VixiarHandheldBLEService extends Service
         mBluetoothGatt.writeDescriptor(mRTNotificationCCCD);
     }
 
-    private void broadcastUpdate(final String action)
+    public void StopScanning()
     {
-        final Intent intent = new Intent(action);
-        sendBroadcast(intent);
-    }
-
-    public ArrayList<Integer> GetPPGData()
-    {
-        return mPPGData;
-    }
-
-    public ArrayList<Integer> GetPressureData()
-    {
-        return mPressureData;
+        if (mLEScanner != null)
+        {
+            mLEScanner.stopScan(mScanCallback);
+        }
     }
 
     public class LocalBinder extends Binder

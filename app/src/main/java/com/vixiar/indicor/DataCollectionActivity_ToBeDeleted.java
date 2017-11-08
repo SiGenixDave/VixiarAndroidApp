@@ -40,7 +40,7 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
     */
 /**
      * This manages the lifecycle of the BLE service.
-     * When the service starts we get the service object and initialize the service.
+     * When the service starts we get the service object and Initialize the service.
      *//*
 
     private final ServiceConnection mServiceConnection = new ServiceConnection()
@@ -60,7 +60,7 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
             Log.i(TAG, "onServiceConnected");
             mVixiarHHBLEService = ((VixiarHandheldBLEService.LocalBinder) service).getService();
             mServiceConnected = true;
-            mVixiarHHBLEService.initialize();
+            mVixiarHHBLEService.Initialize();
             mStatusText.setText("Scanning");
             mVixiarHHBLEService.ScanForIndicorHandhelds();
         }
@@ -95,7 +95,7 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
                 case VixiarHandheldBLEService.ACTION_BLESCAN_CALLBACK:
                     Log.i(TAG, "BLE Scan Callback");
                     mStatusText.setText("Found device");
-                    mVixiarHHBLEService.ConnectToIndicor();
+                    mVixiarHHBLEService.ConnectToSpecificIndicor();
                     break;
 
                 case VixiarHandheldBLEService.ACTION_CONNECTED:
@@ -105,7 +105,7 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
                     */
 /* action when sending Capsense notifications *//*
 
-                    mStatusText.setText("Connected");
+                    mStatusText.setText("iConnected");
                     mVixiarHHBLEService.DiscoverIndicorServices();
                     break;
 
@@ -116,7 +116,7 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
 
                 case VixiarHandheldBLEService.ACTION_SERVICES_DISCOVERED:
                     mStatusText.setText("Services Discovered");
-                    mVixiarHHBLEService.writeRTDataNotification(true);
+                    mVixiarHHBLEService.WriteRTDataNotification(true);
                     Log.d(TAG, "Services Discovered");
                     break;
 
