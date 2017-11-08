@@ -1,11 +1,8 @@
 package com.vixiar.indicor;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -15,7 +12,7 @@ import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
-public class StabilityActivity extends Activity
+public class StabilityActivity extends Activity implements IndicorDataInterface
 {
     private int data[] =
             {
@@ -52,7 +49,7 @@ public class StabilityActivity extends Activity
         PPGgraph.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
         PPGgraph.getViewport().setDrawBorder(true);
 
-
+// ----------------------- Temporary data to display ------------------------------------
         LineGraphSeries mPPGSeries = new LineGraphSeries<>();
         mPPGSeries.setColor(getResources().getColor(R.color.colorChartLine));
         mPPGSeries.setThickness(10);
@@ -63,6 +60,9 @@ public class StabilityActivity extends Activity
             mPPGSeries.appendData(new DataPoint(PressureLastX, data[i]), false, 500);
             PressureLastX += 0.2;
         }
+// ---------------------------------------------------------------------------------------
+        IndicorConnection.getInstance().initialize(this, this);
+        IndicorConnection.getInstance().ConnectToIndicor();
     }
 
     private void InitializeHeaderAndFooter()
@@ -81,4 +81,18 @@ public class StabilityActivity extends Activity
         });
     }
 
+    public void CharacteristicRead(Object o)
+    {
+
+    }
+
+    public void Error(int e)
+    {
+
+    }
+
+    public void Notify(Object o)
+    {
+
+    }
 }

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 public class DataCollectionActivity_ToBeDeleted extends Activity
 {
+/*
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
     private static final int REQUEST_ENABLE_BLE = 1;
@@ -36,19 +37,23 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
     private static boolean mConnectState;
     private static boolean mServiceConnected;
     private static VixiarHandheldBLEService mVixiarHHBLEService;
-    /**
+    */
+/**
      * This manages the lifecycle of the BLE service.
      * When the service starts we get the service object and initialize the service.
-     */
+     *//*
+
     private final ServiceConnection mServiceConnection = new ServiceConnection()
     {
 
-        /**
+        */
+/**
          * This is called when the VixiarHandheldBLEService is connected
          *
          * @param componentName the component name of the service that has been connected
          * @param service service being bound
-         */
+         *//*
+
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service)
         {
@@ -57,14 +62,16 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
             mServiceConnected = true;
             mVixiarHHBLEService.initialize();
             mStatusText.setText("Scanning");
-            mVixiarHHBLEService.scan();
+            mVixiarHHBLEService.ScanForIndicorHandhelds();
         }
 
-        /**
+        */
+/**
          * This is called when the VixiarHandheldBLEService is disconnected.
          *
          * @param componentName the component name of the service that has been connected
-         */
+         *//*
+
         @Override
         public void onServiceDisconnected(ComponentName componentName)
         {
@@ -72,9 +79,11 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
             mVixiarHHBLEService = null;
         }
     };
-    /**
+    */
+/**
      * Listener for BLE event broadcasts
-     */
+     *//*
+
     private final BroadcastReceiver mBleUpdateReceiver = new BroadcastReceiver()
     {
         @Override
@@ -86,14 +95,18 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
                 case VixiarHandheldBLEService.ACTION_BLESCAN_CALLBACK:
                     Log.i(TAG, "BLE Scan Callback");
                     mStatusText.setText("Found device");
-                    mVixiarHHBLEService.connect();
+                    mVixiarHHBLEService.ConnectToIndicor();
                     break;
 
                 case VixiarHandheldBLEService.ACTION_CONNECTED:
-                    /* This if statement is needed because we sometimes get a GATT_CONNECTED */
-                    /* action when sending Capsense notifications */
+                    */
+/* This if statement is needed because we sometimes get a GATT_CONNECTED *//*
+
+                    */
+/* action when sending Capsense notifications *//*
+
                     mStatusText.setText("Connected");
-                    mVixiarHHBLEService.discoverServices();
+                    mVixiarHHBLEService.DiscoverIndicorServices();
                     break;
 
                 case VixiarHandheldBLEService.ACTION_DISCONNECTED:
@@ -224,6 +237,7 @@ public class DataCollectionActivity_ToBeDeleted extends Activity
     {
         unbindService(mServiceConnection);
     }
+*/
 }
 
 

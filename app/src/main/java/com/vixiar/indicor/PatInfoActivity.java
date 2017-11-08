@@ -32,14 +32,8 @@ import java.lang.reflect.Method;
 
 public class PatInfoActivity extends Activity
 {
-    // this is a request code that is used if BLE isn't turned on...
-    // it tells the response handlet to start the data collection intent if the user enables ble
-    private static final int REQUEST_START_CONNECTION_BLE = 1;
-
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
-    //This is required for Android 6.0 (Marshmallow)
-    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
     private EditText txtPatientID;
     private EditText txtDOB;
@@ -67,7 +61,6 @@ public class PatInfoActivity extends Activity
     private ImageButton btnStartTest;
     private ImageButton btnPractice;
 
-    @TargetApi(Build.VERSION_CODES.M) // This is required for Android 6.0 (Marshmallow) to work
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -80,86 +73,7 @@ public class PatInfoActivity extends Activity
         HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
         HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
         HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
-
-
-        // FULL SCREEN (add if FS is desired)
-        /*
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        */
-
-        // verify that this device supports bluetooth and it's turned on
-        /*
-        if (!IsBLEAvailable())
-        {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("BLE not supported");
-            builder.setMessage("This device does not support Bluetooth Low Energy which is required to communicate to the handheld.");
-            builder.setPositiveButton("OK",
-                    new DialogInterface.OnClickListener()
-                    {
-                        public void onClick(DialogInterface dialog,
-                                            int which)
-                        {
-                        }
-                    });
-            builder.show();
-        } else
-        {
-            // This section required for Android 6.0 (Marshmallow)
-            // Make sure location access is on or BLE won't scan
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            {
-                // Android M Permission check 
-                if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("This app requires location access in order to function properly.");
-                    builder.setMessage("Please grant location access so this app can communicate with handheld devices.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener()
-                    {
-                        public void onDismiss(DialogInterface dialog)
-                        {
-                            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
-                        }
-                    });
-                    builder.show();
-                }
-            } //End of section for Android 6.0 (Marshmallow)
-        }
-        */
     }
-
-    //This method required for Android 6.0 (Marshmallow)
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults)
-    {
-        switch (requestCode)
-        {
-            case PERMISSION_REQUEST_COARSE_LOCATION:
-            {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                {
-                    Log.d("Permission for 6.0:", "Coarse location permission granted");
-                } else
-                {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Functionality limited");
-                    builder.setMessage("Since location access has not been granted, this app will not be able to communicate with handheld devices.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener()
-                    {
-                        @Override
-                        public void onDismiss(DialogInterface dialog)
-                        {
-                        }
-                    });
-                    builder.show();
-                }
-            }
-        }
-    } //End of section for Android 6.0 (Marshmallow)
 
     @Override
     protected void onPause()
@@ -175,53 +89,6 @@ public class PatInfoActivity extends Activity
         //et.setFocusable(true);
         et.setFocusableInTouchMode(true );
         et.requestFocus();
-    }
-
-    // quick stuff to check that BLE is supported and turned on
-    private BluetoothAdapter GetAdapter()
-    {
-        final BluetoothManager bluetoothManager =
-                (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
-        return bluetoothManager.getAdapter();
-    }
-
-    public boolean IsBLEAvailable()
-    {
-        return GetAdapter() != null;
-    }
-
-    public boolean IsBLEEnabled()
-    {
-        BluetoothAdapter adapter = GetAdapter();
-        if (adapter != null)
-        {
-            // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
-            // fire an intent to display a dialog asking the user to grant permission to enable it.
-            if (!adapter.isEnabled())
-            {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_START_CONNECTION_BLE);
-            }
-            return adapter.isEnabled();
-        } else
-        {
-            return false;
-        }
-    }
-
-    // this get's called after the user either accepts or denys turning ble on
-    // it they accept, the data collection activity starts
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        if (requestCode == REQUEST_START_CONNECTION_BLE)
-        {
-            if (resultCode == Activity.RESULT_OK)
-            {
-                Intent intent = new Intent(this, DataCollectionActivity_ToBeDeleted.class);
-                startActivity(intent);
-            }
-        }
     }
 
     private void initializeControls()
@@ -622,6 +489,8 @@ public class PatInfoActivity extends Activity
             }
         });
         npGender.setOnValueChangedListener(genderChangeListener);
+
+        // TODO: See if this really works
         // this code fixes bug in numberpicker where when first opening a numberpicker with a formatter,
         // the string is not shown until the picker is touched
         try

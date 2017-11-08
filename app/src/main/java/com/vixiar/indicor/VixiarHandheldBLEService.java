@@ -63,20 +63,10 @@ import java.util.UUID;
  * Service for managing the BLE data connection with the GATT database.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-// This is required to allow us to use the lollipop and later scan APIs
+// This is required to allow us to use the lollipop and later ScanForIndicorHandhelds APIs
 public class VixiarHandheldBLEService extends Service
 {
-    // Actions used during broadcasts to the main activity
-    public final static String ACTION_BLESCAN_CALLBACK =
-            "com.sigenix.indicor.ACTION_BLESCAN_CALLBACK";
-    public final static String ACTION_CONNECTED =
-            "com.sigenix.indicor.ACTION_CONNECTED";
-    public final static String ACTION_DISCONNECTED =
-            "com.sigenix.indicor.ACTION_DISCONNECTED";
-    public final static String ACTION_SERVICES_DISCOVERED =
-            "com.sigenix.indicor.ACTION_SERVICES_DISCOVERED";
-    public final static String ACTION_RTDATA_RECEIVED =
-            "com.sigenix.indicor.ACTION_RTDATA_RECEIVED";
+    private IndicorBLEServiceInterface mCallbackInterface;
 
     private final static String TAG = VixiarHandheldBLEService.class.getSimpleName();
 
@@ -105,12 +95,7 @@ public class VixiarHandheldBLEService extends Service
     private static ArrayList<Integer> mPressureData = new ArrayList<Integer>();
     private static ArrayList<Integer> mPPGData = new ArrayList<Integer>();
     private static Integer mBatteryLevel;
-    /**
-     * Implements the callback for when scanning for devices has faound a device with
-     * the service we are looking for.
-     * <p>
-     * This is the callback for BLE scanning for LOLLIPOP and later
-     */
+
     private final ScanCallback mScanCallback = new ScanCallback()
     {
         @Override
@@ -118,13 +103,13 @@ public class VixiarHandheldBLEService extends Service
         {
             mLeDevice = result.getDevice();
             mLEScanner.stopScan(mScanCallback); // Stop scanning after the first device is found
-            broadcastUpdate(ACTION_BLESCAN_CALLBACK); // Tell the main activity that a device has been found
+            if (mCallbackInterface != null)
+            {
+                mCallbackInterface.BLEScanCallback();
+            }
         }
     };
-    /**
-     * Implements callback methods for GATT events that the app cares about.  For example,
-     * connection change and services discovered.
-     */
+
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback()
     {
         @Override
@@ -132,24 +117,21 @@ public class VixiarHandheldBLEService extends Service
         {
             if (newState == BluetoothProfile.STATE_CONNECTED)
             {
-                broadcastUpdate(ACTION_CONNECTED);
                 Log.i(TAG, "Connected to GATT server.");
+                if (mCallbackInterface != null)
+                {
+                    mCallbackInterface.BLEConnected();
+                }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED)
             {
                 Log.i(TAG, "Disconnected from GATT server.");
-                broadcastUpdate(ACTION_DISCONNECTED);
+                if (mCallbackInterface != null)
+                {
+                    mCallbackInterface.BLEDisconnected();
+                }
             }
         }
 
-        /**
-         * This is called when a service discovery has completed.
-         *
-         * It gets the characteristics we are interested in and then
-         * broadcasts an update to the main activity.
-         *
-         * @param gatt The GATT database object
-         * @param status Status of whether the write was successful.
-         */
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status)
         {
@@ -162,20 +144,13 @@ public class VixiarHandheldBLEService extends Service
             // Get the descriptors
             mRTNotificationCCCD = mRTDataCharacteristic.getDescriptor(UUID.fromString(CCCDUUID));
 
-            // Read the current state of the LED from the device
-            //readLedCharacteristic();
-
             // Broadcast that service/characteristic/descriptor discovery is done
-            broadcastUpdate(ACTION_SERVICES_DISCOVERED);
+            if (mCallbackInterface != null)
+            {
+                mCallbackInterface.BLEServicesDiscovered();
+            }
         }
 
-        /**
-         * This is called when a read completes
-         *
-         * @param gatt the GATT database object
-         * @param characteristic the GATT characteristic that was read
-         * @param status the status of the transaction
-         */
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic,
@@ -196,17 +171,13 @@ public class VixiarHandheldBLEService extends Service
                     mBatteryLevel = (data[0] & 0xff);
                 }
                 // Notify the main activity that new data is available
-                //broadcastUpdate(ACTION_DATA_RECEIVED);
+                if (mCallbackInterface != null)
+                {
+                    mCallbackInterface.BLEDataReceived();
+                }
             }
         }
 
-        /**
-         * This is called when a characteristic with notify set changes.
-         * It broadcasts an update to the main activity with the changed data.
-         *
-         * @param gatt The GATT database object
-         * @param characteristic The characteristic that was changed
-         */
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic)
@@ -234,18 +205,14 @@ public class VixiarHandheldBLEService extends Service
                     mPPGData.add(result);
                 }
                 Log.i(TAG, "Got a PPG packet");
-                broadcastUpdate(ACTION_RTDATA_RECEIVED);
+                if (mCallbackInterface != null)
+                {
+                    mCallbackInterface.BLEDataReceived();
+                }
             }
-
-            // Notify the main activity that new data is available
         }
-    }; // End of GATT event callback methods
-    /**
-     * Implements the callback for when scanning for devices has found a device with
-     * the service we are looking for.
-     * <p>
-     * This is the callback for BLE scanning on versions prior to Lollipop
-     */
+    };
+
     private BluetoothAdapter.LeScanCallback mLeScanCallback =
             new BluetoothAdapter.LeScanCallback()
             {
@@ -255,13 +222,12 @@ public class VixiarHandheldBLEService extends Service
                     mLeDevice = device;
                     //noinspection deprecation
                     mBluetoothAdapter.stopLeScan(mLeScanCallback); // Stop scanning after the first device is found
-                    broadcastUpdate(ACTION_BLESCAN_CALLBACK); // Tell the main activity that a device has been found
+                    if (mCallbackInterface != null)
+                    {
+                        mCallbackInterface.BLEScanCallback();
+                    }
                 }
             };
-
-    public VixiarHandheldBLEService()
-    {
-    }
 
     @Override
     public IBinder onBind(Intent intent)
@@ -277,13 +243,10 @@ public class VixiarHandheldBLEService extends Service
         return super.onUnbind(intent);
     }
 
-    /**
-     * Initializes a reference to the local Bluetooth adapter.
-     *
-     * @return Return true if the initialization is successful.
-     */
-    public boolean initialize()
+    public boolean initialize(IndicorBLEServiceInterface i)
     {
+        mCallbackInterface = i;
+
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
         if (mBluetoothManager == null)
@@ -306,16 +269,13 @@ public class VixiarHandheldBLEService extends Service
         return true;
     }
 
-    /**
-     * Scans for BLE devices that support the service we are looking for
-     */
-    public void scan()
+    public void ScanForIndicorHandhelds()
     {
         /* Scan for devices and look for the one with the service that we want */
         UUID capsenseLedService = UUID.fromString(vixiarRealTimeServiceUUID);
         UUID[] capsenseLedServiceArray = {capsenseLedService};
 
-        // Use old scan method for versions older than lollipop
+        // Use old ScanForIndicorHandhelds method for versions older than lollipop
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
         {
             //noinspection deprecation
@@ -329,7 +289,7 @@ public class VixiarHandheldBLEService extends Service
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                     .build();
             filters = new ArrayList<>();
-            // We will scan just for the CAR's UUID
+            // We will ScanForIndicorHandhelds just for the CAR's UUID
             ParcelUuid PUuid = new ParcelUuid(capsenseLedService);
             ScanFilter filter = new ScanFilter.Builder().setServiceUuid(PUuid).build();
             filters.add(filter);
@@ -337,15 +297,7 @@ public class VixiarHandheldBLEService extends Service
         }
     }
 
-    /**
-     * Connects to the GATT server hosted on the Bluetooth LE device.
-     *
-     * @return Return true if the connection is initiated successfully. The connection result
-     * is reported asynchronously through the
-     * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
-     * callback.
-     */
-    public boolean connect()
+    public boolean ConnectToIndicor()
     {
         if (mBluetoothAdapter == null)
         {
@@ -360,17 +312,14 @@ public class VixiarHandheldBLEService extends Service
             return mBluetoothGatt.connect();
         }
 
-        // We want to directly connect to the device, so we are setting the autoConnect
+        // We want to directly ConnectToIndicor to the device, so we are setting the autoConnect
         // parameter to false.
         mBluetoothGatt = mLeDevice.connectGatt(this, false, mGattCallback);
         Log.d(TAG, "Trying to create a new connection.");
         return true;
     }
 
-    /**
-     * Runs service discovery on the connected device.
-     */
-    public void discoverServices()
+    public void DiscoverIndicorServices()
     {
         if (mBluetoothAdapter == null || mBluetoothGatt == null)
         {
@@ -380,13 +329,7 @@ public class VixiarHandheldBLEService extends Service
         mBluetoothGatt.discoverServices();
     }
 
-    /**
-     * Disconnects an existing connection or cancel a pending connection. The disconnection result
-     * is reported asynchronously through the
-     * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
-     * callback.
-     */
-    public void disconnect()
+    public void DisconnectFromIndicor()
     {
         if (mBluetoothAdapter == null || mBluetoothGatt == null)
         {
@@ -396,10 +339,6 @@ public class VixiarHandheldBLEService extends Service
         mBluetoothGatt.disconnect();
     }
 
-    /**
-     * After using a given BLE device, the app must call this method to ensure resources are
-     * released properly.
-     */
     public void close()
     {
         if (mBluetoothGatt == null)
@@ -410,25 +349,6 @@ public class VixiarHandheldBLEService extends Service
         mBluetoothGatt = null;
     }
 
-    /**
-     * This method is used to read the state of the LED from the device
-     */
-    /*
-    public void readLedCharacteristic()
-    {
-        if (mBluetoothAdapter == null || mBluetoothGatt == null)
-        {
-            Log.w(TAG, "BluetoothAdapter not initialized");
-            return;
-        }
-        mBluetoothGatt.readCharacteristic(mPPGRealTimeData);
-    }
-    */
-    /**
-     * This method enables or disables notifications for the PPG data
-     *
-     * @param value Turns notifications on (1) or off (0)
-     */
     public void writeRTDataNotification(boolean value)
     {
         // Set notifications locally in the CCCD
@@ -440,21 +360,6 @@ public class VixiarHandheldBLEService extends Service
         mBluetoothGatt.writeDescriptor(mRTNotificationCCCD);
     }
 
-    /**
-     * This method returns the value of th CapSense Slider
-     *
-     * @return the value of the CapSense Slider
-     */
-    // public String getCapSenseValue()
-    {
-        // return mCapSenseValue;
-    }
-
-    /**
-     * Sends a broadcast to the listener in the main activity.
-     *
-     * @param action The type of action that occurred.
-     */
     private void broadcastUpdate(final String action)
     {
         final Intent intent = new Intent(action);
@@ -470,9 +375,7 @@ public class VixiarHandheldBLEService extends Service
     {
         return mPressureData;
     }
-    /**
-     * This is a binder for the VixiarHandheldBLEService
-     */
+
     public class LocalBinder extends Binder
     {
         VixiarHandheldBLEService getService()
