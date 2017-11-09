@@ -7,7 +7,7 @@ package com.vixiar.indicor;
 public interface IndicorDataInterface
 {
     public void iError(int e);
-    public void iNotify(byte[] data);
+    public void iNotify(String data);
     public void iConnected();
     public void iCharacteristicRead(Object o);
 }
