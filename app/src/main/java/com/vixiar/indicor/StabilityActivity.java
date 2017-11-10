@@ -15,6 +15,9 @@ import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static java.lang.Math.random;
 
 public class StabilityActivity extends Activity implements IndicorDataInterface
@@ -27,7 +30,8 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
         public void run()
         {
             handler.postDelayed(this, 20);
-            Animate();
+            //Animate();
+            GraphUI();
         }
     };
 
@@ -38,7 +42,6 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
     private static Double PressureLastX = 0.0;
     private ProgressBar pb;
     private static LineGraphSeries mPPGSeries;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -79,7 +82,7 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
 
         IndicorConnection.getInstance().initialize(this, this);
         IndicorConnection.getInstance().ConnectToIndicor();
-        //handler.post(r);
+        handler.post(r);
     }
 
     private void InitializeHeaderAndFooter()
@@ -114,18 +117,34 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
     }
 
 
+    private List<Integer> mSyncPPGData = new ArrayList<>();
+
     /// this crashes too even without accessing data
     /// the problem might not be with the data but due to the fact that
     /// iNotify is getting called from the service
     public void iNotify(String data)
     {
-        for (int i = 1; i < 17; i += 4)
-        {
-            int value = (256 * (int)(random() * 17.0));
-            mPPGSeries.appendData(new DataPoint(PressureLastX, value), true, 500);
-            PressureLastX += 0.02;
+        int value = (256 * (int)(random() * 17.0));
+        synchronized (mSyncPPGData) {
+           mSyncPPGData.add(value);
         }
     }
+
+    int graphCount;
+
+    public void GraphUI () {
+
+        synchronized (mSyncPPGData) {
+            while (graphCount < mSyncPPGData.size()) {
+                mPPGSeries.appendData(new DataPoint(PressureLastX, mSyncPPGData.get(graphCount)), true, 5000);
+                PressureLastX += 0.02;
+                graphCount++;
+            }
+        }
+
+    }
+
+
 
     int i = 0;
 
