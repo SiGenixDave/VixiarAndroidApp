@@ -137,7 +137,7 @@ public class IndicorConnection implements IndicorBLEServiceInterface
         mVixiarHHBLEService.WriteRTDataNotification(true);
     }
 
-    public void iBLEDataReceived(String data)
+    public void iBLEDataReceived(byte[] data)
     {
         if (mCallbackInterface != null)
         {

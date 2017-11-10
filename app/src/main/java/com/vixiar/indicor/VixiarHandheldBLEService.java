@@ -198,15 +198,7 @@ public class VixiarHandheldBLEService extends Service
             {
                 if (mCallbackInterface != null)
                 {
-                    String s = characteristic.getValue().toString();
-/*
-                    for (int i = 0; i < 17; i++)
-                    {
-                        s = characteristic.getValue().toString();
-                    }
-                    //byte[] x = characteristic.getValue().clone();
-*/
-                    mCallbackInterface.iBLEDataReceived(s);
+                    mCallbackInterface.iBLEDataReceived(characteristic.getValue());
                 }
             }
         }
