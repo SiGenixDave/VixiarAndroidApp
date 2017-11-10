@@ -1,14 +1,9 @@
 package com.vixiar.indicor;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
@@ -79,6 +74,14 @@ public class PressureViewGraph extends View
     {
     }
 
+    public final int ACTIVE = 1;
+    public final int INACTIVE = 0;
+    private int m_graphMode = INACTIVE;
+
+    public final int TZ_VISIBLE = 1;
+    public final int TZ_INVISIBLE = 0;
+    private int m_tzVisible = TZ_INVISIBLE;
+
     @Override
     protected void onDraw(Canvas canvas)
     {
@@ -86,7 +89,10 @@ public class PressureViewGraph extends View
         CalculateMetrics();
         DrawBackground(canvas);
         DrawLabels(canvas);
-        DrawBall(canvas);
+        if (m_graphMode == ACTIVE)
+        {
+            DrawBall(canvas);
+        }
     }
 
     public void setBallPressure(float pressure) {
@@ -157,47 +163,53 @@ public class PressureViewGraph extends View
 
     public void DrawBackground(Canvas canvas)
     {
-        Paint orangePaint = new Paint(0);
-        orangePaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorBarOrange));
-        orangePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        Paint topAndBottomPaint = new Paint(0);
+        if (m_graphMode == INACTIVE)
+        {
+            topAndBottomPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorGraphTopAndBottomInactive));
+        }
+        else
+        {
+            topAndBottomPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorGraphTopAndBottomActive));
+        }
+        topAndBottomPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        topAndBottomPaint.setStyle(Paint.Style.FILL);
 
-        //Initialize the bitmap object by loading an image from the resources folder
-        Bitmap fillBMP = BitmapFactory.decodeResource(getResources(), R.drawable.diagonal_bars);
-
-        Matrix matrix = new Matrix();
-        matrix.postScale((float)0.1, (float)0.1);
-        Bitmap scaledBitmap = Bitmap.createBitmap(fillBMP, 0, 0, fillBMP.getWidth(), fillBMP.getHeight(), matrix, true);
-        //Initialize the BitmapShader with the Bitmap object and set the texture tile mode
-        BitmapShader fillBMPshader = new BitmapShader(fillBMP, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
-
-        orangePaint.setStyle(Paint.Style.FILL);
-        // orangePaint.setShader(fillBMPshader);
-
-        Paint greenPaint = new Paint(0);
-        greenPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorBarGreen));
-        greenPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        Paint centerPaint = new Paint(0);
+        if (m_graphMode == INACTIVE)
+        {
+            centerPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorGraphCenterInactive));
+        }
+        else
+        {
+            centerPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorGraphCenterActive));
+        }
+        centerPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
 
         // draw the top rect
-        canvas.drawRect(barLeftPosition, topSegmentTop, barWidth+barLeftPosition, topSegmentBottom, orangePaint);
+        canvas.drawRect(barLeftPosition, topSegmentTop, barWidth+barLeftPosition, topSegmentBottom, topAndBottomPaint);
 
         // draw the middle rect
-        canvas.drawRect(barLeftPosition, middleSegmentTop, barWidth+barLeftPosition, middleSegmentBottom, greenPaint);
+        canvas.drawRect(barLeftPosition, middleSegmentTop, barWidth+barLeftPosition, middleSegmentBottom, centerPaint);
 
         // draw the bottom rect
-        canvas.drawRect(barLeftPosition, bottomSegmentTop, barWidth+barLeftPosition, bottomSegmentBottom, orangePaint);
+        canvas.drawRect(barLeftPosition, bottomSegmentTop, barWidth+barLeftPosition, bottomSegmentBottom, topAndBottomPaint);
 
         // draw the top circle
-        canvas.drawCircle(barLeftPosition + (barWidth / 2), topSegmentTop, barWidth / 2, orangePaint);
+        canvas.drawCircle(barLeftPosition + (barWidth / 2), topSegmentTop, barWidth / 2, topAndBottomPaint);
 
         // draw the bottom circle
-        canvas.drawCircle(barLeftPosition + (barWidth / 2), bottomSegmentBottom, barWidth / 2, orangePaint);
+        canvas.drawCircle(barLeftPosition + (barWidth / 2), bottomSegmentBottom, barWidth / 2, topAndBottomPaint);
 
-        // draw the lines for the target zone
-        Paint blackPaint = new Paint(0);
-        blackPaint.setColor(Color.BLACK);
-        blackPaint.setStrokeWidth(txZoneLineStroke);
-        canvas.drawLine(barWidth+barLeftPosition, middleSegmentTop - (gapBetweenBars / 2), contentWidth - paddingRight, middleSegmentTop - (gapBetweenBars / 2), blackPaint);
-        canvas.drawLine(barWidth+barLeftPosition, bottomSegmentTop - (gapBetweenBars / 2), contentWidth - paddingRight, bottomSegmentTop - (gapBetweenBars / 2), blackPaint);
+        if (m_tzVisible == TZ_VISIBLE)
+        {
+            // draw the lines for the target zone
+            Paint blackPaint = new Paint(0);
+            blackPaint.setColor(Color.BLACK);
+            blackPaint.setStrokeWidth(txZoneLineStroke);
+            canvas.drawLine(barWidth + barLeftPosition, middleSegmentTop - (gapBetweenBars / 2), contentWidth - paddingRight, middleSegmentTop - (gapBetweenBars / 2), blackPaint);
+            canvas.drawLine(barWidth + barLeftPosition, bottomSegmentTop - (gapBetweenBars / 2), contentWidth - paddingRight, bottomSegmentTop - (gapBetweenBars / 2), blackPaint);
+        }
     }
 
     public void DrawLabels(Canvas canvas)
@@ -214,10 +226,13 @@ public class PressureViewGraph extends View
         canvas.drawText("30 mmHg", barLeftStart - 2, middleSegmentTop, textPaint);
         canvas.drawText("45 mmHg", barLeftStart - 2, topSegmentTop, textPaint);
 
-        textPaint.setTextSize(tzLabelSize);
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorBarGreen));
-        canvas.drawText("Target Zone", tzLabelXCenter, tzLabelYCenter, textPaint);
+        if (m_tzVisible == TZ_VISIBLE)
+        {
+            textPaint.setTextSize(tzLabelSize);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorGraphCenterActive));
+            canvas.drawText("Target Zone", tzLabelXCenter, tzLabelYCenter, textPaint);
+        }
     }
 
     public void DrawBall(Canvas canvas)
@@ -247,5 +262,15 @@ public class PressureViewGraph extends View
         whiteBallPaint.setStrokeWidth(ballStroke / 4);
         canvas.drawLine(barLeftPosition + (barWidth / 2) - ballRadius, bottomSegmentBottom - (ballPressure * heightPerMMHg) , barLeftPosition + (barWidth / 2) - (ballRadius / 3), bottomSegmentBottom - (ballPressure * heightPerMMHg), whiteBallPaint);
         canvas.drawLine(barLeftPosition + (barWidth / 2) + ballRadius, bottomSegmentBottom - (ballPressure * heightPerMMHg) , barLeftPosition + (barWidth / 2) + (ballRadius / 3), bottomSegmentBottom - (ballPressure * heightPerMMHg), whiteBallPaint);
+    }
+
+    public void SetGraphActiveMode(Integer graphMode)
+    {
+        m_graphMode = graphMode;
+    }
+
+    public void SetGraphTargetZoneVisibility(Integer tzVisible)
+    {
+        m_tzVisible = tzVisible;
     }
 }

@@ -27,6 +27,8 @@ public class PracticeActivity extends Activity
 
         pvg = findViewById(R.id.pressureGraph);
         pvg.setBallPressure((float)0.0);
+        pvg.SetGraphActiveMode(pvg.ACTIVE);
+        pvg.SetGraphTargetZoneVisibility(pvg.TZ_VISIBLE);
 
         InitializeHeaderAndFooter();
     }

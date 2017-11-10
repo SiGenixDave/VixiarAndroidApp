@@ -10,7 +10,9 @@
     <color name="colorPatientEntryHighlightedValue">#33a6d4</color>
     <color name="colorPatientEntryNormalValue">#69747d</color>
     <color name="colorTitleBar">#61c1d2</color>
-    <color name="colorBarOrange">#F26431</color>
-    <color name="colorBarGreen">#8AC640</color>
+    <color name="colorGraphTopAndBottomActive">#F26431</color>
+    <color name="colorGraphCenterActive">#8AC640</color>
+    <color name="colorGraphTopAndBottomInactive">#D1D3D4</color>
+    <color name="colorGraphCenterInactive">#69747D</color>
     <color name="colorChartLine">#808080</color>
 </resources>
