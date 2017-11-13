@@ -21,23 +21,30 @@ import java.util.List;
 
 public class StabilityActivity extends Activity implements IndicorDataInterface
 {
-
     Handler mUIUpdateHandler = new Handler();
-    private ImageView pressureDetector;
     final Runnable mUIUpdateRunnable = new Runnable()
     {
         public void run()
         {
             mUIUpdateHandler.postDelayed(this, 20);
-            UpdateUI();
+            //UpdateUI();
         }
     };
 
+    Handler mSimulatedStabilityHandler = new Handler();
+    final Runnable mSimulatedStabilityRunnable = new Runnable()
+    {
+        public void run()
+        {
+            StabilityReached();
+        }
+    };
+
+    private ImageView pressureDetector;
     private static Double m_nPPGGraphLastX = 0.0;
     private ProgressBar m_ProgressBar;
     private TextView m_lblAcquiring;
     private static LineGraphSeries m_PPGGraphSeries;
-    private Integer m_bBLEConnected = 0;
     private GraphView m_graphView;
 
     @Override
@@ -103,10 +110,12 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
 
     public void iConnected()
     {
-        synchronized (m_bBLEConnected)
-        {
-            m_bBLEConnected = 1;
-        }
+        m_lblAcquiring.setVisibility(View.VISIBLE);
+        m_ProgressBar.setVisibility(View.VISIBLE);
+        m_graphView.setVisibility(View.VISIBLE);
+        HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
+
+        mSimulatedStabilityHandler.postDelayed(mSimulatedStabilityRunnable, 5000);
     }
 
     public void iCharacteristicRead(Object o)
@@ -119,44 +128,18 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
 
     }
 
-    private List<Integer> mSyncPPGData = new ArrayList<>();
-
     public void iNotify(byte[] data)
     {
         int value = 0;
         for (int i = 1; i < data.length; i += 4)
         {
             value = (256 * (int)(data[i] & 0xFF)) + (data[i+1] & 0xFF);
-            synchronized (mSyncPPGData)
-            {
-                mSyncPPGData.add(value);
-            }
+            m_PPGGraphSeries.appendData(new DataPoint(m_nPPGGraphLastX, value),  true, 500);
+            m_nPPGGraphLastX += 0.02;
         }
     }
-
-    int graphCount;
-
-    public void UpdateUI()
+    public void StabilityReached()
     {
-        synchronized (mSyncPPGData)
-        {
-            while (graphCount < mSyncPPGData.size())
-            {
-                m_PPGGraphSeries.appendData(new DataPoint(m_nPPGGraphLastX, mSyncPPGData.get(graphCount)), true, 500);
-                m_nPPGGraphLastX += 0.02;
-                graphCount++;
-            }
-        }
-        synchronized (m_bBLEConnected)
-        {
-            if(m_bBLEConnected == 1)
-            {
-                m_lblAcquiring.setVisibility(View.VISIBLE);
-                m_ProgressBar.setVisibility(View.VISIBLE);
-                m_graphView.setVisibility(View.VISIBLE);
-                HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
-                m_bBLEConnected = 2;
-            }
-        }
+        setContentView(R.layout.activity_testing);
     }
 }

@@ -3,15 +3,18 @@ package com.vixiar.indicor;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanResult;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +26,7 @@ import static android.content.Context.BIND_AUTO_CREATE;
  * Created by gyurk on 11/6/2017.
  */
 
-public class IndicorConnection implements IndicorBLEServiceInterface
+public class IndicorConnection
 {
     // make this a singleton class
     private static IndicorConnection ourInstance = new IndicorConnection();
@@ -36,6 +39,7 @@ public class IndicorConnection implements IndicorBLEServiceInterface
     private final static String TAG = "IND";
 
     private IndicorDataInterface mCallbackInterface;
+    private MyBLEMessageReceiver myBLEMessageReceiver;
 
     // Variables to manage BLE connection
     private static boolean mConnectState;
@@ -76,7 +80,7 @@ public class IndicorConnection implements IndicorBLEServiceInterface
             Log.i(TAG, "onServiceConnected");
             mVixiarHHBLEService = ((VixiarHandheldBLEService.LocalBinder) service).getService();
             mServiceConnected = true;
-            mVixiarHHBLEService.Initialize(IndicorConnection.this);
+            mVixiarHHBLEService.Initialize();
 
             // delete everythign from the scan list
             mScanList.clear();
@@ -101,48 +105,81 @@ public class IndicorConnection implements IndicorBLEServiceInterface
 
     public void ConnectToIndicor()
     {
-        StartHandheldBLEService();
-    }
-
-    private void StartHandheldBLEService()
-    {
         // Start the BLE Service
-        Log.d(TAG, "Starting BLE Service");
+        Log.i(TAG, "Starting BLE Service");
         Intent gattServiceIntent = new Intent(mContext, VixiarHandheldBLEService.class);
         mContext.bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-        Log.d(TAG, "BLE Service Started");
+        Log.i(TAG, "BLE Service Started");
+        RegisterReceiver();
     }
 
-    public void iBLEScanCallback(ScanResult result)
+    private void RegisterReceiver()
     {
-        Log.d("IND", "Got a callback");
+        //Register BroadcastReceiver
+        //to receive event from our service
+        Log.i(TAG, "registerReceiver");
+        myBLEMessageReceiver = new MyBLEMessageReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(VixiarHandheldBLEService.MESSAGE_ID);
+        mContext.registerReceiver(myBLEMessageReceiver, intentFilter);
+    }
+
+    private class MyBLEMessageReceiver extends BroadcastReceiver
+    {
+        @Override
+        public void onReceive(Context arg0, Intent arg1)
+        {
+            Log.i(TAG, "onReceive");
+            if (arg1.hasExtra(VixiarHandheldBLEService.SCAN_RESULT))
+            {
+                BLEScanCallback((ScanResult)arg1.getParcelableExtra(VixiarHandheldBLEService.SCAN_RESULT));
+            }
+            else if (arg1.hasExtra(VixiarHandheldBLEService.CONNECTED))
+            {
+                BLEConnected();
+            }
+            else if (arg1.hasExtra(VixiarHandheldBLEService.DISCONNECTED))
+            {
+                BLEDisconnected();
+            }
+            else if (arg1.hasExtra(VixiarHandheldBLEService.SERVICES_DISCOVERED))
+            {
+                BLEServicesDiscovered();
+            }
+            else if (arg1.hasExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED))
+            {
+                BLEDataReceived(arg1.getByteArrayExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED));
+            }
+        }
+    }
+
+    public void BLEScanCallback(ScanResult result)
+    {
+        Log.i("IND", "Got a callback");
         mScanList.add(result);
     }
 
-    public void iBLEConnected()
+    public void BLEConnected()
     {
-        Log.d("IND", "iConnected");
+        Log.i("IND", "iConnected");
         mVixiarHHBLEService.DiscoverIndicorServices();
         mCallbackInterface.iConnected();
     }
 
-    public void iBLEDisconnected()
+    public void BLEDisconnected()
     {
 
     }
 
-    public void iBLEServicesDiscovered()
+    public void BLEServicesDiscovered()
     {
         dialog.cancel();
         mVixiarHHBLEService.WriteRTDataNotification(true);
     }
 
-    public void iBLEDataReceived(byte[] data)
+    public void BLEDataReceived(byte[] data)
     {
-        if (mCallbackInterface != null)
-        {
-            mCallbackInterface.iNotify(data);
-        }
+        mCallbackInterface.iNotify(data);
     }
 
     private void DisplayConnectingDialog()

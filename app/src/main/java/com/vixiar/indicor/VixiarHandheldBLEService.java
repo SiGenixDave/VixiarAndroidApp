@@ -66,9 +66,15 @@ import java.util.UUID;
 // This is required to allow us to use the lollipop and later ScanForIndicorHandhelds APIs
 public class VixiarHandheldBLEService extends Service
 {
-    private IndicorBLEServiceInterface mCallbackInterface;
-
     private final static String TAG = VixiarHandheldBLEService.class.getSimpleName();
+
+    // the ID used to filter messages from the service to the handler class
+    final static String MESSAGE_ID = "vixiarBLEService";
+    final static String SCAN_RESULT = "scanResult";
+    final static String CONNECTED = "connected";
+    final static String DISCONNECTED = "disconnected";
+    final static String SERVICES_DISCOVERED = "services_discovered";
+    final static String RT_DATA_RECEIVED = "rt_data";
 
     // UUIDs for the service and characteristics that the Vixiar service uses
     public final static String RTDataCharacteristicUUID = "7991CF92-D18B-40EB-AFBE-4EECB596C677";
@@ -96,10 +102,7 @@ public class VixiarHandheldBLEService extends Service
                 @Override
                 public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
                 {
-                    if (mCallbackInterface != null)
-                    {
-                        mCallbackInterface.iBLEScanCallback(null);
-                    }
+                    //TODO: this probably should be handled for older devices
                 }
             };
 
@@ -109,10 +112,7 @@ public class VixiarHandheldBLEService extends Service
         @Override
         public void onScanResult(int callbackType, ScanResult result)
         {
-            if (mCallbackInterface != null)
-            {
-                mCallbackInterface.iBLEScanCallback(result);
-            }
+            SendDataToConnectionClass(SCAN_RESULT, result);
         }
     };
 
@@ -124,17 +124,11 @@ public class VixiarHandheldBLEService extends Service
             if (newState == BluetoothProfile.STATE_CONNECTED)
             {
                 Log.i(TAG, "iConnected to GATT server.");
-                if (mCallbackInterface != null)
-                {
-                    mCallbackInterface.iBLEConnected();
-                }
+                SendDataToConnectionClass(CONNECTED, null);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED)
             {
                 Log.i(TAG, "Disconnected from GATT server.");
-                if (mCallbackInterface != null)
-                {
-                    mCallbackInterface.iBLEDisconnected();
-                }
+                SendDataToConnectionClass(DISCONNECTED, null);
             }
         }
 
@@ -151,10 +145,7 @@ public class VixiarHandheldBLEService extends Service
             mRTNotificationCCCD = mRTDataCharacteristic.getDescriptor(UUID.fromString(CCCDUUID));
 
             // Broadcast that service/characteristic/descriptor discovery is done
-            if (mCallbackInterface != null)
-            {
-                mCallbackInterface.iBLEServicesDiscovered();
-            }
+            SendDataToConnectionClass(SERVICES_DISCOVERED, null);
         }
 
         @Override
@@ -173,11 +164,7 @@ public class VixiarHandheldBLEService extends Service
                 if (uuid.equals(batteryLevelDataCharacteristicUUID))
                 {
                     final byte[] data = characteristic.getValue();
-                }
-                // iNotify the main activity that new data is available
-                if (mCallbackInterface != null)
-                {
-                    mCallbackInterface.iBLEServicesDiscovered();
+                    // TODO: send this and the other characteristics
                 }
             }
         }
@@ -196,10 +183,7 @@ public class VixiarHandheldBLEService extends Service
 
             if (uuid.toUpperCase().equals(RTDataCharacteristicUUID))
             {
-                if (mCallbackInterface != null)
-                {
-                    mCallbackInterface.iBLEDataReceived(characteristic.getValue());
-                }
+                SendDataToConnectionClass(RT_DATA_RECEIVED, characteristic.getValue());
             }
         }
     };
@@ -218,10 +202,8 @@ public class VixiarHandheldBLEService extends Service
         return super.onUnbind(intent);
     }
 
-    public boolean Initialize(IndicorBLEServiceInterface i)
+    public boolean Initialize()
     {
-        mCallbackInterface = i;
-
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
         if (mBluetoothManager == null)
@@ -350,4 +332,29 @@ public class VixiarHandheldBLEService extends Service
             return VixiarHandheldBLEService.this;
         }
     }
+
+    private void SendDataToConnectionClass(String name, Object data)
+    {
+        Log.i(TAG, "sendingMessage");
+        Intent intent = new Intent();
+        intent.setAction(MESSAGE_ID);
+        if (data instanceof Integer)
+        {
+            intent.putExtra(name, (Integer)data);
+        }
+        else if (data instanceof byte [])
+        {
+            intent.putExtra(name, (byte [])data);
+        }
+        else if (data instanceof ScanResult)
+        {
+            intent.putExtra(name, (ScanResult)data);
+        }
+        else
+        {
+            intent.putExtra(name, "");
+        }
+        sendBroadcast(intent);
+    }
+
 }
