@@ -21,8 +21,8 @@
         android:layout_centerInParent="true"
         android:orientation="vertical">
 
-        <com.vixiar.indicor.PressureViewGraph
-            android:id="@+id/pressureGraph"
+        <com.vixiar.indicor.PracticePressureGraph
+            android:id="@+id/practicePressureGraph"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="30dp"/>

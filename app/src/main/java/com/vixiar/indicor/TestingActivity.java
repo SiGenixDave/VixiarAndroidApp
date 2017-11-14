@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.INotificationSideChannel;
 import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
 import android.widget.ImageView;
@@ -16,18 +15,23 @@ import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class StabilityActivity extends Activity implements IndicorDataInterface
+public class TestingActivity extends Activity implements IndicorDataInterface
 {
-    Handler mUIUpdateHandler = new Handler();
-    final Runnable mUIUpdateRunnable = new Runnable()
+    Handler m_10SecValsalvaCountdownHandler = new Handler();
+    final Runnable m_10SecValsalvaCountdownRunnable = new Runnable()
     {
         public void run()
         {
-            mUIUpdateHandler.postDelayed(this, 20);
-            //UpdateUI();
+            Countdown10SecondValsalvaUpdate();
+        }
+    };
+
+    Handler m_5SecCountdownHandler = new Handler();
+    final Runnable m_5SecCountdownRunnable = new Runnable()
+    {
+        public void run()
+        {
+            Countdown5SecondUpdate();
         }
     };
 
@@ -40,18 +44,32 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
         }
     };
 
-    private ImageView pressureDetector;
     private static Double m_nPPGGraphLastX = 0.0;
     private ProgressBar m_ProgressBar;
     private TextView m_lblAcquiring;
     private static LineGraphSeries m_PPGGraphSeries;
     private GraphView m_graphView;
+    private int m_5SecCountdown;
+    private ImageView timeRemainingImage;
+
+    private int [] tenSecCountdownImages = new int[] {
+            R.drawable.countdown0sec,
+            R.drawable.countdown1sec,
+            R.drawable.countdown2sec,
+            R.drawable.countdown3sec,
+            R.drawable.countdown4sec,
+            R.drawable.countdown5sec,
+            R.drawable.countdown6sec,
+            R.drawable.countdown7sec,
+            R.drawable.countdown8sec,
+            R.drawable.countdown9sec,
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_stability);
+        setContentView(R.layout.activity_testing_stability);
 
         InitializeHeaderAndFooter();
 
@@ -89,7 +107,6 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
 
         IndicorConnection.getInstance().initialize(this, this);
         IndicorConnection.getInstance().ConnectToIndicor();
-        mUIUpdateHandler.post(mUIUpdateRunnable);
     }
 
     private void InitializeHeaderAndFooter()
@@ -138,8 +155,75 @@ public class StabilityActivity extends Activity implements IndicorDataInterface
             m_nPPGGraphLastX += 0.02;
         }
     }
-    public void StabilityReached()
+    private void StabilityReached()
     {
-        setContentView(R.layout.activity_testing);
+        setContentView(R.layout.activity_testing_valsalva);
+
+        // change the font to Roboto
+        Typeface robotoLightTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
+
+        TextView tv = findViewById(R.id.txtTimeRemaining);
+        tv.setTypeface(robotoLightTypeface);
+
+        tv = findViewById(R.id.txtMessage);
+        tv.setTypeface(robotoLightTypeface);
+
+        Typeface robotoTypeface = ResourcesCompat.getFont(this, R.font.roboto_regular);
+
+        tv = findViewById(R.id.txtCountdown);
+        tv.setTypeface(robotoTypeface);
+
+        m_5SecCountdown = 5;
+
+        tv.setText(String.valueOf(m_5SecCountdown));
+        m_5SecCountdownHandler.postDelayed(m_5SecCountdownRunnable, 1000);
+
+    }
+
+    private int countdownSecLeft;
+
+    private void Countdown5SecondUpdate()
+    {
+        TextView tv = findViewById(R.id.txtCountdown);
+
+        if (m_5SecCountdown > 0)
+        {
+            m_5SecCountdown--;
+            tv.setText(String.valueOf(m_5SecCountdown));
+            m_5SecCountdownHandler.postDelayed(m_5SecCountdownRunnable, 1000);
+        }
+        else
+        {
+            TestPressureGraph tpg = findViewById(R.id.testPressureGraph);
+            tpg.SetGraphActiveMode(tpg.ACTIVE);
+            tpg.setBallPressure((float)0.0);
+
+            timeRemainingImage = findViewById(R.id.timeRemaingImage);
+            timeRemainingImage.setImageResource(R.drawable.countdown10sec);
+            m_10SecValsalvaCountdownHandler.postDelayed(m_10SecValsalvaCountdownRunnable, 1000);
+
+            TextView tv1 = findViewById(R.id.txtMessage);
+            tv1.setText(R.string.exhale);
+
+            tv1 = findViewById(R.id.txtCountdown);
+            tv1.setText("");
+
+            countdownSecLeft = 10;
+        }
+    }
+
+    private void Countdown10SecondValsalvaUpdate()
+    {
+        timeRemainingImage = findViewById(R.id.timeRemaingImage);
+        countdownSecLeft--;
+        if (countdownSecLeft < 0)
+        {
+            timeRemainingImage.setImageResource(R.drawable.done_circle);
+        }
+        else
+        {
+            timeRemainingImage.setImageResource(tenSecCountdownImages[countdownSecLeft]);
+            m_10SecValsalvaCountdownHandler.postDelayed(m_10SecValsalvaCountdownRunnable, 1000);
+        }
     }
 }

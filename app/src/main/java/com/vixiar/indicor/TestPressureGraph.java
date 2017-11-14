@@ -14,7 +14,7 @@ import android.view.View;
 /**
  * TODO: document your custom view class.
  */
-public class PressureViewGraph extends View
+public class TestPressureGraph extends View
 {
     private TextPaint textPaint;
     private float ballPressure = (float)16.0;
@@ -47,24 +47,20 @@ public class PressureViewGraph extends View
     float ballStroke;
     float ballInset;
     int pressureLabelSize;
-    int tzLabelSize;
-    int tzLabelXCenter;
-    int tzLabelYCenter;
-    int txZoneLineStroke;
 
-    public PressureViewGraph(Context context)
+    public TestPressureGraph(Context context)
     {
         super(context);
         init(null, 0);
     }
 
-    public PressureViewGraph(Context context, AttributeSet attrs)
+    public TestPressureGraph(Context context, AttributeSet attrs)
     {
         super(context, attrs);
         init(attrs, 0);
     }
 
-    public PressureViewGraph(Context context, AttributeSet attrs, int defStyle)
+    public TestPressureGraph(Context context, AttributeSet attrs, int defStyle)
     {
         super(context, attrs, defStyle);
         init(attrs, defStyle);
@@ -77,10 +73,6 @@ public class PressureViewGraph extends View
     public final int ACTIVE = 1;
     public final int INACTIVE = 0;
     private int m_graphMode = INACTIVE;
-
-    public final int TZ_VISIBLE = 1;
-    public final int TZ_INVISIBLE = 0;
-    private int m_tzVisible = TZ_INVISIBLE;
 
     @Override
     protected void onDraw(Canvas canvas)
@@ -110,16 +102,16 @@ public class PressureViewGraph extends View
         contentWidth = getWidth() - paddingLeft - paddingRight;
         contentHeight = getHeight() - paddingTop - paddingBottom;
 
-        barWidth = (int)((float)contentWidth * (float)0.2);
-        barWidthMax = contentHeight / 5;
+        barWidth = (int)((float)contentWidth * (float)0.85);
+        barWidthMax = contentHeight / 4;
 
         if (barWidth > barWidthMax)
         {
-            barWidth = barWidthMax;
+           barWidth = barWidthMax;
         }
-        // start the bar 15% in from the left of the usable space
+        // start the bar 25% in from the left of the usable space
         // this is to make room for the labels
-        barLeftStart = (int)((float)contentWidth * (float)0.15) + paddingLeft;
+        barLeftStart = (int)((float)contentWidth * (float)0.25) + paddingLeft;
 
         // subtract the width from the total space to allow for a half-circle at the top and bottom
         barHeight = contentHeight - barWidth;
@@ -149,16 +141,6 @@ public class PressureViewGraph extends View
 
         // pressure label size
         pressureLabelSize = barWidth / 8;
-
-        // target zone label size
-        tzLabelSize = barWidth / 4;
-
-        // center for target zone label
-        tzLabelXCenter = ((contentWidth - (barLeftPosition + barWidth)) / 2) + (barLeftPosition + barWidth);
-        tzLabelYCenter = (contentHeight / 2) + paddingTop;
-
-        txZoneLineStroke = gapBetweenBars / 8;
-
     }
 
     public void DrawBackground(Canvas canvas)
@@ -200,16 +182,6 @@ public class PressureViewGraph extends View
 
         // draw the bottom circle
         canvas.drawCircle(barLeftPosition + (barWidth / 2), bottomSegmentBottom, barWidth / 2, topAndBottomPaint);
-
-        if (m_tzVisible == TZ_VISIBLE)
-        {
-            // draw the lines for the target zone
-            Paint blackPaint = new Paint(0);
-            blackPaint.setColor(Color.BLACK);
-            blackPaint.setStrokeWidth(txZoneLineStroke);
-            canvas.drawLine(barWidth + barLeftPosition, middleSegmentTop - (gapBetweenBars / 2), contentWidth - paddingRight, middleSegmentTop - (gapBetweenBars / 2), blackPaint);
-            canvas.drawLine(barWidth + barLeftPosition, bottomSegmentTop - (gapBetweenBars / 2), contentWidth - paddingRight, bottomSegmentTop - (gapBetweenBars / 2), blackPaint);
-        }
     }
 
     public void DrawLabels(Canvas canvas)
@@ -221,18 +193,10 @@ public class PressureViewGraph extends View
         textPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextAlign(Paint.Align.RIGHT);
         textPaint.setTextSize(pressureLabelSize);
-        canvas.drawText("0 mmHg", barLeftStart - 2, bottomSegmentBottom, textPaint);
-        canvas.drawText("16 mmHg", barLeftStart - 2, bottomSegmentTop, textPaint);
-        canvas.drawText("30 mmHg", barLeftStart - 2, middleSegmentTop, textPaint);
-        canvas.drawText("45 mmHg", barLeftStart - 2, topSegmentTop, textPaint);
-
-        if (m_tzVisible == TZ_VISIBLE)
-        {
-            textPaint.setTextSize(tzLabelSize);
-            textPaint.setTextAlign(Paint.Align.CENTER);
-            textPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorGraphCenterActive));
-            canvas.drawText("Target Zone", tzLabelXCenter, tzLabelYCenter, textPaint);
-        }
+        canvas.drawText("0 mmHg", barLeftPosition - 5, bottomSegmentBottom, textPaint);
+        canvas.drawText("16 mmHg", barLeftPosition - 5, bottomSegmentTop, textPaint);
+        canvas.drawText("30 mmHg", barLeftPosition - 5, middleSegmentTop, textPaint);
+        canvas.drawText("45 mmHg", barLeftPosition - 5, topSegmentTop, textPaint);
     }
 
     public void DrawBall(Canvas canvas)
@@ -267,10 +231,6 @@ public class PressureViewGraph extends View
     public void SetGraphActiveMode(Integer graphMode)
     {
         m_graphMode = graphMode;
-    }
-
-    public void SetGraphTargetZoneVisibility(Integer tzVisible)
-    {
-        m_tzVisible = tzVisible;
+        invalidate();
     }
 }

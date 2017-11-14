@@ -1,23 +1,14 @@
 package com.vixiar.indicor;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -691,7 +682,7 @@ public class PatInfoActivity extends Activity
             @Override
             public void onClick(View view)
             {
-                Intent intent = new Intent(PatInfoActivity.this, StabilityActivity.class);
+                Intent intent = new Intent(PatInfoActivity.this, TestingActivity.class);
                 startActivity(intent);
             }
         });

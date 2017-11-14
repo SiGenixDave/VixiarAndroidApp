@@ -3,21 +3,11 @@ package com.vixiar.indicor;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.provider.ContactsContract;
-import android.util.DisplayMetrics;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 public class PracticeActivity extends Activity
 {
-    PressureViewGraph pvg;
+    PracticePressureGraph pvg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -25,10 +15,8 @@ public class PracticeActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_practice);
 
-        pvg = findViewById(R.id.pressureGraph);
+        pvg = findViewById(R.id.practicePressureGraph);
         pvg.setBallPressure((float)0.0);
-        pvg.SetGraphActiveMode(pvg.ACTIVE);
-        pvg.SetGraphTargetZoneVisibility(pvg.TZ_VISIBLE);
 
         InitializeHeaderAndFooter();
     }
@@ -54,7 +42,7 @@ public class PracticeActivity extends Activity
             @Override
             public void onClick(View view)
             {
-                Intent intent = new Intent(PracticeActivity.this, StabilityActivity.class);
+                Intent intent = new Intent(PracticeActivity.this, TestingActivity.class);
                 startActivity(intent);
             }
         });

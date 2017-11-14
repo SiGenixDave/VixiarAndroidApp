@@ -10,7 +10,9 @@
     <dimen name="main_screen_label_size">24sp</dimen>
     <dimen name="main_screen_vertical_spacing">20dp</dimen>
     <dimen name="bottom_bar_font_size">24sp</dimen>
+    <dimen name="bottom_bar_countdown_font_size">48sp</dimen>
     <dimen name="top_bar_title_font_size">20sp</dimen>
     <dimen name="top_bar_button_font_size">16sp</dimen>
     <dimen name="acquiring_signal_font_size">48sp</dimen>
+    <dimen name="time_remaining_font_size">36sp</dimen>
 </resources>

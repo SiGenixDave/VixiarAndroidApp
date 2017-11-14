@@ -59,7 +59,10 @@
     <string name="acquiring_signal">Acquiring signal...</string>
     <string name="pulse_amplitude">PULSE AMPLITUDE</string>
     <string name="time">TIME</string>
+    <string name="time_remaining">Time Remaining</string>
 
     <string name="cancel">Cancel</string>
+
+    <string name="exhale">Exhale. Hold constant pressure.</string>
 
 </resources>
