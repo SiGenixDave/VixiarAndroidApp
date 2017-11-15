@@ -23,9 +23,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".TrainingActivity_ToBeDeleted"/>
-        <activity android:name=".DataCollectionActivity_ToBeDeleted">
-        </activity>
 
         <service
             android:name=".VixiarHandheldBLEService"

@@ -163,8 +163,8 @@ public class MainActivity extends Activity
         {
             if (resultCode == Activity.RESULT_OK)
             {
-                Intent intent = new Intent(this, DataCollectionActivity_ToBeDeleted.class);
-                startActivity(intent);
+                //Intent intent = new Intent(this, DataCollectionActivity_ToBeDeleted.class);
+                //startActivity(intent);
             }
         }
     }
