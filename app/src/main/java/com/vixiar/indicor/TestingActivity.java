@@ -22,7 +22,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface
     {
         public void run()
         {
-            Countdown10SecondValsalvaUpdate();
+            Countdown10SecondValsalvaTest();
         }
     };
 
@@ -212,7 +212,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface
         }
     }
 
-    private void Countdown10SecondValsalvaUpdate()
+    private void Countdown10SecondValsalvaTest()
     {
         timeRemainingImage = findViewById(R.id.timeRemaingImage);
         countdownSecLeft--;
