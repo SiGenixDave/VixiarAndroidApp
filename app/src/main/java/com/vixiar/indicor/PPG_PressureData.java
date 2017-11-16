@@ -8,9 +8,9 @@ public class PPG_PressureData
 {
     public PPG_PressureData(int PPG, double pressure)
     {
-        PPG = PPG;
-        pressure = pressure;
+        m_PPG = PPG;
+        m_pressure = pressure;
     }
-    private double pressure;
-    private int PPG;
+    public double m_pressure;
+    public int m_PPG;
 }

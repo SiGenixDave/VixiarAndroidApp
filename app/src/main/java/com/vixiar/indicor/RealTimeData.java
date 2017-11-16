@@ -11,12 +11,12 @@ pressure sensor Vout = VS*[(0.1533*P) + 0.053]  ...  Vs = 5.0V, P is pressure in
 1 kPa = 0.133322368 mmHg
 circuit board 0V at pressure sensor = 3V at A/D. 5V at pressure sensor = 0V at A/D
 A/D 3.3V = 2048 counts
-doing the math, pressure(mmHg)=(counts-1763.1)/-38.052
+doing the math, p(mmHg) = (-0.0263 * counts) + 46.335
 
 */
 public class RealTimeData
 {
-    private ArrayList<PPG_PressureData> data;
+    private ArrayList<PPG_PressureData> data = new ArrayList<PPG_PressureData>();
     public void AppendData(byte [] new_data)
     {
         // extract the data...the first byte is the sequence number
@@ -28,7 +28,7 @@ public class RealTimeData
         {
             ppg_value = (256 * (int)(new_data[i] & 0xFF)) + (new_data[i+1] & 0xFF);
             pressure_counts = (256 * (int)(new_data[i+2] & 0xFF)) + (new_data[i+3] & 0xFF);
-            pressure_value = ((double)pressure_counts-1763.1)/-38.052;
+            pressure_value = ((double)pressure_counts * (-0.0263)) + 46.335;
             PPG_PressureData pd = new PPG_PressureData(ppg_value, pressure_value);
             data.add(pd);
         }
@@ -36,5 +36,9 @@ public class RealTimeData
     public ArrayList<PPG_PressureData> GetData()
     {
         return data;
+    }
+    public void ClearData()
+    {
+        data.clear();
     }
 }

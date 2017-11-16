@@ -37,7 +37,7 @@ public class IndicorConnection
     }
 
     private final static String TAG = "IND";
-
+    private RealTimeData rtd = new RealTimeData();
     private IndicorDataInterface mCallbackInterface;
     private MyBLEMessageReceiver myBLEMessageReceiver;
 
@@ -148,7 +148,15 @@ public class IndicorConnection
             }
             else if (arg1.hasExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED))
             {
-                BLEDataReceived(arg1.getByteArrayExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED));
+                if (arg1.getByteArrayExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED) == null)
+                {
+                    Log.i(TAG, "Got a null");
+                }
+                else
+                {
+                    rtd.AppendData(arg1.getByteArrayExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED));
+                }
+                mCallbackInterface.iNotify();
             }
         }
     }
@@ -173,17 +181,13 @@ public class IndicorConnection
 
     public void BLEServicesDiscovered()
     {
-        dialog.cancel();
+        //dialog.cancel();
         mVixiarHHBLEService.WriteRTDataNotification(true);
-    }
-
-    public void BLEDataReceived(byte[] data)
-    {
-        mCallbackInterface.iNotify(data);
     }
 
     private void DisplayConnectingDialog()
     {
+/*
         LayoutInflater inflater = new LayoutInflater(mContext)
         {
             @Override
@@ -202,6 +206,7 @@ public class IndicorConnection
         alert.setCancelable(false);
         dialog = alert.create();
         dialog.show();
+*/
     }
 
     private void ScanTimeout()
@@ -274,5 +279,10 @@ public class IndicorConnection
         public int Average() {
             return mTotalRssi/mNumAdvertisements;
         }
+    }
+
+    public RealTimeData GetData()
+    {
+        return rtd;
     }
 }

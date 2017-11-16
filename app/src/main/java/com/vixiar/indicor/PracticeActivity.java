@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-public class PracticeActivity extends Activity
+import com.jjoe64.graphview.series.DataPoint;
+
+public class PracticeActivity extends Activity implements IndicorDataInterface
 {
     PracticePressureGraph pvg;
 
@@ -19,6 +21,9 @@ public class PracticeActivity extends Activity
         pvg.setBallPressure((float)0.0);
 
         InitializeHeaderAndFooter();
+
+        IndicorConnection.getInstance().initialize(this, this);
+        IndicorConnection.getInstance().ConnectToIndicor();
     }
 
     private void InitializeHeaderAndFooter()
@@ -48,4 +53,21 @@ public class PracticeActivity extends Activity
         });
     }
 
+    public void iConnected()
+    {
+    }
+
+    public void iCharacteristicRead(Object o)
+    {
+    }
+
+    public void iError(int e)
+    {
+    }
+
+    public void iNotify()
+    {
+        int currentIndex = IndicorConnection.getInstance().GetData().GetData().size();
+        pvg.setBallPressure((float)IndicorConnection.getInstance().GetData().GetData().get(currentIndex-1).m_pressure);
+    }
 }

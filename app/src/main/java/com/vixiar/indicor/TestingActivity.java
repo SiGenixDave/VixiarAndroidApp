@@ -132,7 +132,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface
         m_graphView.setVisibility(View.VISIBLE);
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
 
-        mSimulatedStabilityHandler.postDelayed(mSimulatedStabilityRunnable, 5000);
+        mSimulatedStabilityHandler.postDelayed(mSimulatedStabilityRunnable, 10000);
     }
 
     public void iCharacteristicRead(Object o)
@@ -145,16 +145,18 @@ public class TestingActivity extends Activity implements IndicorDataInterface
 
     }
 
-    public void iNotify(byte[] data)
+    private int m_nLastIndex = 0;
+    public void iNotify()
     {
-        int value = 0;
-        for (int i = 1; i < data.length; i += 4)
+        int currentIndex = IndicorConnection.getInstance().GetData().GetData().size();
+        for (int i = m_nLastIndex; i < currentIndex; i ++)
         {
-            value = (256 * (int)(data[i] & 0xFF)) + (data[i+1] & 0xFF);
-            m_PPGGraphSeries.appendData(new DataPoint(m_nPPGGraphLastX, value),  true, 500);
+            m_PPGGraphSeries.appendData(new DataPoint(m_nPPGGraphLastX, IndicorConnection.getInstance().GetData().GetData().get(i).m_PPG),  true, 500);
             m_nPPGGraphLastX += 0.02;
         }
+        m_nLastIndex = currentIndex;
     }
+
     private void StabilityReached()
     {
         setContentView(R.layout.activity_testing_valsalva);
