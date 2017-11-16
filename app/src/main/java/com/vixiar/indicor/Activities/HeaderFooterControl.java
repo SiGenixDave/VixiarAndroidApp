@@ -1,4 +1,4 @@
-package com.vixiar.indicor;
+package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
 import android.graphics.Typeface;
@@ -8,6 +8,8 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.vixiar.indicor.R;
 
 /**
  * Created by gyurk on 11/2/2017.

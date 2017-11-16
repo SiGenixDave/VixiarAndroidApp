@@ -1,4 +1,4 @@
-package com.vixiar.indicor;
+package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
 import android.graphics.Typeface;
@@ -14,6 +14,10 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+import com.vixiar.indicor.BLE_Interface.IndicorConnection;
+import com.vixiar.indicor.BLE_Interface.IndicorDataInterface;
+import com.vixiar.indicor.R;
+import com.vixiar.indicor.Graphics.TestPressureGraph;
 
 public class TestingActivity extends Activity implements IndicorDataInterface
 {

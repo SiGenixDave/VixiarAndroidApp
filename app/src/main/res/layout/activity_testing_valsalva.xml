@@ -29,7 +29,7 @@
             android:layout_height="match_parent"
             android:orientation="horizontal">
 
-            <com.vixiar.indicor.TestPressureGraph
+            <com.vixiar.indicor.Graphics.TestPressureGraph
                 android:id="@+id/testPressureGraph"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

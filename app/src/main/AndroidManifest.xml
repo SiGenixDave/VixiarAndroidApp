@@ -16,7 +16,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".Activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -25,14 +25,14 @@
         </activity>
 
         <service
-            android:name=".VixiarHandheldBLEService"
+            android:name=".BLE_Interface.VixiarHandheldBLEService"
             android:enabled="true"/>
 
-        <activity android:name=".PatInfoActivity">
+        <activity android:name=".Activities.PatInfoActivity">
         </activity>
-        <activity android:name=".PracticeActivity">
+        <activity android:name=".Activities.PracticeActivity">
         </activity>
-        <activity android:name=".TestingActivity">
+        <activity android:name=".Activities.TestingActivity">
         </activity>
     </application>
 

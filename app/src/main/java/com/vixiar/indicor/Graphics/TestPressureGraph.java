@@ -1,4 +1,4 @@
-package com.vixiar.indicor;
+package com.vixiar.indicor.Graphics;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -10,6 +10,8 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
+
+import com.vixiar.indicor.R;
 
 /**
  * TODO: document your custom view class.

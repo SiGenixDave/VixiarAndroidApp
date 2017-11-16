@@ -1,4 +1,4 @@
-package com.vixiar.indicor;
+package com.vixiar.indicor.BLE_Interface;
 
 /**
  * Created by gyurk on 11/6/2017.

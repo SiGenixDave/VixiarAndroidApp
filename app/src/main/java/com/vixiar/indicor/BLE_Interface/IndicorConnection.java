@@ -1,4 +1,4 @@
-package com.vixiar.indicor;
+package com.vixiar.indicor.BLE_Interface;
 
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
@@ -12,9 +12,6 @@ import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;

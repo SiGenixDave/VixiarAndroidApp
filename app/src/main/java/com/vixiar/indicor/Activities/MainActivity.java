@@ -1,4 +1,4 @@
-package com.vixiar.indicor;
+package com.vixiar.indicor.Activities;
 
 import android.Manifest;
 import android.annotation.TargetApi;
@@ -14,14 +14,14 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.vixiar.indicor.BuildConfig;
+import com.vixiar.indicor.R;
 
 public class MainActivity extends Activity
 {

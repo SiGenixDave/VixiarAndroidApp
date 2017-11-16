@@ -1,4 +1,6 @@
-package com.vixiar.indicor;
+package com.vixiar.indicor.BLE_Interface;
+
+import com.vixiar.indicor.BLE_Interface.PPG_PressureData;
 
 import java.util.ArrayList;
 

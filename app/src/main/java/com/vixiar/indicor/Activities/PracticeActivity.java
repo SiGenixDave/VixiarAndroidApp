@@ -1,11 +1,14 @@
-package com.vixiar.indicor;
+package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-import com.jjoe64.graphview.series.DataPoint;
+import com.vixiar.indicor.BLE_Interface.IndicorConnection;
+import com.vixiar.indicor.BLE_Interface.IndicorDataInterface;
+import com.vixiar.indicor.Graphics.PracticePressureGraph;
+import com.vixiar.indicor.R;
 
 public class PracticeActivity extends Activity implements IndicorDataInterface
 {
