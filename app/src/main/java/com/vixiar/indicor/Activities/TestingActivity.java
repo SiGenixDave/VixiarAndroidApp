@@ -139,6 +139,14 @@ public class TestingActivity extends Activity implements IndicorDataInterface
         mSimulatedStabilityHandler.postDelayed(mSimulatedStabilityRunnable, 10000);
     }
 
+    public void iDisconnected()
+    {
+        // for now, just leave the activity
+        onBackPressed();
+    }
+
+
+
     public void iCharacteristicRead(Object o)
     {
 
@@ -146,7 +154,8 @@ public class TestingActivity extends Activity implements IndicorDataInterface
 
     public void iError(int e)
     {
-
+        // for now, just leave the activity
+        onBackPressed();
     }
 
     private int m_nLastIndex = 0;

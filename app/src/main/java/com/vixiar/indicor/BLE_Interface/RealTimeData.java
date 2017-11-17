@@ -30,7 +30,11 @@ public class RealTimeData
         {
             ppg_value = (256 * (int)(new_data[i] & 0xFF)) + (new_data[i+1] & 0xFF);
             pressure_counts = (256 * (int)(new_data[i+2] & 0xFF)) + (new_data[i+3] & 0xFF);
-            pressure_value = ((double)pressure_counts * (-0.0263)) + 46.335;
+            pressure_value = ((double)pressure_counts * (-0.0263)) + 46.726;
+            if (pressure_value < 0.0)
+            {
+                pressure_value = 0.0;
+            }
             PPG_PressureData pd = new PPG_PressureData(ppg_value, pressure_value);
             data.add(pd);
         }

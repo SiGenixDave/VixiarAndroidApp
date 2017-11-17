@@ -47,8 +47,10 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -58,6 +60,8 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 /**
  * Service for managing the BLE data connection with the GATT database.
@@ -74,6 +78,7 @@ public class VixiarHandheldBLEService extends Service
     final static String CONNECTED = "connected";
     final static String DISCONNECTED = "disconnected";
     final static String SERVICES_DISCOVERED = "services_discovered";
+    final static String ERROR_WRITING_DESCRIPTOR = "descriptor_write_error";
     final static String RT_DATA_RECEIVED = "rt_data";
 
     // UUIDs for the service and characteristics that the Vixiar service uses
@@ -95,6 +100,8 @@ public class VixiarHandheldBLEService extends Service
 
     private final IBinder mBinder = new LocalBinder();
 
+
+    // ----------------------------- BLE Callbacks -----------------------------------------------
     // this is the callback used for older devices
     private BluetoothAdapter.LeScanCallback mLeScanCallback =
             new BluetoothAdapter.LeScanCallback()
@@ -119,11 +126,23 @@ public class VixiarHandheldBLEService extends Service
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback()
     {
         @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
+        {
+            // if this comes back with a status of 0, the write didn't work, which may mean that the
+            // handheld lost pairing
+            super.onDescriptorWrite(gatt, descriptor, status);
+            if (status != GATT_SUCCESS)
+            {
+                SendDataToConnectionClass(ERROR_WRITING_DESCRIPTOR, null);
+            }
+        }
+
+        @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
         {
             if (newState == BluetoothProfile.STATE_CONNECTED)
             {
-                Log.i(TAG, "iConnected to GATT server.");
+                Log.i(TAG, "Connected to GATT server.");
                 SendDataToConnectionClass(CONNECTED, null);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED)
             {
@@ -135,6 +154,7 @@ public class VixiarHandheldBLEService extends Service
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status)
         {
+            Log.w(TAG, "Services discovered");
             // Get just the service that we are looking for
             BluetoothGattService mService = gatt.getService(UUID.fromString(vixiarRealTimeServiceUUID));
 
@@ -153,8 +173,9 @@ public class VixiarHandheldBLEService extends Service
                                          BluetoothGattCharacteristic characteristic,
                                          int status)
         {
+            Log.w(TAG, "Charactistic read");
 
-            if (status == BluetoothGatt.GATT_SUCCESS)
+            if (status == GATT_SUCCESS)
             {
                 // Verify that the read was the battery level
                 String uuid = characteristic.getUuid().toString();
@@ -173,6 +194,7 @@ public class VixiarHandheldBLEService extends Service
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic)
         {
+            Log.w(TAG, "Charactistic notification");
 
             String uuid = characteristic.getUuid().toString();
 
@@ -188,6 +210,33 @@ public class VixiarHandheldBLEService extends Service
         }
     };
 
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            int state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE,
+                    BluetoothDevice.ERROR);
+
+            if (state == BluetoothDevice.BOND_BONDED)
+            {
+                //attachText("Device " + device + " PAIRED");
+            } else if (state == BluetoothDevice.BOND_BONDING)
+            {
+                //attachText("Device " + device + " pairing is in process...");
+            } else if (state == BluetoothDevice.BOND_NONE)
+            {
+                //attachText("Device " + device + " is unpaired");
+            } else
+            {
+                //attachText("Device " + device + " is in undefined state");
+            }
+        }
+    };
+
+    // --------------------------End of BLE callbacks -------------------------------------------
+
     @Override
     public IBinder onBind(Intent intent)
     {
@@ -202,6 +251,18 @@ public class VixiarHandheldBLEService extends Service
         return super.onUnbind(intent);
     }
 
+    public class LocalBinder extends Binder
+    {
+        VixiarHandheldBLEService getService()
+        {
+            return VixiarHandheldBLEService.this;
+        }
+
+    }
+
+
+    // --------------------------- Public interface functions -------------------------------------------
+
     public boolean Initialize()
     {
         // For API level 18 and above, get a reference to BluetoothAdapter through
@@ -215,14 +276,12 @@ public class VixiarHandheldBLEService extends Service
                 return false;
             }
         }
-
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         if (mBluetoothAdapter == null)
         {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
-
         return true;
     }
 
@@ -246,11 +305,14 @@ public class VixiarHandheldBLEService extends Service
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                     .build();
             filters = new ArrayList<>();
-            // We will ScanForIndicorHandhelds just for the CAR's UUID
+
+            // scan just for the handheld's service UUID
             ParcelUuid PUuid = new ParcelUuid(handheldService);
             ScanFilter filter = new ScanFilter.Builder().setServiceUuid(PUuid).build();
             filters.add(filter);
             mLEScanner.startScan(filters, settings, mScanCallback);
+
+            registerReceiver(mReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
         }
     }
 
@@ -269,7 +331,7 @@ public class VixiarHandheldBLEService extends Service
             return mBluetoothGatt.connect();
         }
 
-        // We want to directly ConnectToSpecificIndicor to the device, so we are setting the autoConnect
+        // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
         Log.d(TAG, "Trying to create a new connection.");
@@ -312,7 +374,7 @@ public class VixiarHandheldBLEService extends Service
         mBluetoothGatt.setCharacteristicNotification(mRTDataCharacteristic, value);
 
         // Write Notification value to the device
-        Log.i(TAG, "Realtime Notification " + value);
+        Log.i(TAG, "Setting realtime notification " + value);
         mRTNotificationCCCD.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
         mBluetoothGatt.writeDescriptor(mRTNotificationCCCD);
     }
@@ -325,30 +387,22 @@ public class VixiarHandheldBLEService extends Service
         }
     }
 
-    public class LocalBinder extends Binder
-    {
-        VixiarHandheldBLEService getService()
-        {
-            return VixiarHandheldBLEService.this;
-        }
-    }
-
+    // ------------------ Utility functions -----------------------------------------------------
     private void SendDataToConnectionClass(String name, Object data)
     {
-        Log.i(TAG, "sendingMessage");
         Intent intent = new Intent();
         intent.setAction(MESSAGE_ID);
         if (data instanceof Integer)
         {
-            intent.putExtra(name, (Integer)data);
+            intent.putExtra(name, (Integer) data);
         }
-        else if (data instanceof byte [])
+        else if (data instanceof byte[])
         {
-            intent.putExtra(name, (byte [])data);
+            intent.putExtra(name, (byte[]) data);
         }
         else if (data instanceof ScanResult)
         {
-            intent.putExtra(name, (ScanResult)data);
+            intent.putExtra(name, (ScanResult) data);
         }
         else
         {
@@ -356,5 +410,4 @@ public class VixiarHandheldBLEService extends Service
         }
         sendBroadcast(intent);
     }
-
 }

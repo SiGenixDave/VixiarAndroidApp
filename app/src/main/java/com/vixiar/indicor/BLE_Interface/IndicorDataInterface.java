@@ -9,5 +9,6 @@ public interface IndicorDataInterface
     public void iError(int e);
     public void iNotify();
     public void iConnected();
+    public void iDisconnected();
     public void iCharacteristicRead(Object o);
 }

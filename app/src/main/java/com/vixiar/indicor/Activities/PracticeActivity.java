@@ -3,12 +3,15 @@ package com.vixiar.indicor.Activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.vixiar.indicor.BLE_Interface.IndicorConnection;
 import com.vixiar.indicor.BLE_Interface.IndicorDataInterface;
 import com.vixiar.indicor.Graphics.PracticePressureGraph;
 import com.vixiar.indicor.R;
+
+import static android.content.ContentValues.TAG;
 
 public class PracticeActivity extends Activity implements IndicorDataInterface
 {
@@ -58,14 +61,23 @@ public class PracticeActivity extends Activity implements IndicorDataInterface
 
     public void iConnected()
     {
+        Log.i(TAG, "Connected");
     }
 
     public void iCharacteristicRead(Object o)
     {
     }
 
+    public void iDisconnected()
+    {
+        // for now, just leave the activity
+        onBackPressed();
+    }
+
     public void iError(int e)
     {
+        // for now, just leave the activity
+        onBackPressed();
     }
 
     public void iNotify()
