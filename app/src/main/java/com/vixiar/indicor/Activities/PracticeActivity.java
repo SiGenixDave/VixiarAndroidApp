@@ -82,7 +82,7 @@ public class PracticeActivity extends Activity implements IndicorDataInterface
 
     public void iNotify()
     {
-        int currentIndex = IndicorConnection.getInstance().GetData().GetData().size();
-        pvg.setBallPressure((float)IndicorConnection.getInstance().GetData().GetData().get(currentIndex-1).m_pressure);
+        int currentIndex = IndicorConnection.getInstance().GetRealtimeData().GetData().size();
+        pvg.setBallPressure((float)IndicorConnection.getInstance().GetRealtimeData().GetData().get(currentIndex-1).m_pressure);
     }
 }

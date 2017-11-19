@@ -19,7 +19,7 @@ import com.vixiar.indicor.R;
 public class TestPressureGraph extends View
 {
     private TextPaint textPaint;
-    private float ballPressure = (float)16.0;
+    private double m_nBallPressure = (double)0.0;
 
     int paddingLeft;
     int paddingTop;
@@ -89,8 +89,8 @@ public class TestPressureGraph extends View
         }
     }
 
-    public void setBallPressure(float pressure) {
-        ballPressure = pressure;
+    public void setBallPressure(double pressure) {
+        m_nBallPressure = pressure;
         invalidate();
     }
 
@@ -209,25 +209,25 @@ public class TestPressureGraph extends View
         shadowBallPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
         shadowBallPaint.setAlpha(25);
         shadowBallPaint.setStrokeWidth(ballStroke);
-        canvas.drawCircle(barLeftPosition + (barWidth / 2) + (ballStroke / 2), bottomSegmentBottom - (ballPressure * heightPerMMHg) + ballStroke, ballRadius, shadowBallPaint) ;
+        canvas.drawCircle(barLeftPosition + (barWidth / 2) + (ballStroke / 2), bottomSegmentBottom - (float)(m_nBallPressure * heightPerMMHg) + ballStroke, ballRadius, shadowBallPaint) ;
 
         Paint whiteBallPaint = new Paint(0);
         whiteBallPaint.setColor(Color.WHITE);
         whiteBallPaint.setStyle(Paint.Style.STROKE);
         whiteBallPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
         whiteBallPaint.setStrokeWidth(ballStroke);
-        canvas.drawCircle(barLeftPosition + (barWidth / 2), bottomSegmentBottom - (ballPressure * heightPerMMHg), ballRadius, whiteBallPaint) ;
+        canvas.drawCircle(barLeftPosition + (barWidth / 2), bottomSegmentBottom - (float)(m_nBallPressure * heightPerMMHg), ballRadius, whiteBallPaint) ;
 
         // draw the slight white tint in the center of the ball
         whiteBallPaint.setStyle(Paint.Style.FILL);
         whiteBallPaint.setAlpha(80);
-        canvas.drawCircle(barLeftPosition + (barWidth / 2), bottomSegmentBottom - (ballPressure * heightPerMMHg), ballRadius, whiteBallPaint) ;
+        canvas.drawCircle(barLeftPosition + (barWidth / 2), bottomSegmentBottom - (float)(m_nBallPressure * heightPerMMHg), ballRadius, whiteBallPaint) ;
 
         // draw the little lines pointing in
         whiteBallPaint.setAlpha(255);
         whiteBallPaint.setStrokeWidth(ballStroke / 4);
-        canvas.drawLine(barLeftPosition + (barWidth / 2) - ballRadius, bottomSegmentBottom - (ballPressure * heightPerMMHg) , barLeftPosition + (barWidth / 2) - (ballRadius / 3), bottomSegmentBottom - (ballPressure * heightPerMMHg), whiteBallPaint);
-        canvas.drawLine(barLeftPosition + (barWidth / 2) + ballRadius, bottomSegmentBottom - (ballPressure * heightPerMMHg) , barLeftPosition + (barWidth / 2) + (ballRadius / 3), bottomSegmentBottom - (ballPressure * heightPerMMHg), whiteBallPaint);
+        canvas.drawLine(barLeftPosition + (barWidth / 2) - ballRadius, bottomSegmentBottom - (float)(m_nBallPressure * heightPerMMHg) , barLeftPosition + (barWidth / 2) - (ballRadius / 3), bottomSegmentBottom - (float)(m_nBallPressure * heightPerMMHg), whiteBallPaint);
+        canvas.drawLine(barLeftPosition + (barWidth / 2) + ballRadius, bottomSegmentBottom - (float)(m_nBallPressure * heightPerMMHg) , barLeftPosition + (barWidth / 2) + (ballRadius / 3), bottomSegmentBottom - (float)(m_nBallPressure * heightPerMMHg), whiteBallPaint);
     }
 
     public void SetGraphActiveMode(Integer graphMode)

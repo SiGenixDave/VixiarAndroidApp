@@ -62,6 +62,7 @@
     <string name="time_remaining">Time Remaining</string>
 
     <string name="cancel">Cancel</string>
+    <string name="test_will_begin">Test will begin in </string>
 
     <string name="exhale">Exhale. Hold constant pressure.</string>
 

@@ -39,7 +39,7 @@ public class IndicorConnection
     }
 
     private final static String TAG = "IND";
-    private RealTimeData rtd = new RealTimeData();
+    private RealTimeData m_realtimeData = new RealTimeData();
     private IndicorDataInterface mCallbackInterface;
     private MyBLEMessageReceiver myBLEMessageReceiver;
 
@@ -150,7 +150,7 @@ public class IndicorConnection
             }
             else if (arg1.hasExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED))
             {
-                rtd.AppendData(arg1.getByteArrayExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED));
+                m_realtimeData.AppendData(arg1.getByteArrayExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED));
                 mCallbackInterface.iNotify();
             }
             else if (arg1.hasExtra(VixiarHandheldBLEService.ERROR_WRITING_DESCRIPTOR))
@@ -364,8 +364,8 @@ public class IndicorConnection
         }
     }
 
-    public RealTimeData GetData()
+    public RealTimeData GetRealtimeData()
     {
-        return rtd;
+        return m_realtimeData;
     }
 }
