@@ -9,7 +9,7 @@
     <RelativeLayout
         android:id="@+id/barLayout"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="@dimen/top_bar_height"
         android:background="@color/colorTopBar">
 
         <Button
@@ -40,7 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@null"
-            android:padding="10dp"
+            android:padding="15dp"
             android:scaleType="fitEnd"
             android:src="@drawable/battery_4"/>
 

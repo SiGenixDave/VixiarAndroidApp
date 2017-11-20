@@ -84,6 +84,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="5"
+                    android:background="@color/colorMainBackground"
                     android:fontFamily="@font/roboto_light"
                     android:paddingStart="10dp"
                     android:text="@string/setting_label_dob"

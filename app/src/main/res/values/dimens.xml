@@ -4,15 +4,26 @@
     <dimen name="patient_entry_first_col_width">200dp</dimen>
     <dimen name="patient_entry_row_margin">10dp</dimen>
     <dimen name="patient_entry_vertical_spacing">20dp</dimen>
+
     <dimen name="procedure_step_font_size">16dp</dimen>
     <dimen name="procedure_steps_font_size">14dp</dimen>
-    <dimen name="main_screen_icon_size">50dp</dimen>
-    <dimen name="main_screen_label_size">24sp</dimen>
-    <dimen name="main_screen_vertical_spacing">20dp</dimen>
+
+    <dimen name="main_screen_icon_size">60dp</dimen>
+    <dimen name="main_screen_label_size">28sp</dimen>
+    <dimen name="main_screen_vertical_spacing">30dp</dimen>
+
     <dimen name="bottom_bar_font_size">24sp</dimen>
     <dimen name="bottom_bar_countdown_font_size">48sp</dimen>
-    <dimen name="top_bar_title_font_size">20sp</dimen>
-    <dimen name="top_bar_button_font_size">16sp</dimen>
+
+    <dimen name="top_bar_height">60sp</dimen>
+    <dimen name="top_bar_title_font_size">24sp</dimen>
+    <dimen name="top_bar_button_font_size">18sp</dimen>
+
     <dimen name="acquiring_signal_font_size">48sp</dimen>
     <dimen name="time_remaining_font_size">36sp</dimen>
+
+    <dimen name="results_summary_bar_height">80dp</dimen>
+    <dimen name="results_summary_bar_font_size">24dp</dimen>
+    <dimen name="results_measurement_font_size">30sp</dimen>
+    <dimen name="results_measurement_bar_height">100dp</dimen>
 </resources>
