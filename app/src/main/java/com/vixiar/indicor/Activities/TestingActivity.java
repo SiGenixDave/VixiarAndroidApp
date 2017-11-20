@@ -1,9 +1,12 @@
 package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -20,6 +23,8 @@ import com.vixiar.indicor.R;
 
 public class TestingActivity extends Activity implements IndicorDataInterface, TimerCallback
 {
+    private final String TAG = this.getClass().getSimpleName();
+
     private static Double m_nPPGGraphLastX = 0.0;
     private int m_nCountdownSecLeft;
     private int m_nTestNumber;
@@ -33,10 +38,17 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
 
     // UI Components (Testing Screen)
     private ImageView m_imgTimeRemaining;
-    private TextView m_lblTimeRemaning;
+    private TextView m_lblTimeRemaining;
     private TextView m_lblBottomMessage;
     private TextView m_lblBottomCountdownNumber;
-    private TestPressureGraph m_graphPressurePressure;
+    private TestPressureGraph m_graphPressure;
+
+    // UI Components (Testing Screen)
+    private ImageView m_imgResults1Checkbox;
+    private ImageView m_imgResults2Checkbox;
+    private ImageView m_imgResults3Checkbox;
+    private ImageView m_imgRestIcon;
+    private TextView m_lblRest;
 
     Typeface m_robotoLightTypeface;
     Typeface m_robotoRegularTypeface;
@@ -61,7 +73,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         EVT_ONESHOT_TIMER_TIMEOUT,
         EVT_CONNECTED,
         EVT_PERIODIC_TIMER_TICK,
-        EVT_VALSALVA_START,
+        EVT_VALSALVA_PRESSURE_UPDATE,
     }
 
     // Timer stuff
@@ -74,7 +86,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
     // Timing constants
     private final int STABILIZING_TIME_MS = 10000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
-    private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_SECONDS = 10;
+    private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
     private final int ONE_SEC = 1000;
     private final int NEXT_TEST_DELAY_SECONDS = 60;
@@ -138,7 +150,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
     @Override
     public void iDisconnected()
     {
-        // for now, just leave the activity
+        // TODO: for now, just leave the activity
         onBackPressed();
     }
 
@@ -150,7 +162,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
     @Override
     public void iError(int e)
     {
-        // for now, just leave the activity
+        // TODO: for now, just leave the activity
         onBackPressed();
     }
 
@@ -187,7 +199,9 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
                 m_nAvgPressure = (PRESSURE_FILTER_OLD_VALUE_MULTIPLIER * m_nAvgPressure) + (PRESSURE_FILTER_NEW_VALUE_MULTIPLIER * thisAvg);
 
                 // update the ball
-                m_graphPressurePressure.setBallPressure(m_nAvgPressure);
+                m_graphPressure.setBallPressure(m_nAvgPressure);
+
+                TestingStateMachine(Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE);
                 break;
         }
     }
@@ -259,13 +273,13 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
     {
         setContentView(R.layout.activity_testing_valsalva);
 
-        m_lblTimeRemaning = findViewById(R.id.txtTimeRemaining);
+        m_lblTimeRemaining = findViewById(R.id.txtTimeRemaining);
         m_lblBottomMessage = findViewById(R.id.txtMessage);
         m_lblBottomCountdownNumber = findViewById(R.id.txtCountdown);
-        m_graphPressurePressure = findViewById(R.id.testPressureGraph);
+        m_graphPressure = findViewById(R.id.testPressureGraph);
         m_imgTimeRemaining = findViewById(R.id.imgTimeRemaing);
 
-        m_lblTimeRemaning.setTypeface(m_robotoLightTypeface);
+        m_lblTimeRemaining.setTypeface(m_robotoLightTypeface);
         m_lblBottomMessage.setTypeface(m_robotoLightTypeface);
         m_lblBottomCountdownNumber.setTypeface(m_robotoRegularTypeface);
 
@@ -280,31 +294,104 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
                 onBackPressed();
             }
         });
-
     }
 
     private void InactivateTestingView()
     {
-        m_graphPressurePressure.SetGraphActiveMode(m_graphPressurePressure.INACTIVE);
-        m_imgTimeRemaining.setImageResource(R.drawable.countdown10sec);
+        m_imgTimeRemaining.setImageResource(R.drawable.countdown10sec_dim);
+        m_graphPressure.SetGraphActiveMode(m_graphPressure.INACTIVE);
         m_lblBottomMessage.setText(R.string.test_will_begin);
     }
 
     private void ActivateTestingView()
     {
-        m_graphPressurePressure.SetGraphActiveMode(m_graphPressurePressure.ACTIVE);
-        m_graphPressurePressure.setBallPressure((float) 0.0);
+        m_graphPressure.SetGraphActiveMode(m_graphPressure.ACTIVE);
+        m_graphPressure.setBallPressure((float) 0.0);
         m_imgTimeRemaining.setImageResource(R.drawable.countdown10sec);
         m_lblBottomMessage.setText(R.string.exhale);
+        m_lblBottomCountdownNumber.setText("");
+    }
+
+    private void SetupLoadingResultsView()
+    {
+        // set the counter to show the done image
+        UpdateValsalvaCountdown(-1);
+        m_graphPressure.SetGraphActiveMode(m_graphPressure.INACTIVE);
+        m_lblTimeRemaining.setVisibility(View.INVISIBLE);
+        m_lblBottomCountdownNumber.setVisibility(View.INVISIBLE);
+        m_lblBottomMessage.setText(R.string.loading_results);
     }
 
     private void SwitchToResultsView()
     {
+        // TODO: update the patient ID and date time on results screen
+        setContentView(R.layout.activity_testing_results);
 
+        m_lblBottomMessage = findViewById(R.id.txtMessage);
+        m_lblBottomCountdownNumber = findViewById(R.id.txtCountdown);
+        m_imgResults1Checkbox = findViewById(R.id.imgMeasurement1Checkbox);
+        m_imgResults2Checkbox = findViewById(R.id.imgMeasurement2Checkbox);
+        m_imgResults3Checkbox = findViewById(R.id.imgMeasurement3Checkbox);
+        m_imgRestIcon = findViewById(R.id.imgRestIcon);
+        m_lblRest = findViewById(R.id.lblRest);
+
+        m_lblBottomMessage.setTypeface(m_robotoLightTypeface);
+        m_lblBottomCountdownNumber.setTypeface(m_robotoRegularTypeface);
+
+        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
+        HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.measurement));
+        HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                onBackPressed();
+            }
+        });
     }
 
-    private void SetupDoneLoadingResultsView()
+    private void UpdateResults()
     {
+        // mark the correct number of check boxes
+        switch (m_nTestNumber)
+        {
+            case 1:
+                m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
+                m_imgResults2Checkbox.setImageResource(R.drawable.measurement_unchecked);
+                m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
+                break;
+
+            case 2:
+                m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
+                m_imgResults2Checkbox.setImageResource(R.drawable.measurement_checked);
+                m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
+                break;
+
+            case 3:
+                m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
+                m_imgResults2Checkbox.setImageResource(R.drawable.measurement_checked);
+                m_imgResults3Checkbox.setImageResource(R.drawable.measurement_checked);
+                break;
+
+            default:
+                m_imgResults1Checkbox.setImageResource(R.drawable.measurement_unchecked);
+                m_imgResults2Checkbox.setImageResource(R.drawable.measurement_unchecked);
+                m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
+                break;
+
+        }
+    }
+
+    private void SetResultsViewComplete()
+    {
+        UpdateResults();
+        m_lblBottomMessage.setText(R.string.test_complete);
+        m_imgRestIcon.setVisibility(View.INVISIBLE);
+        m_lblRest.setText("");
+        m_lblBottomCountdownNumber.setText("");
+        // TODO: display the save and home icons
+        // TODO: move the test complete label to the center
     }
 
     private void UpdateBottomCountdownNumber(int value)
@@ -339,11 +426,26 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         m_periodicTimer = new StateMachineTimer(PERIODIC_TIMER_ID);
 
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
+
+        m_nTestNumber = 1;
     }
 
     private void PressureError()
     {
-
+        // TODO: this is temporary...need to finish this
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("Pressure error");
+        alertDialogBuilder.setMessage("Something happened with the pressure");
+        alertDialogBuilder.setPositiveButton("Ok",
+                new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1)
+                    {
+                    }
+                });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 
     private void TestingStateMachine(Testing_Events event)
@@ -351,15 +453,19 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         switch (m_testingState)
         {
             case STABILIZING_NOT_CONNECTED:
+                Log.i(TAG, "In state: STABILIZING_NOT_CONNECTED");
                 if (event == Testing_Events.EVT_CONNECTED)
                 {
                     ActivateStabilityView();
+
+                    m_testingState = Testing_State.STABILIZING;
 
                     // start the stability timer
                     m_oneShotTimer.Start(this, STABILIZING_TIME_MS, true);
                 }
                 break;
             case STABILIZING:
+                Log.i(TAG, "In state: STABILIZING");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
                     SwitchToTestingView();
@@ -372,6 +478,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
                 break;
 
             case STABLE_5SEC_COUNTDOWN:
+                Log.i(TAG, "In state: STABLE_5SEC_COUNTDOWN");
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
                     m_nCountdownSecLeft--;
@@ -384,22 +491,27 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
                         m_periodicTimer.Cancel();
                         ActivateTestingView();
                         m_testingState = Testing_State.VALSALVA_WAIT_FOR_PRESSURE;
-                        m_oneShotTimer.Start(this, VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_SECONDS, true);
+                        m_oneShotTimer.Start(this, VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS, true);
                         m_nAvgPressure = 0.0;
                     }
                 }
                 break;
 
             case VALSALVA_WAIT_FOR_PRESSURE:
+                Log.i(TAG, "In state: VALSALVA_WAIT_FOR_PRESSURE");
                 // see if we reached the starting pressure for Valsalva
-                if (m_nAvgPressure > VALSALVA_MIN_PRESSURE)
+                if (event == Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE)
                 {
-                    m_testingState = Testing_State.VALSALVA;
-                    m_periodicTimer.Start(this, ONE_SEC, false);
-                    m_nCountdownSecLeft = VALSALVA_DURATION_SECONDS;
-                    UpdateValsalvaCountdown(m_nCountdownSecLeft);
+                    if (m_nAvgPressure > VALSALVA_MIN_PRESSURE)
+                    {
+                        m_testingState = Testing_State.VALSALVA;
+                        m_periodicTimer.Start(this, ONE_SEC, false);
+                        m_nCountdownSecLeft = VALSALVA_DURATION_SECONDS;
+                        m_oneShotTimer.Cancel();
+                        UpdateValsalvaCountdown(m_nCountdownSecLeft);
+                    }
                 }
-                if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
+                else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
                     PressureError();
                     m_testingState = Testing_State.PRESSURE_ERROR;
@@ -407,9 +519,16 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
                 break;
 
             case VALSALVA:
-                if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
+                // TODO: disable the Android back button during valsalva
+                Log.i(TAG, "In state: VALSALVA");
+                if (event == Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE)
                 {
-
+                    if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
+                    {
+                        m_periodicTimer.Cancel();
+                        PressureError();
+                        m_testingState = Testing_State.PRESSURE_ERROR;
+                    }
                 }
                 else if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
@@ -420,9 +539,8 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
                     }
                     else
                     {
-                        UpdateValsalvaCountdown(-1);
                         m_periodicTimer.Cancel();
-                        SetupDoneLoadingResultsView();
+                        SetupLoadingResultsView();
                         m_testingState = Testing_State.LOADING_RESULTS;
                         m_oneShotTimer.Start(this, VALSALVA_LOADING_RESULTS_DELAY_MS, true);
                     }
@@ -430,19 +548,29 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
                 break;
 
             case LOADING_RESULTS:
+                Log.i(TAG, "In state: LOADING_RESULTS");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    m_nTestNumber++;
-                    SwitchToResultsView();
-                    m_periodicTimer.Start(this, ONE_SEC, false);
-                    m_testingState = Testing_State.RESULTS;
-                    m_nCountdownSecLeft = NEXT_TEST_DELAY_SECONDS;
-                    UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                    if (m_nTestNumber < 3)
+                    {
+                        SwitchToResultsView();
+                        UpdateResults();
+                        m_periodicTimer.Start(this, ONE_SEC, false);
+                        m_testingState = Testing_State.RESULTS;
+                        m_nCountdownSecLeft = NEXT_TEST_DELAY_SECONDS;
+                        UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                    }
+                    else
+                    {
+                        SwitchToResultsView();
+                        SetResultsViewComplete();
+                        m_testingState = Testing_State.COMPLETE;
+                    }
                 }
                 break;
 
             case RESULTS:
-            {
+                Log.i(TAG, "In state: RESULTS");
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
                     m_nCountdownSecLeft--;
@@ -452,13 +580,28 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
                     }
                     else
                     {
+                        // starting next test
                         m_periodicTimer.Cancel();
-                        InactivateStabilityView();
+                        m_nTestNumber++;
+                        SwitchToStabilityView();
+                        ActivateStabilityView();
+                        // TODO: clear the data on the stability graph so it starts a fresh display
                         m_testingState = Testing_State.STABILIZING;
                         m_oneShotTimer.Start(this, STABILIZING_TIME_MS, true);
                     }
                 }
-            }
+                break;
+
+            case COMPLETE:
+                Log.i(TAG, "In state: COMPLETE");
+                // TODO: this is temporary...need to finish this
+                break;
+
+            case PRESSURE_ERROR:
+                Log.i(TAG, "In state: PRESSURE_ERROR");
+                // TODO: this is temporary...need to finish this
+                break;
+
         }
     }
 }

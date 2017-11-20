@@ -64,12 +64,14 @@
     <string name="cancel">Cancel</string>
     <string name="test_will_begin">Test will begin in </string>
 
+    <string name="loading_results">Loading Results...</string>
     <string name="exhale">Exhale. Hold constant pressure.</string>
     <string name="measurement1">Measurement 1</string>
     <string name="measurement2">Measurement 2</string>
     <string name="measurement3">Measurement 3</string>
     <string name="LVEDP">LVEDP</string>
     <string name="rest_period">Rest Period</string>
+    <string name="test_complete">Test complete</string>
     <string name="test_will_resume">Test will resume in </string>
 
 

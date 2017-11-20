@@ -135,6 +135,7 @@ public class MainActivity extends Activity
         return GetAdapter() != null;
     }
 
+    // TODO: App crashes if ble is not enabled, need to call this check from somewhere
     public boolean IsBLEEnabled()
     {
         BluetoothAdapter adapter = GetAdapter();

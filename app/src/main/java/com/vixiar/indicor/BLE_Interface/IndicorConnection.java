@@ -242,6 +242,7 @@ public class IndicorConnection
         // see if there are any devices
         if (device == null)
         {
+            // TODO: this is temporary...need to finish this
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
             alertDialogBuilder.setMessage("No Indicor handhelds were detected");
             alertDialogBuilder.setTitle("No handheld found");
@@ -268,6 +269,7 @@ public class IndicorConnection
                 mVixiarHHBLEService.ConnectToSpecificIndicor(device);
             } else
             {
+                // TODO: this is temporary...need to finish this
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
                 alertDialogBuilder.setMessage("A handheld device was detected, however it is not paired with this tablet.  See Instructions for Use for how to pair the handheld with this device.");
                 alertDialogBuilder.setTitle("No handheld paired");

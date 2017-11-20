@@ -13,9 +13,6 @@ import android.view.View;
 
 import com.vixiar.indicor.R;
 
-/**
- * TODO: document your custom view class.
- */
 public class PracticePressureGraph extends View
 {
     private TextPaint textPaint;
