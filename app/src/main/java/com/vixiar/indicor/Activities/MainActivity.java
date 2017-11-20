@@ -25,6 +25,8 @@ import com.vixiar.indicor.R;
 
 public class MainActivity extends Activity
 {
+    private final String TAG = this.getClass().getSimpleName();
+
     //This is required for Android 6.0 (Marshmallow)
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
@@ -60,7 +62,7 @@ public class MainActivity extends Activity
 
         Typeface robotoTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
 
-        TextView versionText = (TextView)findViewById(R.id.textViewVersion);
+        TextView versionText = (TextView) findViewById(R.id.textViewVersion);
         versionText.setText(nameAndVersion);
         versionText.setTypeface(robotoTypeface);
 
@@ -88,6 +90,7 @@ public class MainActivity extends Activity
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         */
+        // wait a couple seconds then check the BLE stuff
         handler.postDelayed(r, 2000);
     }
 
@@ -102,7 +105,8 @@ public class MainActivity extends Activity
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
                     Log.d("Permission for 6.0:", "Coarse location permission granted");
-                } else
+                }
+                else
                 {
                     final android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
                     builder.setTitle("Functionality limited");
@@ -113,6 +117,8 @@ public class MainActivity extends Activity
                         @Override
                         public void onDismiss(DialogInterface dialog)
                         {
+                            finish();
+                            System.exit(0);
                         }
                     });
                     builder.show();
@@ -149,14 +155,15 @@ public class MainActivity extends Activity
                 startActivityForResult(enableBtIntent, REQUEST_START_CONNECTION_BLE);
             }
             return adapter.isEnabled();
-        } else
+        }
+        else
         {
             return false;
         }
     }
 
     // this get's called after the user either accepts or denys turning ble on
-    // it they accept, the data collection activity starts
+    // it they didn't turn it on, the app quits
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
@@ -164,8 +171,46 @@ public class MainActivity extends Activity
         {
             if (resultCode == Activity.RESULT_OK)
             {
-                //Intent intent = new Intent(this, DataCollectionActivity_ToBeDeleted.class);
-                //startActivity(intent);
+                Log.i(TAG, "BLE was enabled");
+                // This section required for Android 6.0 (Marshmallow)
+                // Make sure location access is on or BLE won't scan
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                {
+                    // Android M Permission check 
+                    if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                    {
+                        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setTitle("This app requires location access in order to function properly.");
+                        builder.setMessage("Please grant location access so this app can communicate with handheld devices.");
+                        builder.setPositiveButton(android.R.string.ok, null);
+                        builder.setOnDismissListener(new DialogInterface.OnDismissListener()
+                        {
+                            public void onDismiss(DialogInterface dialog)
+                            {
+                                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+                            }
+                        });
+                        builder.show();
+                    }
+                } //End of section for Android 6.0 (Marshmallow)
+            }
+            else
+            {
+                Log.i(TAG, "BLE was not enabled");
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("BLE not enabled");
+                builder.setMessage("BLE must be enabled.  BLE is required to communicate to the handheld.");
+                builder.setPositiveButton("OK",
+                        new DialogInterface.OnClickListener()
+                        {
+                            public void onClick(DialogInterface dialog,
+                                                int which)
+                            {
+                                finish();
+                                System.exit(0);
+                            }
+                        });
+                builder.show();
             }
         }
     }
@@ -191,30 +236,39 @@ public class MainActivity extends Activity
                                             int which)
                         {
                             finish();
-                            System.exit(0);                        }
-                    });
-            builder.show();
-        } else
-        {
-            // This section required for Android 6.0 (Marshmallow)
-            // Make sure location access is on or BLE won't ScanForIndicorHandhelds
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            {
-                // Android M Permission check 
-                if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("This app requires location access in order to function properly.");
-                    builder.setMessage("Please grant location access so this app can communicate with handheld devices.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener()
-                    {
-                        public void onDismiss(DialogInterface dialog)
-                        {
-                            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+                            System.exit(0);
                         }
                     });
-                    builder.show();
+            builder.show();
+        }
+        else
+        {
+            // this call will check if BLE is enabled, if it isn't the user will be given the chance to
+            // enable it.  If they don't the app will quit
+            // if it is enabled, we need to make sure location access is enabled
+
+            // This section required for Android 6.0 (Marshmallow)
+            // Make sure location access is on or BLE won't scan
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            {
+                if (IsBLEEnabled())
+                {
+                    // Android M Permission check 
+                    if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                    {
+                        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setTitle("This app requires location access in order to function properly.");
+                        builder.setMessage("Please grant location access so this app can communicate with handheld devices.");
+                        builder.setPositiveButton(android.R.string.ok, null);
+                        builder.setOnDismissListener(new DialogInterface.OnDismissListener()
+                        {
+                            public void onDismiss(DialogInterface dialog)
+                            {
+                                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+                            }
+                        });
+                        builder.show();
+                    }
                 }
             } //End of section for Android 6.0 (Marshmallow)
         }
