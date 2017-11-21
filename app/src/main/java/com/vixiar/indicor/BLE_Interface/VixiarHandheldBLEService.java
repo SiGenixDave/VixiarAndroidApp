@@ -289,7 +289,7 @@ public class VixiarHandheldBLEService extends Service
             ParcelUuid PUuid = new ParcelUuid(handheldService);
             ScanFilter filter = new ScanFilter.Builder().setServiceUuid(PUuid).build();
             filters.add(filter);
-            mLEScanner.startScan(null, settings, mScanCallback);
+            mLEScanner.startScan(filters, settings, mScanCallback);
         }
     }
 
