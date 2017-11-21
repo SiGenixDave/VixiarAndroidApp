@@ -110,6 +110,7 @@ public class VixiarHandheldBLEService extends Service
                 public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
                 {
                     //TODO: this probably should be handled for older devices
+                    Log.i(TAG, "LEScan Callback");
                 }
             };
 
@@ -119,6 +120,7 @@ public class VixiarHandheldBLEService extends Service
         @Override
         public void onScanResult(int callbackType, ScanResult result)
         {
+            Log.i(TAG, "Scan Callback");
             SendDataToConnectionClass(SCAN_RESULT, result);
         }
     };
@@ -144,7 +146,8 @@ public class VixiarHandheldBLEService extends Service
             {
                 Log.i(TAG, "Connected to GATT server.");
                 SendDataToConnectionClass(CONNECTED, null);
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED)
+            }
+            else if (newState == BluetoothProfile.STATE_DISCONNECTED)
             {
                 Log.i(TAG, "Disconnected from GATT server.");
                 SendDataToConnectionClass(DISCONNECTED, null);
@@ -210,31 +213,6 @@ public class VixiarHandheldBLEService extends Service
         }
     };
 
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver()
-    {
-        @Override
-        public void onReceive(Context context, Intent intent)
-        {
-            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            int state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE,
-                    BluetoothDevice.ERROR);
-
-            if (state == BluetoothDevice.BOND_BONDED)
-            {
-                //attachText("Device " + device + " PAIRED");
-            } else if (state == BluetoothDevice.BOND_BONDING)
-            {
-                //attachText("Device " + device + " pairing is in process...");
-            } else if (state == BluetoothDevice.BOND_NONE)
-            {
-                //attachText("Device " + device + " is unpaired");
-            } else
-            {
-                //attachText("Device " + device + " is in undefined state");
-            }
-        }
-    };
-
     // --------------------------End of BLE callbacks -------------------------------------------
 
     @Override
@@ -296,13 +274,14 @@ public class VixiarHandheldBLEService extends Service
         {
             //noinspection deprecation
             mBluetoothAdapter.startLeScan(handheldServiceArray, mLeScanCallback);
-        } else
+        }
+        else
         { // New BLE scanning introduced in LOLLIPOP
             ScanSettings settings;
             List<ScanFilter> filters;
             mLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
             settings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
                     .build();
             filters = new ArrayList<>();
 
@@ -310,9 +289,7 @@ public class VixiarHandheldBLEService extends Service
             ParcelUuid PUuid = new ParcelUuid(handheldService);
             ScanFilter filter = new ScanFilter.Builder().setServiceUuid(PUuid).build();
             filters.add(filter);
-            mLEScanner.startScan(filters, settings, mScanCallback);
-
-            registerReceiver(mReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+            mLEScanner.startScan(null, settings, mScanCallback);
         }
     }
 

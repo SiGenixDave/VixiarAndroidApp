@@ -223,6 +223,7 @@ public class MainActivity extends Activity
 
     private void CheckBLE()
     {
+        // TODO: check that location services are enabled on the device
         // verify that this device supports bluetooth and it's turned on
         if (!IsBLEAvailable())
         {
