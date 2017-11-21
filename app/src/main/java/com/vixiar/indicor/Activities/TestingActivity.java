@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
+import android.text.GetChars;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -223,7 +224,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
 
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
-        HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.measurement));
+        HeaderFooterControl.getInstance().SetScreenTitle(this, GetMeasurementScreenTitle());
         HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
         {
             @Override
@@ -252,6 +253,11 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         m_seriesPPGData.setThickness(8);
         m_chartPPG.addSeries(m_seriesPPGData);
 
+    }
+
+    private String GetMeasurementScreenTitle()
+    {
+        return getString(R.string.measurement) + " " + String.valueOf(m_nTestNumber) + "/3";
     }
 
     private void InactivateStabilityView()
@@ -285,7 +291,7 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
 
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
-        HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.measurement));
+        HeaderFooterControl.getInstance().SetScreenTitle(this, GetMeasurementScreenTitle());
         HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
         {
             @Override
@@ -310,6 +316,14 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         m_imgTimeRemaining.setImageResource(R.drawable.countdown10sec);
         m_lblBottomMessage.setText(R.string.exhale);
         m_lblBottomCountdownNumber.setText("");
+        HeaderFooterControl.getInstance().SetNavButtonTitle(this, "");
+        HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+            }
+        });
     }
 
     private void SetupLoadingResultsView()
@@ -338,15 +352,16 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         m_lblBottomMessage.setTypeface(m_robotoLightTypeface);
         m_lblBottomCountdownNumber.setTypeface(m_robotoRegularTypeface);
 
+
         HeaderFooterControl.getInstance().SetTypefaces(this);
-        HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
-        HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.measurement));
+        HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.end_test));
+        HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.results));
         HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
             {
-                onBackPressed();
+                // TODO: Handle end test button from results screen
             }
         });
     }
@@ -419,6 +434,8 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
 
     private void InitStateMachine()
     {
+        m_nTestNumber = 1;
+
         SwitchToStabilityView();
         InactivateStabilityView();
 
@@ -426,8 +443,6 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         m_periodicTimer = new StateMachineTimer(PERIODIC_TIMER_ID);
 
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
-
-        m_nTestNumber = 1;
     }
 
     private void PressureError()
