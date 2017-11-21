@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
+import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
 
 import java.lang.reflect.InvocationTargetException;
@@ -25,6 +26,9 @@ import java.lang.reflect.Method;
 
 public class PatInfoActivity extends Activity
 {
+    // TODO: switch the input method of DOB to just an age spinner
+    // TODO: swith the BP fields to just type a value in
+
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
 
@@ -72,6 +76,29 @@ public class PatInfoActivity extends Activity
     protected void onPause()
     {
         super.onPause();
+
+        // store the data entered to the patient class
+        PatientInfo.getInstance().setPatientId(txtPatientID.getText().toString());
+
+        try
+        {
+            PatientInfo.getInstance().setDiastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
+        }
+        catch (NumberFormatException e)
+        {
+            PatientInfo.getInstance().setDiastolicBloodPressure(0);
+        }
+
+        try
+        {
+            PatientInfo.getInstance().setSystolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
+        }
+        catch (NumberFormatException e)
+        {
+            PatientInfo.getInstance().setSystolicBloodPressure(0);
+        }
+
+        // TODO: finish copying the patient info data to the patient class
     }
 
     @Override
@@ -79,8 +106,7 @@ public class PatInfoActivity extends Activity
     {
         super.onResume();
         Button et = findViewById(R.id.navButton);
-        //et.setFocusable(true);
-        et.setFocusableInTouchMode(true );
+        et.setFocusableInTouchMode(true);
         et.requestFocus();
     }
 
@@ -98,7 +124,8 @@ public class PatInfoActivity extends Activity
                 if (hasFocus)
                 {
                     txtPatientID.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
-                } else
+                }
+                else
                 {
                     txtPatientID.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     hideKeyBoard(v);
@@ -137,7 +164,8 @@ public class PatInfoActivity extends Activity
                     int nDay = npDOBDay.getValue();
                     int nYear = npDOBYear.getValue();
                     txtDOB.setText(monthString[nMonth] + " " + String.valueOf(nDay) + " " + String.valueOf(nYear));
-                } else
+                }
+                else
                 {
                     txtDOB.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npDOBDay.setVisibility(View.GONE);
@@ -236,7 +264,8 @@ public class PatInfoActivity extends Activity
                     int nFeet = npHeightFeet.getValue();
                     int nInches = npHeightInches.getValue();
                     txtHeight.setText(String.valueOf(nFeet) + " / " + String.valueOf(nInches));
-                } else
+                }
+                else
                 {
                     txtHeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npHeightFeet.setVisibility(View.GONE);
@@ -296,7 +325,8 @@ public class PatInfoActivity extends Activity
                     npWeight.setVisibility(View.VISIBLE);
                     int nWeight = npWeight.getValue();
                     txtWeight.setText(String.valueOf(nWeight));
-                } else
+                }
+                else
                 {
                     txtWeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npWeight.setVisibility(View.GONE);
@@ -347,7 +377,8 @@ public class PatInfoActivity extends Activity
                     npSystolic.setVisibility(View.VISIBLE);
                     int nDiastolic = npSystolic.getValue();
                     txtSystolic.setText(String.valueOf(nDiastolic));
-                } else
+                }
+                else
                 {
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npSystolic.setVisibility(View.GONE);
@@ -398,7 +429,8 @@ public class PatInfoActivity extends Activity
                     npDiastolic.setVisibility(View.VISIBLE);
                     int nDiastolic = npDiastolic.getValue();
                     txtDiastolic.setText(String.valueOf(nDiastolic));
-                } else
+                }
+                else
                 {
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npDiastolic.setVisibility(View.GONE);
@@ -449,7 +481,8 @@ public class PatInfoActivity extends Activity
                     npGender.setVisibility(View.VISIBLE);
                     int nGender = npGender.getValue();
                     txtGender.setText(genderString[nGender]);
-                } else
+                }
+                else
                 {
                     txtGender.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npGender.setVisibility(View.GONE);
@@ -527,7 +560,8 @@ public class PatInfoActivity extends Activity
                 if (hasFocus)
                 {
                     txtNotes.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
-                } else
+                }
+                else
                 {
                     txtNotes.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     hideKeyBoard(v);
@@ -582,7 +616,8 @@ public class PatInfoActivity extends Activity
                 HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
-            } else
+            }
+            else
             {
                 HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);

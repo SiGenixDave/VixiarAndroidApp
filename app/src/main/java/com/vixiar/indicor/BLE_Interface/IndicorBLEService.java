@@ -47,10 +47,8 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -68,9 +66,9 @@ import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 // This is required to allow us to use the lollipop and later ScanForIndicorHandhelds APIs
-public class VixiarHandheldBLEService extends Service
+public class IndicorBLEService extends Service
 {
-    private final static String TAG = VixiarHandheldBLEService.class.getSimpleName();
+    private final static String TAG = IndicorBLEService.class.getSimpleName();
 
     // the ID used to filter messages from the service to the handler class
     final static String MESSAGE_ID = "vixiarBLEService";
@@ -188,7 +186,7 @@ public class VixiarHandheldBLEService extends Service
                 if (uuid.equals(batteryLevelDataCharacteristicUUID))
                 {
                     final byte[] data = characteristic.getValue();
-                    // TODO: send this and the other characteristics
+                    // TODO: finish reading all of the characteristics
                 }
             }
         }
@@ -231,9 +229,9 @@ public class VixiarHandheldBLEService extends Service
 
     public class LocalBinder extends Binder
     {
-        VixiarHandheldBLEService getService()
+        IndicorBLEService getService()
         {
-            return VixiarHandheldBLEService.this;
+            return IndicorBLEService.this;
         }
 
     }

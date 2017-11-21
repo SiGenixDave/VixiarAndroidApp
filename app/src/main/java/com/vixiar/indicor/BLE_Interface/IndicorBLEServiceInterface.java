@@ -16,6 +16,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import com.vixiar.indicor.Data.PatientInfo;
+import com.vixiar.indicor.Data.RealtimeData;
 import com.vixiar.indicor.R;
 
 import java.util.ArrayList;
@@ -28,25 +30,24 @@ import static android.content.Context.BIND_AUTO_CREATE;
  * Created by gyurk on 11/6/2017.
  */
 
-public class IndicorConnection
+public class IndicorBLEServiceInterface
 {
     // make this a singleton class
-    private static IndicorConnection ourInstance = new IndicorConnection();
+    private static IndicorBLEServiceInterface ourInstance = new IndicorBLEServiceInterface();
 
-    public static IndicorConnection getInstance()
+    public static IndicorBLEServiceInterface getInstance()
     {
         return ourInstance;
     }
 
     private final static String TAG = "IND";
-    private RealTimeData m_realtimeData = new RealTimeData();
-    private IndicorDataInterface mCallbackInterface;
+    private IndicorBLEServiceInterfaceCallbacks mCallbackInterface;
     private MyBLEMessageReceiver myBLEMessageReceiver;
 
     // Variables to manage BLE connection
     private static boolean mConnectState;
     private static boolean mServiceConnected;
-    private static VixiarHandheldBLEService mVixiarHHBLEService;
+    private static IndicorBLEService mVixiarHHBLEService;
 
     private AlertDialog connectionDialog;
     private Context mContext;
@@ -66,7 +67,7 @@ public class IndicorConnection
 
     private final int SCAN_TIME_MS = 5000;
 
-    public void initialize(Context c, IndicorDataInterface dataInterface)
+    public void initialize(Context c, IndicorBLEServiceInterfaceCallbacks dataInterface)
     {
         mContext = c;
         mCallbackInterface = dataInterface;
@@ -87,7 +88,7 @@ public class IndicorConnection
         public void onServiceConnected(ComponentName componentName, IBinder service)
         {
             Log.i(TAG, "onServiceConnected");
-            mVixiarHHBLEService = ((VixiarHandheldBLEService.LocalBinder) service).getService();
+            mVixiarHHBLEService = ((IndicorBLEService.LocalBinder) service).getService();
             mServiceConnected = true;
             mVixiarHHBLEService.Initialize();
 
@@ -115,14 +116,14 @@ public class IndicorConnection
     {
         // Start the BLE Service
         Log.i(TAG, "Starting BLE Service");
-        Intent gattServiceIntent = new Intent(mContext, VixiarHandheldBLEService.class);
+        Intent gattServiceIntent = new Intent(mContext, IndicorBLEService.class);
         mContext.bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
         Log.i(TAG, "BLE Service Started");
 
         // create a receiver to receive messages from the service
         myBLEMessageReceiver = new MyBLEMessageReceiver();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(VixiarHandheldBLEService.MESSAGE_ID);
+        intentFilter.addAction(IndicorBLEService.MESSAGE_ID);
         mContext.registerReceiver(myBLEMessageReceiver, intentFilter);
     }
 
@@ -132,28 +133,28 @@ public class IndicorConnection
         public void onReceive(Context arg0, Intent arg1)
         {
             Log.i(TAG, "onReceive");
-            if (arg1.hasExtra(VixiarHandheldBLEService.SCAN_RESULT))
+            if (arg1.hasExtra(IndicorBLEService.SCAN_RESULT))
             {
-                BLEScanCallback((ScanResult) arg1.getParcelableExtra(VixiarHandheldBLEService.SCAN_RESULT));
+                BLEScanCallback((ScanResult) arg1.getParcelableExtra(IndicorBLEService.SCAN_RESULT));
             }
-            else if (arg1.hasExtra(VixiarHandheldBLEService.CONNECTED))
+            else if (arg1.hasExtra(IndicorBLEService.CONNECTED))
             {
                 BLEConnected();
             }
-            else if (arg1.hasExtra(VixiarHandheldBLEService.DISCONNECTED))
+            else if (arg1.hasExtra(IndicorBLEService.DISCONNECTED))
             {
                 BLEDisconnected();
             }
-            else if (arg1.hasExtra(VixiarHandheldBLEService.SERVICES_DISCOVERED))
+            else if (arg1.hasExtra(IndicorBLEService.SERVICES_DISCOVERED))
             {
                 BLEServicesDiscovered();
             }
-            else if (arg1.hasExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED))
+            else if (arg1.hasExtra(IndicorBLEService.RT_DATA_RECEIVED))
             {
-                m_realtimeData.AppendData(arg1.getByteArrayExtra(VixiarHandheldBLEService.RT_DATA_RECEIVED));
+                PatientInfo.getInstance().GetRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
                 mCallbackInterface.iNotify();
             }
-            else if (arg1.hasExtra(VixiarHandheldBLEService.ERROR_WRITING_DESCRIPTOR))
+            else if (arg1.hasExtra(IndicorBLEService.ERROR_WRITING_DESCRIPTOR))
             {
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
                 alertDialogBuilder.setMessage("A handheld device was detected, however it is not paired with this tablet.  See Instructions for Use for how to pair the handheld with this device.");
@@ -237,6 +238,8 @@ public class IndicorConnection
     private void ScanTimeout()
     {
         mVixiarHHBLEService.StopScanning();
+
+        // TODO: add logic to figure out which device to connect to based on which one is paired, strongest signal, etc.
         BluetoothDevice device = GetLargestSignalDevice();
 
         // see if there are any devices
@@ -341,7 +344,6 @@ public class IndicorConnection
         return null;
     }
 
-
     private class VixiarDeviceParams
     {
 
@@ -364,10 +366,5 @@ public class IndicorConnection
         {
             return mTotalRssi / mNumAdvertisements;
         }
-    }
-
-    public RealTimeData GetRealtimeData()
-    {
-        return m_realtimeData;
     }
 }

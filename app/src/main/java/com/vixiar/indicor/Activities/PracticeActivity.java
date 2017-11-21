@@ -6,14 +6,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import com.vixiar.indicor.BLE_Interface.IndicorConnection;
-import com.vixiar.indicor.BLE_Interface.IndicorDataInterface;
+import com.vixiar.indicor.BLE_Interface.IndicorBLEServiceInterface;
+import com.vixiar.indicor.BLE_Interface.IndicorBLEServiceInterfaceCallbacks;
+import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.Graphics.PracticePressureGraph;
 import com.vixiar.indicor.R;
 
 import static android.content.ContentValues.TAG;
 
-public class PracticeActivity extends Activity implements IndicorDataInterface
+public class PracticeActivity extends Activity implements IndicorBLEServiceInterfaceCallbacks
 {
     PracticePressureGraph pvg;
 
@@ -28,8 +29,8 @@ public class PracticeActivity extends Activity implements IndicorDataInterface
 
         InitializeHeaderAndFooter();
 
-        IndicorConnection.getInstance().initialize(this, this);
-        IndicorConnection.getInstance().ConnectToIndicor();
+        IndicorBLEServiceInterface.getInstance().initialize(this, this);
+        IndicorBLEServiceInterface.getInstance().ConnectToIndicor();
     }
 
     private void InitializeHeaderAndFooter()
@@ -82,7 +83,7 @@ public class PracticeActivity extends Activity implements IndicorDataInterface
 
     public void iNotify()
     {
-        int currentIndex = IndicorConnection.getInstance().GetRealtimeData().GetData().size();
-        pvg.setBallPressure((float)IndicorConnection.getInstance().GetRealtimeData().GetData().get(currentIndex-1).m_pressure);
+        int currentIndex = PatientInfo.getInstance().GetRealtimeData().GetData().size();
+        pvg.setBallPressure((float) PatientInfo.getInstance().GetRealtimeData().GetData().get(currentIndex-1).m_pressure);
     }
 }

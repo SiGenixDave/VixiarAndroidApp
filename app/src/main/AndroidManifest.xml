@@ -25,7 +25,7 @@
         </activity>
 
         <service
-            android:name=".BLE_Interface.VixiarHandheldBLEService"
+            android:name=".BLE_Interface.IndicorBLEService"
             android:enabled="true"/>
 
         <activity android:name=".Activities.PatInfoActivity">

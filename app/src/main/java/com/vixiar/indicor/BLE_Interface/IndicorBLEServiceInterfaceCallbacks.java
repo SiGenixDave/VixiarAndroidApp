@@ -4,7 +4,7 @@ package com.vixiar.indicor.BLE_Interface;
  * Created by gyurk on 11/6/2017.
  */
 
-public interface IndicorDataInterface
+public interface IndicorBLEServiceInterfaceCallbacks
 {
     public void iError(int e);
     public void iNotify();

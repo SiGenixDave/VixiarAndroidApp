@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
-import android.text.GetChars;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -17,13 +16,20 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
-import com.vixiar.indicor.BLE_Interface.IndicorConnection;
-import com.vixiar.indicor.BLE_Interface.IndicorDataInterface;
+import com.vixiar.indicor.BLE_Interface.IndicorBLEServiceInterface;
+import com.vixiar.indicor.BLE_Interface.IndicorBLEServiceInterfaceCallbacks;
+import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.Graphics.TestPressureGraph;
 import com.vixiar.indicor.R;
 
-public class TestingActivity extends Activity implements IndicorDataInterface, TimerCallback
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class TestingActivity extends Activity implements IndicorBLEServiceInterfaceCallbacks, TimerCallback
 {
+    //TODO: need to put data markers at the beginning and end of valsalva
+
     private final String TAG = this.getClass().getSimpleName();
 
     private static Double m_nPPGGraphLastX = 0.0;
@@ -44,12 +50,15 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
     private TextView m_lblBottomCountdownNumber;
     private TestPressureGraph m_graphPressure;
 
-    // UI Components (Testing Screen)
+    // UI Components (Results Screen)
     private ImageView m_imgResults1Checkbox;
     private ImageView m_imgResults2Checkbox;
     private ImageView m_imgResults3Checkbox;
     private ImageView m_imgRestIcon;
     private TextView m_lblRest;
+    private TextView m_lblPatID;
+    private TextView m_txtPatID;
+    private TextView m_txtDateTime;
 
     Typeface m_robotoLightTypeface;
     Typeface m_robotoRegularTypeface;
@@ -121,10 +130,10 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         m_robotoLightTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
         m_robotoRegularTypeface = ResourcesCompat.getFont(this, R.font.roboto_regular);
 
-        InitStateMachine();
+        InitTest();
 
-        IndicorConnection.getInstance().initialize(this, this);
-        IndicorConnection.getInstance().ConnectToIndicor();
+        IndicorBLEServiceInterface.getInstance().initialize(this, this);
+        IndicorBLEServiceInterface.getInstance().ConnectToIndicor();
     }
 
     @Override
@@ -175,10 +184,10 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         {
             case STABILIZING:
                 // update the PPG chart
-                int currentDataIndex = IndicorConnection.getInstance().GetRealtimeData().GetData().size();
+                int currentDataIndex = PatientInfo.getInstance().GetRealtimeData().GetData().size();
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
-                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, IndicorConnection.getInstance().GetRealtimeData().GetData().get(i).m_PPG), true, 500);
+                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().GetRealtimeData().GetData().get(i).m_PPG), true, 500);
                     m_nPPGGraphLastX += 0.02;
                 }
                 m_nLastDataIndex = currentDataIndex;
@@ -186,12 +195,12 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
 
             case VALSALVA_WAIT_FOR_PRESSURE:
             case VALSALVA:
-                currentDataIndex = IndicorConnection.getInstance().GetRealtimeData().GetData().size();
+                currentDataIndex = PatientInfo.getInstance().GetRealtimeData().GetData().size();
                 double tempSum = 0.0;
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
                     // sum up all the pressures from this set of data
-                    tempSum += IndicorConnection.getInstance().GetRealtimeData().GetData().get(i).m_pressure;
+                    tempSum += PatientInfo.getInstance().GetRealtimeData().GetData().get(i).m_pressure;
                 }
                 double thisAvg = tempSum / (currentDataIndex - m_nLastDataIndex);
                 m_nLastDataIndex = currentDataIndex;
@@ -338,7 +347,6 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
 
     private void SwitchToResultsView()
     {
-        // TODO: update the patient ID and date time on results screen
         setContentView(R.layout.activity_testing_results);
 
         m_lblBottomMessage = findViewById(R.id.txtMessage);
@@ -348,10 +356,18 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         m_imgResults3Checkbox = findViewById(R.id.imgMeasurement3Checkbox);
         m_imgRestIcon = findViewById(R.id.imgRestIcon);
         m_lblRest = findViewById(R.id.lblRest);
+        m_lblPatID = findViewById(R.id.lblID);
+        m_txtPatID = findViewById(R.id.txtPatID);
+        m_txtDateTime = findViewById(R.id.txtDateTime);
 
-        m_lblBottomMessage.setTypeface(m_robotoLightTypeface);
-        m_lblBottomCountdownNumber.setTypeface(m_robotoRegularTypeface);
+        m_lblRest.setTypeface(m_robotoLightTypeface);
+        m_lblPatID.setTypeface(m_robotoRegularTypeface);
+        m_txtDateTime.setTypeface(m_robotoRegularTypeface);
+        m_txtPatID.setTypeface(m_robotoRegularTypeface);
 
+        m_txtPatID.setText(PatientInfo.getInstance().getPatientId());
+
+        m_txtDateTime.setText(PatientInfo.getInstance().getTestDate());
 
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.end_test));
@@ -432,9 +448,10 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         }
     }
 
-    private void InitStateMachine()
+    private void InitTest()
     {
         m_nTestNumber = 1;
+        PatientInfo.getInstance().setTestDate(getDateTime());
 
         SwitchToStabilityView();
         InactivateStabilityView();
@@ -443,6 +460,12 @@ public class TestingActivity extends Activity implements IndicorDataInterface, T
         m_periodicTimer = new StateMachineTimer(PERIODIC_TIMER_ID);
 
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
+    }
+
+    private String getDateTime() {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        return simpleDateFormat.format(date);
     }
 
     private void PressureError()
