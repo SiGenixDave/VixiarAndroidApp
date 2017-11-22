@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
 public class PatInfoActivity extends Activity
 {
     // TODO: switch the input method of DOB to just an age spinner
-    // TODO: swith the BP fields to just type a value in
+    // TODO: switch the BP fields to just type a value in
 
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
