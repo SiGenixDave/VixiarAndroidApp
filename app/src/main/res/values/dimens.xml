@@ -8,12 +8,15 @@
     <dimen name="procedure_step_font_size">16dp</dimen>
     <dimen name="procedure_steps_font_size">14dp</dimen>
 
-    <dimen name="main_screen_icon_size">60dp</dimen>
+    <dimen name="main_screen_icon_size">80dp</dimen>
     <dimen name="main_screen_label_size">28sp</dimen>
     <dimen name="main_screen_vertical_spacing">30dp</dimen>
 
     <dimen name="bottom_bar_font_size">24sp</dimen>
     <dimen name="bottom_bar_countdown_font_size">48sp</dimen>
+    <dimen name="bottom_Bar_height">120dp</dimen>
+    <dimen name="main_screen_bottom_Bar_font_size1">30sp</dimen>
+    <dimen name="main_screen_bottom_Bar_font_size2">24sp</dimen>
 
     <dimen name="top_bar_height">60sp</dimen>
     <dimen name="top_bar_title_font_size">24sp</dimen>

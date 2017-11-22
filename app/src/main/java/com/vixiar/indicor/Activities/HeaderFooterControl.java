@@ -93,6 +93,7 @@ public class HeaderFooterControl
     public void DimPracticeButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.practiceButton);
+        b.setEnabled(false);
         if (b != null)
         {
             b.setAlpha((float) 0.5);
@@ -102,6 +103,7 @@ public class HeaderFooterControl
     public void UnDimPracticeButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.practiceButton);
+        b.setEnabled(true);
         if (b != null)
         {
             b.setAlpha((float) 1.0);
@@ -111,6 +113,7 @@ public class HeaderFooterControl
     public void DimNextButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.startTestButton);
+        b.setEnabled(false);
         if (b != null)
         {
             b.setAlpha((float) 0.5);
@@ -120,6 +123,7 @@ public class HeaderFooterControl
     public void UnDimNextButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.startTestButton);
+        b.setEnabled(true);
         if (b != null)
         {
             b.setAlpha((float) 1.0);

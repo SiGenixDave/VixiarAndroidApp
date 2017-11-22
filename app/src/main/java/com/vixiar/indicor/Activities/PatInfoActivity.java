@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -33,7 +34,7 @@ public class PatInfoActivity extends Activity
     private final static String TAG = PatInfoActivity.class.getSimpleName();
 
     private EditText txtPatientID;
-    private EditText txtDOB;
+    private EditText txtAge;
     private EditText txtHeight;
     private EditText txtWeight;
     private EditText txtSystolic;
@@ -42,9 +43,7 @@ public class PatInfoActivity extends Activity
     private EditText txtNotes;
     private TextView txtMessage;
 
-    private NumberPicker npDOBMonth;
-    private NumberPicker npDOBDay;
-    private NumberPicker npDOBYear;
+    private NumberPicker npAge;
     private NumberPicker npHeightFeet;
     private NumberPicker npHeightInches;
     private NumberPicker npWeight;
@@ -67,9 +66,9 @@ public class PatInfoActivity extends Activity
         InitializeHeaderAndFooter();
         initializeControls();
 
-        HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
-        HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
-        HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
+        HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
+        HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
+        HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
     }
 
     @Override
@@ -83,8 +82,7 @@ public class PatInfoActivity extends Activity
         try
         {
             PatientInfo.getInstance().setDiastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
-        }
-        catch (NumberFormatException e)
+        } catch (NumberFormatException e)
         {
             PatientInfo.getInstance().setDiastolicBloodPressure(0);
         }
@@ -92,8 +90,7 @@ public class PatInfoActivity extends Activity
         try
         {
             PatientInfo.getInstance().setSystolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
-        }
-        catch (NumberFormatException e)
+        } catch (NumberFormatException e)
         {
             PatientInfo.getInstance().setSystolicBloodPressure(0);
         }
@@ -146,104 +143,54 @@ public class PatInfoActivity extends Activity
 
         // --------------------------------------------------------------------------------------------------------
         // DOB
-        txtDOB = (EditText) findViewById(R.id.txtDOB);
-        txtDOB.addTextChangedListener(fieldChangeWatcher);
-        txtDOB.setShowSoftInputOnFocus(false);
-        txtDOB.setOnFocusChangeListener(new View.OnFocusChangeListener()
+        txtAge = (EditText) findViewById(R.id.txtAge);
+        txtAge.addTextChangedListener(fieldChangeWatcher);
+        txtAge.setShowSoftInputOnFocus(false);
+        txtAge.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
             @Override
             public void onFocusChange(View v, boolean hasFocus)
             {
                 if (hasFocus)
                 {
-                    txtDOB.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
-                    npDOBDay.setVisibility(View.VISIBLE);
-                    npDOBMonth.setVisibility(View.VISIBLE);
-                    npDOBYear.setVisibility(View.VISIBLE);
-                    int nMonth = npDOBMonth.getValue();
-                    int nDay = npDOBDay.getValue();
-                    int nYear = npDOBYear.getValue();
-                    txtDOB.setText(monthString[nMonth] + " " + String.valueOf(nDay) + " " + String.valueOf(nYear));
+                    txtAge.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
+                    npAge.setVisibility(View.VISIBLE);
+                    txtAge.setText(String.valueOf(npAge.getValue()));
                 }
                 else
                 {
-                    txtDOB.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
-                    npDOBDay.setVisibility(View.GONE);
-                    npDOBMonth.setVisibility(View.GONE);
-                    npDOBYear.setVisibility(View.GONE);
+                    txtAge.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
+                    npAge.setVisibility(View.GONE);
                 }
             }
         });
 
         monthString = getResources().getStringArray(R.array.months_array);
 
-        NumberPicker.OnValueChangeListener dobChangeListener = new NumberPicker.OnValueChangeListener()
+        NumberPicker.OnValueChangeListener ageChangeListener = new NumberPicker.OnValueChangeListener()
         {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal)
             {
-                int nMonth = npDOBMonth.getValue();
-                int nDay = npDOBDay.getValue();
-                int nYear = npDOBYear.getValue();
-                txtDOB.setText(monthString[nMonth] + " " + String.valueOf(nDay) + " " + String.valueOf(nYear));
+                txtAge.setText(String.valueOf(npAge.getValue()));
             }
         };
 
-        npDOBDay = (NumberPicker) findViewById(R.id.npDOBDay);
-        npDOBDay.setVisibility(View.GONE);
-        npDOBDay.setMinValue(1);
-        npDOBDay.setMaxValue(31);
-        npDOBDay.setOnValueChangedListener(dobChangeListener);
-
-        npDOBMonth = (NumberPicker) findViewById(R.id.npDOBMonth);
-        npDOBMonth.setFormatter(new NumberPicker.Formatter()
-        {
-            @Override
-            public String format(int value)
-            {
-                return monthString[value];
-            }
-        });
-        // this code fixes bug in numberpicker where when first opening a numberpicker with a formatter,
-        // the string is not shown until the picker is touched
-        try
-        {
-            Method method = npDOBMonth.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
-            method.setAccessible(true);
-            method.invoke(npDOBMonth, true);
-        } catch (NoSuchMethodException e)
-        {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e)
-        {
-            e.printStackTrace();
-        } catch (IllegalAccessException e)
-        {
-            e.printStackTrace();
-        } catch (InvocationTargetException e)
-        {
-            e.printStackTrace();
-        }
-        npDOBMonth.setMinValue(0);
-        npDOBMonth.setMaxValue(monthString.length - 1);
-        npDOBMonth.setVisibility(View.GONE);
-        npDOBMonth.setOnValueChangedListener(dobChangeListener);
-
-        npDOBYear = (NumberPicker) findViewById(R.id.npDOBYear);
-        npDOBYear.setVisibility(View.GONE);
-        npDOBYear.setMinValue(1930);
-        npDOBYear.setMaxValue(2017);
-        npDOBYear.setValue(1960);
-        npDOBYear.setOnValueChangedListener(dobChangeListener);
+        npAge = (NumberPicker) findViewById(R.id.npAge);
+        npAge.setVisibility(View.GONE);
+        npAge.setMinValue(18);
+        npAge.setMaxValue(110);
+        npAge.setValue(50);
+        npAge.setOnValueChangedListener(ageChangeListener);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
-        LinearLayout DOBGroup = (LinearLayout) findViewById(R.id.DOBGroup);
-        DOBGroup.setOnClickListener(new View.OnClickListener()
+        LinearLayout ageGroup = findViewById(R.id.ageGroup);
+        ageGroup.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
-                txtDOB.requestFocus();
+                txtAge.requestFocus();
             }
         });
         // --------------------------------------------------------------------------------------------------------
@@ -361,11 +308,15 @@ public class PatInfoActivity extends Activity
                 txtWeight.requestFocus();
             }
         });
+
         // --------------------------------------------------------------------------------------------------------
         // Systolic
         txtSystolic = (EditText) findViewById(R.id.txtSystolic);
         txtSystolic.addTextChangedListener(fieldChangeWatcher);
-        txtSystolic.setShowSoftInputOnFocus(false);
+        txtSystolic.setShowSoftInputOnFocus(true);
+        final int minSystolic = 100;
+        final int maxSystolic = 190;
+        txtSystolic.setFilters(new InputFilter[]{new InputFilterMinMax(minSystolic >= 10 ? "0" : String.valueOf(minSystolic), maxSystolic > -10 ? String.valueOf(maxSystolic) : "0")});
         txtSystolic.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
             @Override
@@ -374,34 +325,21 @@ public class PatInfoActivity extends Activity
                 if (hasFocus)
                 {
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
-                    npSystolic.setVisibility(View.VISIBLE);
-                    int nDiastolic = npSystolic.getValue();
-                    txtSystolic.setText(String.valueOf(nDiastolic));
                 }
                 else
                 {
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
-                    npSystolic.setVisibility(View.GONE);
+                    if (Integer.parseInt(txtSystolic.getText().toString()) > maxSystolic)
+                    {
+                        txtSystolic.setText(String.valueOf(maxSystolic));
+                    }
+                    if (Integer.parseInt(txtSystolic.getText().toString()) < minSystolic)
+                    {
+                        txtSystolic.setText(String.valueOf(minSystolic));
+                    }
                 }
             }
         });
-
-        NumberPicker.OnValueChangeListener systolicChangeListener = new NumberPicker.OnValueChangeListener()
-        {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal)
-            {
-                int nDiastolic = npSystolic.getValue();
-                txtSystolic.setText(String.valueOf(nDiastolic));
-            }
-        };
-
-        npSystolic = (NumberPicker) findViewById(R.id.npSystolic);
-        npSystolic.setVisibility(View.GONE);
-        npSystolic.setMinValue(90);
-        npSystolic.setMaxValue(160);
-        npSystolic.setOnValueChangedListener(systolicChangeListener);
-        npSystolic.setValue(120);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout systolicGroup = (LinearLayout) findViewById(R.id.systolicGroup);
@@ -417,7 +355,11 @@ public class PatInfoActivity extends Activity
         // Diastolic
         txtDiastolic = (EditText) findViewById(R.id.txtDiast);
         txtDiastolic.addTextChangedListener(fieldChangeWatcher);
-        txtDiastolic.setShowSoftInputOnFocus(false);
+        txtDiastolic.setShowSoftInputOnFocus(true);
+        final int minDiastolic = 40;
+        final int maxDiastolic = 120;
+        txtDiastolic.setFilters(new InputFilter[]{new InputFilterMinMax(minDiastolic >= 10 ? "0" : String.valueOf(minSystolic), maxDiastolic > -10 ? String.valueOf(maxDiastolic) : "0")});
+
         txtDiastolic.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
             @Override
@@ -426,34 +368,21 @@ public class PatInfoActivity extends Activity
                 if (hasFocus)
                 {
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
-                    npDiastolic.setVisibility(View.VISIBLE);
-                    int nDiastolic = npDiastolic.getValue();
-                    txtDiastolic.setText(String.valueOf(nDiastolic));
                 }
                 else
                 {
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
-                    npDiastolic.setVisibility(View.GONE);
+                    if (Integer.parseInt(txtDiastolic.getText().toString()) > maxDiastolic)
+                    {
+                        txtDiastolic.setText(String.valueOf(maxDiastolic));
+                    }
+                    if (Integer.parseInt(txtDiastolic.getText().toString()) < minDiastolic)
+                    {
+                        txtDiastolic.setText(String.valueOf(minDiastolic));
+                    }
                 }
             }
         });
-
-        NumberPicker.OnValueChangeListener diastolicChangeListener = new NumberPicker.OnValueChangeListener()
-        {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal)
-            {
-                int nDiastolic = npDiastolic.getValue();
-                txtDiastolic.setText(String.valueOf(nDiastolic));
-            }
-        };
-
-        npDiastolic = (NumberPicker) findViewById(R.id.npDiastolic);
-        npDiastolic.setVisibility(View.GONE);
-        npDiastolic.setMinValue(80);
-        npDiastolic.setMaxValue(100);
-        npDiastolic.setOnValueChangedListener(diastolicChangeListener);
-        npDiastolic.setValue(80);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout diastolicGroup = (LinearLayout) findViewById(R.id.diastolicGroup);
@@ -608,7 +537,7 @@ public class PatInfoActivity extends Activity
         @Override
         public void afterTextChanged(Editable s)
         {
-            if (txtPatientID.getText().toString().length() != 0 && txtDOB.getText().toString().length() != 0 &&
+            if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
                     txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
                     txtDiastolic.toString().trim().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
                     txtGender.getText().toString().length() != 0)
@@ -619,14 +548,9 @@ public class PatInfoActivity extends Activity
             }
             else
             {
-                HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
-                HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
-                HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
-/*
                 HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
-*/
             }
         }
     };
@@ -674,7 +598,7 @@ public class PatInfoActivity extends Activity
         v = (TextView) findViewById(R.id.txtPatientID);
         v.setTypeface(robotoTypeface);
 
-        v = (TextView) findViewById(R.id.txtDOB);
+        v = (TextView) findViewById(R.id.txtAge);
         v.setTypeface(robotoTypeface);
 
         v = (TextView) findViewById(R.id.txtHeight);

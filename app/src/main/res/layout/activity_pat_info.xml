@@ -64,7 +64,7 @@
 
             <ImageView
                 android:id="@+id/imageView"
-                android:layout_width="550dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="@dimen/main_screen_vertical_spacing"
@@ -72,7 +72,7 @@
                 android:src="@drawable/divider_line"/>
 
             <LinearLayout
-                android:id="@+id/DOBGroup"
+                android:id="@+id/ageGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
@@ -87,11 +87,11 @@
                     android:background="@color/colorMainBackground"
                     android:fontFamily="@font/roboto_light"
                     android:paddingStart="10dp"
-                    android:text="@string/setting_label_dob"
+                    android:text="@string/setting_label_age"
                     android:textSize="@dimen/main_screen_label_size"/>
 
                 <EditText
-                    android:id="@+id/txtDOB"
+                    android:id="@+id/txtAge"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
@@ -114,37 +114,23 @@
                     android:id="@+id/textView22"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="6"
+                    android:layout_weight="5"
                     android:fontFamily="fonts/Roboto-Light.ttf"
                     android:paddingStart="10dp"
                     android:textSize="@dimen/main_screen_label_size"/>
 
                 <NumberPicker
-                    android:id="@+id/npDOBMonth"
+                    android:id="@+id/npAge"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:theme="@style/PatInfoNumberPicker"/>
-
-                <NumberPicker
-                    android:id="@+id/npDOBDay"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:theme="@style/PatInfoNumberPicker"/>
-
-                <NumberPicker
-                    android:id="@+id/npDOBYear"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
                     android:theme="@style/PatInfoNumberPicker"/>
 
                 <TextView
                     android:id="@+id/textView222"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="4"
+                    android:layout_weight="5"
                     android:fontFamily="fonts/Roboto-Light.ttf"
                     android:textSize="@dimen/main_screen_label_size"/>
 
@@ -152,7 +138,7 @@
 
             <ImageView
                 android:id="@+id/imageView9"
-                android:layout_width="550dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="@dimen/main_screen_vertical_spacing"
@@ -231,13 +217,13 @@
                     android:id="@+id/textView27"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="5"/>
+                    android:layout_weight="4"/>
             </LinearLayout>
 
 
             <ImageView
                 android:id="@+id/imageView10"
-                android:layout_width="550dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="@dimen/main_screen_vertical_spacing"
@@ -310,13 +296,13 @@
                     android:id="@+id/lbsLbl1"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="6"/>
+                    android:layout_weight="5"/>
             </LinearLayout>
 
 
             <ImageView
                 android:id="@+id/imageView12"
-                android:layout_width="550dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="@dimen/main_screen_vertical_spacing"
@@ -349,8 +335,8 @@
                     android:layout_gravity="left"
                     android:layout_weight="4"
                     android:background="@null"
-                    android:cursorVisible="false"
-                    android:inputType="textPersonName"
+                    android:inputType="number"
+                    android:numeric="integer"
                     android:textAppearance="@style/PatInfoValue"
                     android:textColor="@null"/>
 
@@ -378,24 +364,17 @@
                     android:layout_height="0dp"
                     android:layout_weight="5"/>
 
-                <NumberPicker
-                    android:id="@+id/npSystolic"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:theme="@style/PatInfoNumberPicker"/>
-
                 <TextView
                     android:id="@+id/textView352"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="6"/>
+                    android:layout_weight="5"/>
             </LinearLayout>
 
 
             <ImageView
                 android:id="@+id/imageView14"
-                android:layout_width="550dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="@dimen/main_screen_vertical_spacing"
@@ -427,8 +406,8 @@
                     android:layout_gravity="left"
                     android:layout_weight="4"
                     android:background="@null"
-                    android:cursorVisible="false"
-                    android:inputType="textPersonName"
+                    android:inputType="number"
+                    android:numeric="integer"
                     android:textAppearance="@style/PatInfoValue"
                     android:textColor="@null"/>
 
@@ -456,24 +435,17 @@
                     android:layout_height="0dp"
                     android:layout_weight="5"/>
 
-                <NumberPicker
-                    android:id="@+id/npDiastolic"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:theme="@style/PatInfoNumberPicker"/>
-
                 <TextView
                     android:id="@+id/textView132"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="6"/>
+                    android:layout_weight="5"/>
             </LinearLayout>
 
 
             <ImageView
                 android:id="@+id/imageView17"
-                android:layout_width="550dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="@dimen/main_screen_vertical_spacing"
@@ -535,13 +507,13 @@
                     android:id="@+id/textView326"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="5"/>
+                    android:layout_weight="4"/>
             </LinearLayout>
 
 
             <ImageView
                 android:id="@+id/imageView3"
-                android:layout_width="550dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="@dimen/main_screen_vertical_spacing"

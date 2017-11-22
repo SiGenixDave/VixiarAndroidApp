@@ -19,7 +19,7 @@
     <string name="complete_data_entry">Complete Patient Data Entry</string>
     <string name="continue_practice_or_test">Practice or continue to test</string>
     <string name="setting_label_pi">Patient ID</string>
-    <string name="setting_label_dob">Date of Birth</string>
+    <string name="setting_label_age">Age</string>
     <string name="setting_label_height">Height</string>
     <string name="setting_label_weight">Weight</string>
     <string name="setting_label_syst">Systolic Pressure</string>
