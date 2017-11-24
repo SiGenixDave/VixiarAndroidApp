@@ -160,7 +160,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void iDisconnected()
     {
-        // TODO: for now, just leave the activity
+        // TODO: bring up dialog about disconnecting, handle result
         onBackPressed();
     }
 
@@ -172,7 +172,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void iError(int e)
     {
-        // TODO: for now, just leave the activity
+        // TODO: handle different errors, bring up dialog about error, handle result
         onBackPressed();
     }
 
@@ -262,6 +262,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_seriesPPGData.setThickness(8);
         m_chartPPG.addSeries(m_seriesPPGData);
 
+        // TODO: Update battery on display
     }
 
     private String GetMeasurementScreenTitle()
@@ -309,6 +310,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 onBackPressed();
             }
         });
+
+        // TODO: Update battery on display
+
     }
 
     private void InactivateTestingView()
@@ -380,6 +384,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 // TODO: Handle end test button from results screen
             }
         });
+
+        // TODO: Update battery on display
+
     }
 
     private void UpdateResults()
@@ -470,7 +477,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private void PressureError()
     {
-        // TODO: this is temporary...need to finish this
+        // TODO: bring up dialog about pressure error, handle result
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Pressure error");
         alertDialogBuilder.setMessage("Something happened with the pressure");
@@ -632,12 +639,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case COMPLETE:
                 Log.i(TAG, "In state: COMPLETE");
-                // TODO: this is temporary...need to finish this
+                // TODO: handle test complete state
                 break;
 
             case PRESSURE_ERROR:
                 Log.i(TAG, "In state: PRESSURE_ERROR");
-                // TODO: this is temporary...need to finish this
+                // TODO: handle pressure error state
                 break;
 
         }

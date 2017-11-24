@@ -27,9 +27,6 @@ import java.lang.reflect.Method;
 
 public class PatInfoActivity extends Activity
 {
-    // TODO: switch the input method of DOB to just an age spinner
-    // TODO: switch the BP fields to just type a value in
-
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
 
@@ -77,25 +74,73 @@ public class PatInfoActivity extends Activity
         super.onPause();
 
         // store the data entered to the patient class
+
+        // PATIENT ID
         PatientInfo.getInstance().setPatientId(txtPatientID.getText().toString());
 
+        // AGE
         try
         {
-            PatientInfo.getInstance().setDiastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
-        } catch (NumberFormatException e)
+            PatientInfo.getInstance().setAge_years(Integer.parseInt(txtAge.getText().toString()));
+        }
+        catch (NumberFormatException e)
         {
-            PatientInfo.getInstance().setDiastolicBloodPressure(0);
+            PatientInfo.getInstance().setAge_years(0);
         }
 
+        // HEIGHT
+        try
+        {
+            // split the height up into ft and inches
+            String[] splitHeight = txtHeight.getText().toString().split("/");
+
+            // get rid of the whitespace
+            String ft = splitHeight[0].replaceAll("\\s", "");
+            String in = splitHeight[1].replaceAll("\\s", "");
+
+            // convert to an int
+            int height_ft = Integer.parseInt(ft);
+            int height_in = Integer.parseInt(in);
+            PatientInfo.getInstance().setHeight_Inches(height_ft * 12 + height_in);
+        }
+        catch (NumberFormatException e)
+        {
+
+            PatientInfo.getInstance().setHeight_Inches(0);
+        }
+
+        // WEIGHT
+        try
+        {
+            PatientInfo.getInstance().setWeight_lbs(Integer.parseInt(txtWeight.getText().toString()));
+        }
+        catch (NumberFormatException e)
+        {
+            PatientInfo.getInstance().setWeight_lbs(0);
+        }
+
+        // SYSTOLIC PRESSURE
         try
         {
             PatientInfo.getInstance().setSystolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
-        } catch (NumberFormatException e)
+        }
+        catch (NumberFormatException e)
         {
             PatientInfo.getInstance().setSystolicBloodPressure(0);
         }
 
-        // TODO: finish copying the patient info data to the patient class
+        // DIASTOLIC PRESSURE
+        try
+        {
+            PatientInfo.getInstance().setDiastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
+        }
+        catch (NumberFormatException e)
+        {
+            PatientInfo.getInstance().setDiastolicBloodPressure(0);
+        }
+
+        // NOTES
+        PatientInfo.getInstance().setNotes(txtNotes.getText().toString());
     }
 
     @Override
@@ -329,13 +374,20 @@ public class PatInfoActivity extends Activity
                 else
                 {
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
-                    if (Integer.parseInt(txtSystolic.getText().toString()) > maxSystolic)
+                    try
                     {
-                        txtSystolic.setText(String.valueOf(maxSystolic));
+                        if (Integer.parseInt(txtSystolic.getText().toString()) > maxSystolic)
+                        {
+                            txtSystolic.setText(String.valueOf(maxSystolic));
+                        }
+                        if (Integer.parseInt(txtSystolic.getText().toString()) < minSystolic)
+                        {
+                            txtSystolic.setText(String.valueOf(minSystolic));
+                        }
                     }
-                    if (Integer.parseInt(txtSystolic.getText().toString()) < minSystolic)
+                    catch (NumberFormatException e)
                     {
-                        txtSystolic.setText(String.valueOf(minSystolic));
+
                     }
                 }
             }
@@ -372,13 +424,20 @@ public class PatInfoActivity extends Activity
                 else
                 {
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
-                    if (Integer.parseInt(txtDiastolic.getText().toString()) > maxDiastolic)
+                    try
                     {
-                        txtDiastolic.setText(String.valueOf(maxDiastolic));
+                        if (Integer.parseInt(txtDiastolic.getText().toString()) > maxDiastolic)
+                        {
+                            txtDiastolic.setText(String.valueOf(maxDiastolic));
+                        }
+                        if (Integer.parseInt(txtDiastolic.getText().toString()) < minDiastolic)
+                        {
+                            txtDiastolic.setText(String.valueOf(minDiastolic));
+                        }
                     }
-                    if (Integer.parseInt(txtDiastolic.getText().toString()) < minDiastolic)
+                    catch (NumberFormatException e)
                     {
-                        txtDiastolic.setText(String.valueOf(minDiastolic));
+
                     }
                 }
             }
@@ -431,7 +490,7 @@ public class PatInfoActivity extends Activity
             }
         };
 
-        npGender = (NumberPicker) findViewById(R.id.npGender);
+        npGender = findViewById(R.id.npGender);
         npGender.setVisibility(View.GONE);
         npGender.setMinValue(0);
         npGender.setMaxValue(genderString.length - 1);
@@ -453,16 +512,20 @@ public class PatInfoActivity extends Activity
             Method method = npGender.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
             method.setAccessible(true);
             method.invoke(npGender, true);
-        } catch (NoSuchMethodException e)
+        }
+        catch (NoSuchMethodException e)
         {
             e.printStackTrace();
-        } catch (IllegalArgumentException e)
+        }
+        catch (IllegalArgumentException e)
         {
             e.printStackTrace();
-        } catch (IllegalAccessException e)
+        }
+        catch (IllegalAccessException e)
         {
             e.printStackTrace();
-        } catch (InvocationTargetException e)
+        }
+        catch (InvocationTargetException e)
         {
             e.printStackTrace();
         }

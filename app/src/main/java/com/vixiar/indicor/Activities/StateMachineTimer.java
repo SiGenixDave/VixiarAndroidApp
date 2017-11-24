@@ -2,7 +2,6 @@ package com.vixiar.indicor.Activities;
 
 import android.os.Handler;
 
-//TODO nned runnable Timers and TimerTasks are prone to memory leaks
 public class StateMachineTimer
 {
     private Handler handler;
