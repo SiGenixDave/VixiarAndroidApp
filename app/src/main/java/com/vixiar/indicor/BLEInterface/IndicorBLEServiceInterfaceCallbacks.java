@@ -1,4 +1,4 @@
-package com.vixiar.indicor.BLE_Interface;
+package com.vixiar.indicor.BLEInterface;
 
 /**
  * Created by gyurk on 11/6/2017.
@@ -10,5 +10,5 @@ public interface IndicorBLEServiceInterfaceCallbacks
     public void iNotify();
     public void iConnected();
     public void iDisconnected();
-    public void iCharacteristicRead(Object o);
+    public void iBatteryLevelRead(int level);
 }

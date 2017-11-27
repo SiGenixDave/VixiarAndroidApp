@@ -6,8 +6,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import com.vixiar.indicor.BLE_Interface.IndicorBLEServiceInterface;
-import com.vixiar.indicor.BLE_Interface.IndicorBLEServiceInterfaceCallbacks;
+import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
+import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.Graphics.PracticePressureGraph;
 import com.vixiar.indicor.R;
@@ -65,7 +65,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         Log.i(TAG, "Connected");
     }
 
-    public void iCharacteristicRead(Object o)
+    public void iBatteryLevelRead(int level)
     {
     }
 

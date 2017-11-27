@@ -25,12 +25,11 @@ public class HeaderFooterControl
         return ourInstance;
     }
 
-    private TextView screenTitle;
-    private Button navigationButton;
-    private TextView bottomMessage;
-    private ImageView practiceButton;
-    private ImageView nextButton;
-
+    private static final int BATTERY_LEVEL_FULL = 90;
+    private static final int BATTERY_LEVEL_3BARS = 70;
+    private static final int BATTERY_LEVEL_2BARS = 50;
+    private static final int BATTERY_LEVEL_1BARS = 30;
+    private static final int BATTERY_LEVEL_0 = 10;
 
     public void SetTypefaces(Activity a)
     {
@@ -136,6 +135,35 @@ public class HeaderFooterControl
         if (v != null)
         {
             v.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    public void ShowBatteryIcon(Activity a, int level)
+    {
+        ImageView v = a.findViewById(R.id.batteryIcon);
+        if (v != null)
+        {
+            v.setVisibility(View.VISIBLE);
+            if (level > BATTERY_LEVEL_FULL)
+            {
+                v.setImageResource(R.drawable.battery_4);
+            }
+            else if (level >= BATTERY_LEVEL_3BARS)
+            {
+                v.setImageResource(R.drawable.battery_3);
+            }
+            else if (level >= BATTERY_LEVEL_2BARS)
+            {
+                v.setImageResource(R.drawable.battery_2);
+            }
+            else if (level >= BATTERY_LEVEL_1BARS)
+            {
+                v.setImageResource(R.drawable.battery_1);
+            }
+            else
+            {
+                v.setImageResource(R.drawable.battery_0);
+            }
         }
     }
 

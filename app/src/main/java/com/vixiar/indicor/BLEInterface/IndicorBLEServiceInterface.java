@@ -1,4 +1,4 @@
-package com.vixiar.indicor.BLE_Interface;
+package com.vixiar.indicor.BLEInterface;
 
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
@@ -16,8 +16,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import com.vixiar.indicor.Activities.GenericTimer;
+import com.vixiar.indicor.Activities.TimerCallback;
 import com.vixiar.indicor.Data.PatientInfo;
-import com.vixiar.indicor.Data.RealtimeData;
 import com.vixiar.indicor.R;
 
 import java.util.ArrayList;
@@ -30,47 +31,53 @@ import static android.content.Context.BIND_AUTO_CREATE;
  * Created by gyurk on 11/6/2017.
  */
 
-public class IndicorBLEServiceInterface
+public class IndicorBLEServiceInterface implements TimerCallback
 {
     // make this a singleton class
     private static IndicorBLEServiceInterface ourInstance = new IndicorBLEServiceInterface();
-
     public static IndicorBLEServiceInterface getInstance()
     {
         return ourInstance;
     }
 
-    private final static String TAG = "IND";
-    private IndicorBLEServiceInterfaceCallbacks mCallbackInterface;
-    private MyBLEMessageReceiver myBLEMessageReceiver;
+    private final static String TAG = IndicorBLEServiceInterface.class.getSimpleName();
+
+    private IndicorBLEServiceInterfaceCallbacks m_CallbackInterface;
+    private MyBLEMessageReceiver m_BLEMessageReceiver;
 
     // Variables to manage BLE connection
-    private static boolean mConnectState;
-    private static boolean mServiceConnected;
-    private static IndicorBLEService mVixiarHHBLEService;
+    private static boolean m_ConnectState;
+    private static boolean m_ServiceConnected;
+    private static IndicorBLEService m_VixiarHHBLEService;
+    private static boolean m_bFirstBarreryReadRequest;
 
-    private AlertDialog connectionDialog;
-    private Context mContext;
-
-    private Handler handler = new Handler();
-    private final Runnable runnable = new Runnable()
+    private AlertDialog m_connectionDialog;
+    private Context m_Context;
+    private Handler m_handler = new Handler();
+    private final Runnable m_ScanTimeoutRunnable = new Runnable()
     {
         public void run()
         {
             ScanTimeout();
         }
     };
+    private int m_batteryLevel;
 
-    private ArrayList<ScanResult> mScanList = new ArrayList<ScanResult>()
+    private ArrayList<ScanResult> m_ScanList = new ArrayList<ScanResult>()
     {
     };
+
+    // be careful this ID doesn't overlap others
+    private final static int BATTERY_READ_TIMER_ID = 3;
+    private final static int BATTERY_READ_TIME_MS = 30000;
+    private GenericTimer m_updateBatteryTimer = new GenericTimer(BATTERY_READ_TIMER_ID);
 
     private final int SCAN_TIME_MS = 5000;
 
     public void initialize(Context c, IndicorBLEServiceInterfaceCallbacks dataInterface)
     {
-        mContext = c;
-        mCallbackInterface = dataInterface;
+        m_Context = c;
+        m_CallbackInterface = dataInterface;
     }
 
     // list of errors
@@ -82,33 +89,33 @@ public class IndicorBLEServiceInterface
      * This manages the lifecycle of the BLE service.
      * When the service starts we get the service object and Initialize the service.
      */
-    private final ServiceConnection mServiceConnection = new ServiceConnection()
+    private final ServiceConnection m_ServiceConnection = new ServiceConnection()
     {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service)
         {
             Log.i(TAG, "onServiceConnected");
-            mVixiarHHBLEService = ((IndicorBLEService.LocalBinder) service).getService();
-            mServiceConnected = true;
-            mVixiarHHBLEService.Initialize();
+            m_VixiarHHBLEService = ((IndicorBLEService.LocalBinder) service).getService();
+            m_ServiceConnected = true;
+            m_VixiarHHBLEService.Initialize();
 
-            // delete everythign from the scan list
-            mScanList.clear();
+            // delete everything from the scan list
+            m_ScanList.clear();
 
             DisplayConnectingDialog();
 
             // start scanning
-            mVixiarHHBLEService.ScanForIndicorHandhelds();
+            m_VixiarHHBLEService.ScanForIndicorHandhelds();
 
             // start the timer to wait for scan results
-            handler.postDelayed(runnable, SCAN_TIME_MS);
+            m_handler.postDelayed(m_ScanTimeoutRunnable, SCAN_TIME_MS);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName)
         {
             Log.i(TAG, "onServiceDisconnected");
-            mVixiarHHBLEService = null;
+            m_VixiarHHBLEService = null;
         }
     };
 
@@ -116,15 +123,20 @@ public class IndicorBLEServiceInterface
     {
         // Start the BLE Service
         Log.i(TAG, "Starting BLE Service");
-        Intent gattServiceIntent = new Intent(mContext, IndicorBLEService.class);
-        mContext.bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        Intent gattServiceIntent = new Intent(m_Context, IndicorBLEService.class);
+        m_Context.bindService(gattServiceIntent, m_ServiceConnection, BIND_AUTO_CREATE);
         Log.i(TAG, "BLE Service Started");
 
         // create a receiver to receive messages from the service
-        myBLEMessageReceiver = new MyBLEMessageReceiver();
+        m_BLEMessageReceiver = new MyBLEMessageReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(IndicorBLEService.MESSAGE_ID);
-        mContext.registerReceiver(myBLEMessageReceiver, intentFilter);
+        m_Context.registerReceiver(m_BLEMessageReceiver, intentFilter);
+    }
+
+    public int GetLastReadBatteryLevel()
+    {
+        return m_batteryLevel;
     }
 
     private class MyBLEMessageReceiver extends BroadcastReceiver
@@ -132,7 +144,7 @@ public class IndicorBLEServiceInterface
         @Override
         public void onReceive(Context arg0, Intent arg1)
         {
-            Log.i(TAG, "onReceive");
+            //Log.i(TAG, "onReceive");
             if (arg1.hasExtra(IndicorBLEService.SCAN_RESULT))
             {
                 BLEScanCallback((ScanResult) arg1.getParcelableExtra(IndicorBLEService.SCAN_RESULT));
@@ -154,11 +166,24 @@ public class IndicorBLEServiceInterface
                 // TODO: Need to implement some sort of timeout here that would be able to detect the loss of connection to the handheld faster than the BLE timeout of 20 seconds
 
                 PatientInfo.getInstance().GetRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
-                mCallbackInterface.iNotify();
+                m_CallbackInterface.iNotify();
+
+                // if this is the first notification received, we need to read the battery level
+                // it has to be done this way because you can't chain gatt reads or writes...you have to
+                // wait till one finishes to start another one
+                if (m_bFirstBarreryReadRequest)
+                {
+                    m_bFirstBarreryReadRequest = false;
+                    m_batteryLevel = -1;
+                    m_VixiarHHBLEService.ReadBatteryLevel();
+                    // start the timer to update the battery level
+                    m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
+                }
             }
             else if (arg1.hasExtra(IndicorBLEService.ERROR_WRITING_DESCRIPTOR))
             {
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
+                //TODO: Need to switch this to use the custom dialog
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
                 alertDialogBuilder.setMessage("A handheld device was detected, however it is not paired with this tablet.  See Instructions for Use for how to pair the handheld with this device.");
                 alertDialogBuilder.setTitle("No handheld paired");
                 alertDialogBuilder.setPositiveButton("Ok",
@@ -167,33 +192,38 @@ public class IndicorBLEServiceInterface
                             @Override
                             public void onClick(DialogInterface arg0, int arg1)
                             {
-                                connectionDialog.cancel();
+                                m_connectionDialog.cancel();
                                 // notify the activity of the problem
-                                mCallbackInterface.iError(ERROR_WRITING_DESCRIPTOR);
+                                m_CallbackInterface.iError(ERROR_WRITING_DESCRIPTOR);
                             }
                         });
                 AlertDialog alertDialog = alertDialogBuilder.create();
                 alertDialog.show();
             }
+            else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
+            {
+                m_batteryLevel = arg1.getIntExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED, 0);
+                m_CallbackInterface.iBatteryLevelRead(m_batteryLevel);
+            }
         }
     }
 
-    public void BLEScanCallback(ScanResult result)
+    private void BLEScanCallback(ScanResult result)
     {
-        Log.i("IND", "Got a callback");
-        mScanList.add(result);
+        //Log.i("IND", "Got a callback");
+        m_ScanList.add(result);
     }
 
-    public void BLEConnected()
+    private void BLEConnected()
     {
         Log.i("IND", "iConnected");
-        mVixiarHHBLEService.DiscoverIndicorServices();
-        mCallbackInterface.iConnected();
+        m_VixiarHHBLEService.DiscoverIndicorServices();
+        m_CallbackInterface.iConnected();
     }
 
-    public void BLEDisconnected()
+    private void BLEDisconnected()
     {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
         alertDialogBuilder.setMessage("The handheld device has become disconnected.");
         alertDialogBuilder.setTitle("Disconnected");
         alertDialogBuilder.setPositiveButton("Ok",
@@ -202,44 +232,56 @@ public class IndicorBLEServiceInterface
                     @Override
                     public void onClick(DialogInterface arg0, int arg1)
                     {
-                        connectionDialog.cancel();
+                        m_connectionDialog.cancel();
                         // notify the activity of the problem
-                        mCallbackInterface.iDisconnected();
+                        m_CallbackInterface.iDisconnected();
                     }
                 });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
     }
 
-    public void BLEServicesDiscovered()
+    private void BLEServicesDiscovered()
     {
-        if (connectionDialog != null)
+        if (m_connectionDialog != null)
         {
-            connectionDialog.cancel();
+            m_connectionDialog.cancel();
         }
 
-        // once the services are discovered, turn on the realtime data notification
-        mVixiarHHBLEService.WriteRTDataNotification(true);
+        // once the services are discovered, turn on the real time data notification
+        // in the notification callback, we'll start reading the battery level and other
+        // characteristics
+        m_VixiarHHBLEService.WriteRTDataNotification(true);
+        m_bFirstBarreryReadRequest = true;
+    }
+
+    @Override
+    public void TimerExpired(int id)
+    {
+        if (id == BATTERY_READ_TIMER_ID)
+        {
+            m_VixiarHHBLEService.ReadBatteryLevel();
+        }
     }
 
     private void DisplayConnectingDialog()
     {
-        LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) m_Context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View alertLayout = inflater.inflate(R.layout.connection_dialog, null);
 
-        AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
+        AlertDialog.Builder alert = new AlertDialog.Builder(m_Context);
         alert.setTitle("Connecting");
         // this is set the view from XML inside AlertDialog
         alert.setView(alertLayout);
         // disallow cancel of AlertDialog on click of back button and outside touch
         alert.setCancelable(false);
-        connectionDialog = alert.create();
-        connectionDialog.show();
+        m_connectionDialog = alert.create();
+        m_connectionDialog.show();
     }
 
     private void ScanTimeout()
     {
-        mVixiarHHBLEService.StopScanning();
+        m_VixiarHHBLEService.StopScanning();
 
         // TODO: add logic to figure out which device to connect to based on which one is paired, strongest signal, etc.
         BluetoothDevice device = GetLargestSignalDevice();
@@ -247,8 +289,8 @@ public class IndicorBLEServiceInterface
         // see if there are any devices
         if (device == null)
         {
-            // TODO: this is temporary...need to finish this
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
+            // TODO: this is temporary...need to use the custom dialog class
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
             alertDialogBuilder.setMessage("No Indicor handhelds were detected");
             alertDialogBuilder.setTitle("No handheld found");
             alertDialogBuilder.setPositiveButton("Ok",
@@ -257,9 +299,9 @@ public class IndicorBLEServiceInterface
                         @Override
                         public void onClick(DialogInterface arg0, int arg1)
                         {
-                            connectionDialog.cancel();
+                            m_connectionDialog.cancel();
                             // notify the activity of the problem
-                            mCallbackInterface.iError(ERROR_NO_DEVICES_FOUND);
+                            m_CallbackInterface.iError(ERROR_NO_DEVICES_FOUND);
                         }
                     });
             AlertDialog alertDialog = alertDialogBuilder.create();
@@ -271,11 +313,11 @@ public class IndicorBLEServiceInterface
             if (device.getBondState() == BluetoothDevice.BOND_BONDED)
             {
                 // if it's bonded, connect to it
-                mVixiarHHBLEService.ConnectToSpecificIndicor(device);
+                m_VixiarHHBLEService.ConnectToSpecificIndicor(device);
             } else
             {
-                // TODO: this is temporary...need to finish this
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
+                // TODO: this is temporary...need to use the custom dialog class
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
                 alertDialogBuilder.setMessage("A handheld device was detected, however it is not paired with this tablet.  See Instructions for Use for how to pair the handheld with this device.");
                 alertDialogBuilder.setTitle("No handheld paired");
                 alertDialogBuilder.setPositiveButton("Ok",
@@ -284,9 +326,9 @@ public class IndicorBLEServiceInterface
                             @Override
                             public void onClick(DialogInterface arg0, int arg1)
                             {
-                                connectionDialog.cancel();
+                                m_connectionDialog.cancel();
                                 // notify the activity of the problem
-                                mCallbackInterface.iError(ERROR_NO_PAIRED_DEVICES_FOUND);
+                                m_CallbackInterface.iError(ERROR_NO_PAIRED_DEVICES_FOUND);
                             }
                         });
                 AlertDialog alertDialog = alertDialogBuilder.create();
@@ -303,7 +345,7 @@ public class IndicorBLEServiceInterface
 
         // Create a map of all of the unique device Ids detected while receiving advertising
         // packets
-        for (ScanResult b : mScanList)
+        for (ScanResult b : m_ScanList)
         {
             String deviceAddress = b.getDevice().getAddress();
             if (!uniqueDevices.containsKey(deviceAddress))
@@ -314,7 +356,7 @@ public class IndicorBLEServiceInterface
         }
 
         // now parse all of the scans and accumulate the RSSI for each device
-        for (ScanResult b : mScanList)
+        for (ScanResult b : m_ScanList)
         {
             // get the address
             String deviceAddress = b.getDevice().getAddress();

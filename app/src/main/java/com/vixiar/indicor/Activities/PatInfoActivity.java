@@ -29,6 +29,7 @@ public class PatInfoActivity extends Activity
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
+    private static final boolean DEBUG = true;
 
     private EditText txtPatientID;
     private EditText txtAge;
@@ -63,9 +64,18 @@ public class PatInfoActivity extends Activity
         InitializeHeaderAndFooter();
         initializeControls();
 
-        HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
-        HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
-        HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
+        if (DEBUG)
+        {
+            HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
+            HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
+            HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
+        }
+        else
+        {
+            HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
+            HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
+            HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
+        }
     }
 
     @Override
@@ -74,73 +84,75 @@ public class PatInfoActivity extends Activity
         super.onPause();
 
         // store the data entered to the patient class
-
-        // PATIENT ID
-        PatientInfo.getInstance().setPatientId(txtPatientID.getText().toString());
-
-        // AGE
-        try
+        if (!DEBUG)
         {
-            PatientInfo.getInstance().setAge_years(Integer.parseInt(txtAge.getText().toString()));
-        }
-        catch (NumberFormatException e)
-        {
-            PatientInfo.getInstance().setAge_years(0);
-        }
+            // PATIENT ID
+            PatientInfo.getInstance().setPatientId(txtPatientID.getText().toString());
 
-        // HEIGHT
-        try
-        {
-            // split the height up into ft and inches
-            String[] splitHeight = txtHeight.getText().toString().split("/");
+            // AGE
+            try
+            {
+                PatientInfo.getInstance().setAge_years(Integer.parseInt(txtAge.getText().toString()));
+            }
+            catch (NumberFormatException e)
+            {
+                PatientInfo.getInstance().setAge_years(0);
+            }
 
-            // get rid of the whitespace
-            String ft = splitHeight[0].replaceAll("\\s", "");
-            String in = splitHeight[1].replaceAll("\\s", "");
+            // HEIGHT
+            try
+            {
+                // split the height up into ft and inches
+                String[] splitHeight = txtHeight.getText().toString().split("/");
 
-            // convert to an int
-            int height_ft = Integer.parseInt(ft);
-            int height_in = Integer.parseInt(in);
-            PatientInfo.getInstance().setHeight_Inches(height_ft * 12 + height_in);
-        }
-        catch (NumberFormatException e)
-        {
+                // get rid of the whitespace
+                String ft = splitHeight[0].replaceAll("\\s", "");
+                String in = splitHeight[1].replaceAll("\\s", "");
 
-            PatientInfo.getInstance().setHeight_Inches(0);
-        }
+                // convert to an int
+                int height_ft = Integer.parseInt(ft);
+                int height_in = Integer.parseInt(in);
+                PatientInfo.getInstance().setHeight_Inches(height_ft * 12 + height_in);
+            }
+            catch (NumberFormatException e)
+            {
 
-        // WEIGHT
-        try
-        {
-            PatientInfo.getInstance().setWeight_lbs(Integer.parseInt(txtWeight.getText().toString()));
-        }
-        catch (NumberFormatException e)
-        {
-            PatientInfo.getInstance().setWeight_lbs(0);
-        }
+                PatientInfo.getInstance().setHeight_Inches(0);
+            }
 
-        // SYSTOLIC PRESSURE
-        try
-        {
-            PatientInfo.getInstance().setSystolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
-        }
-        catch (NumberFormatException e)
-        {
-            PatientInfo.getInstance().setSystolicBloodPressure(0);
-        }
+            // WEIGHT
+            try
+            {
+                PatientInfo.getInstance().setWeight_lbs(Integer.parseInt(txtWeight.getText().toString()));
+            }
+            catch (NumberFormatException e)
+            {
+                PatientInfo.getInstance().setWeight_lbs(0);
+            }
 
-        // DIASTOLIC PRESSURE
-        try
-        {
-            PatientInfo.getInstance().setDiastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
-        }
-        catch (NumberFormatException e)
-        {
-            PatientInfo.getInstance().setDiastolicBloodPressure(0);
-        }
+            // SYSTOLIC PRESSURE
+            try
+            {
+                PatientInfo.getInstance().setSystolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
+            }
+            catch (NumberFormatException e)
+            {
+                PatientInfo.getInstance().setSystolicBloodPressure(0);
+            }
 
-        // NOTES
-        PatientInfo.getInstance().setNotes(txtNotes.getText().toString());
+            // DIASTOLIC PRESSURE
+            try
+            {
+                PatientInfo.getInstance().setDiastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
+            }
+            catch (NumberFormatException e)
+            {
+                PatientInfo.getInstance().setDiastolicBloodPressure(0);
+            }
+
+            // NOTES
+            PatientInfo.getInstance().setNotes(txtNotes.getText().toString());
+        }
     }
 
     @Override
@@ -600,20 +612,29 @@ public class PatInfoActivity extends Activity
         @Override
         public void afterTextChanged(Editable s)
         {
-            if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
-                    txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
-                    txtDiastolic.toString().trim().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
-                    txtGender.getText().toString().length() != 0)
+            if (!DEBUG)
+            {
+                if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
+                        txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
+                        txtDiastolic.toString().trim().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
+                        txtGender.getText().toString().length() != 0)
+                {
+                    HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
+                    HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
+                    HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
+                }
+                else
+                {
+                    HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
+                    HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
+                    HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
+                }
+            }
+            else
             {
                 HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
                 HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
-            }
-            else
-            {
-                HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
-                HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
-                HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
             }
         }
     };

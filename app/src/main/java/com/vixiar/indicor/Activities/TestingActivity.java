@@ -16,8 +16,9 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
-import com.vixiar.indicor.BLE_Interface.IndicorBLEServiceInterface;
-import com.vixiar.indicor.BLE_Interface.IndicorBLEServiceInterfaceCallbacks;
+import com.vixiar.indicor.BLEInterface.IndicorBLEService;
+import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
+import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.Graphics.TestPressureGraph;
 import com.vixiar.indicor.R;
@@ -87,8 +88,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     }
 
     // Timer stuff
-    private StateMachineTimer m_oneShotTimer;
-    private StateMachineTimer m_periodicTimer;
+    private GenericTimer m_oneShotTimer;
+    private GenericTimer m_periodicTimer;
 
     private final int ONESHOT_TIMER_ID = 1;
     private final int PERIODIC_TIMER_ID = 2;
@@ -165,11 +166,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     }
 
     @Override
-    public void iCharacteristicRead(Object o)
-    {
-    }
-
-    @Override
     public void iError(int e)
     {
         // TODO: handle different errors, bring up dialog about error, handle result
@@ -216,6 +212,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         }
     }
 
+    @Override
+    public void iBatteryLevelRead(int level)
+    {
+        Log.i(TAG, "Bat. level = " + level);
+        HeaderFooterControl.getInstance().ShowBatteryIcon(this, level);
+    }
+
     private int m_nLastDataIndex = 0;
 
     // GUI functions
@@ -234,6 +237,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
         HeaderFooterControl.getInstance().SetScreenTitle(this, GetMeasurementScreenTitle());
+        HeaderFooterControl.getInstance().HideBatteryIcon(this);
         HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
         {
             @Override
@@ -261,8 +265,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_seriesPPGData.setColor(getResources().getColor(R.color.colorChartLine));
         m_seriesPPGData.setThickness(8);
         m_chartPPG.addSeries(m_seriesPPGData);
-
-        // TODO: Update battery on display
     }
 
     private String GetMeasurementScreenTitle()
@@ -283,6 +285,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_chartPPG.setVisibility(View.VISIBLE);
         m_spinnerProgress.setVisibility(View.VISIBLE);
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
+
+        // if the battery level was read at least once since the connection, display it, otherwise
+        // it will be updated when it comes back from the handheld
+        if (IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel() != -1)
+        {
+            HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
+        }
     }
 
     private void SwitchToTestingView()
@@ -311,8 +320,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             }
         });
 
-        // TODO: Update battery on display
-
+        // if the battery level was read at least once since the connection, display it, otherwise
+        // it will be updated when it comes back from the handheld
+        if (IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel() != -1)
+        {
+            HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
+        }
     }
 
     private void InactivateTestingView()
@@ -385,8 +398,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             }
         });
 
-        // TODO: Update battery on display
-
+        // if the battery level was read at least once since the connection, display it, otherwise
+        // it will be updated when it comes back from the handheld
+        if (IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel() != -1)
+        {
+            HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
+        }
     }
 
     private void UpdateResults()
@@ -463,8 +480,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         SwitchToStabilityView();
         InactivateStabilityView();
 
-        m_oneShotTimer = new StateMachineTimer(ONESHOT_TIMER_ID);
-        m_periodicTimer = new StateMachineTimer(PERIODIC_TIMER_ID);
+        m_oneShotTimer = new GenericTimer(ONESHOT_TIMER_ID);
+        m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
 
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
@@ -498,7 +515,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         switch (m_testingState)
         {
             case STABILIZING_NOT_CONNECTED:
-                Log.i(TAG, "In state: STABILIZING_NOT_CONNECTED");
+                //Log.i(TAG, "In state: STABILIZING_NOT_CONNECTED");
                 if (event == Testing_Events.EVT_CONNECTED)
                 {
                     ActivateStabilityView();
@@ -510,7 +527,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 break;
             case STABILIZING:
-                Log.i(TAG, "In state: STABILIZING");
+                //Log.i(TAG, "In state: STABILIZING");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
                     SwitchToTestingView();
@@ -523,7 +540,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case STABLE_5SEC_COUNTDOWN:
-                Log.i(TAG, "In state: STABLE_5SEC_COUNTDOWN");
+                //Log.i(TAG, "In state: STABLE_5SEC_COUNTDOWN");
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
                     m_nCountdownSecLeft--;
@@ -543,7 +560,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case VALSALVA_WAIT_FOR_PRESSURE:
-                Log.i(TAG, "In state: VALSALVA_WAIT_FOR_PRESSURE");
+                //Log.i(TAG, "In state: VALSALVA_WAIT_FOR_PRESSURE");
                 // see if we reached the starting pressure for Valsalva
                 if (event == Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE)
                 {
@@ -565,7 +582,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case VALSALVA:
                 // TODO: disable the Android back button during valsalva
-                Log.i(TAG, "In state: VALSALVA");
+                //Log.i(TAG, "In state: VALSALVA");
                 if (event == Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE)
                 {
                     if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
@@ -593,7 +610,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case LOADING_RESULTS:
-                Log.i(TAG, "In state: LOADING_RESULTS");
+                //Log.i(TAG, "In state: LOADING_RESULTS");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
                     if (m_nTestNumber < 3)
@@ -615,7 +632,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case RESULTS:
-                Log.i(TAG, "In state: RESULTS");
+                //Log.i(TAG, "In state: RESULTS");
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
                     m_nCountdownSecLeft--;
@@ -638,12 +655,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case COMPLETE:
-                Log.i(TAG, "In state: COMPLETE");
+                //Log.i(TAG, "In state: COMPLETE");
                 // TODO: handle test complete state
                 break;
 
             case PRESSURE_ERROR:
-                Log.i(TAG, "In state: PRESSURE_ERROR");
+                //Log.i(TAG, "In state: PRESSURE_ERROR");
                 // TODO: handle pressure error state
                 break;
 

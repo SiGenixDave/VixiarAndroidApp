@@ -2,10 +2,10 @@ package com.vixiar.indicor.Activities;
 
 import android.os.Handler;
 
-public class StateMachineTimer
+public class GenericTimer
 {
     private Handler handler;
-    TimerCallback stateMachine;
+    TimerCallback m_callback;
     int timerId;
     boolean oneShot;
     int periodMs;
@@ -23,11 +23,11 @@ public class StateMachineTimer
             {
                 handler.postDelayed (runnable, periodMs);
             }
-            stateMachine.TimerExpired(timerId);
+            m_callback.TimerExpired(timerId);
         }
     };
 
-    public StateMachineTimer(final int timerId) {
+    public GenericTimer(final int timerId) {
         this.timerId = timerId;
         this.handler = new Handler();
     }
@@ -37,8 +37,8 @@ public class StateMachineTimer
         isRunning = false;
     }
 
-    public void Start (TimerCallback stateMachine, int periodMs, boolean oneShot) {
-        this.stateMachine = stateMachine;
+    public void Start (TimerCallback callback, int periodMs, boolean oneShot) {
+        this.m_callback = callback;
         this.oneShot = oneShot;
         this.periodMs = periodMs;
         handler.postDelayed (this.runnable, periodMs);
