@@ -59,7 +59,7 @@ public class PatientInfo
     {
     }
 
-    public RealtimeData GetRealtimeData()
+    public RealtimeData getRealtimeData()
     {
         return rtd;
     }

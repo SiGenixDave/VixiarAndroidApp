@@ -16,10 +16,10 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
-import com.vixiar.indicor.BLEInterface.IndicorBLEService;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.Data.PatientInfo;
+import com.vixiar.indicor.Data.RealtimeDataMarker;
 import com.vixiar.indicor.Graphics.TestPressureGraph;
 import com.vixiar.indicor.R;
 
@@ -180,10 +180,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         {
             case STABILIZING:
                 // update the PPG chart
-                int currentDataIndex = PatientInfo.getInstance().GetRealtimeData().GetData().size();
+                int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetData().size();
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
-                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().GetRealtimeData().GetData().get(i).m_PPG), true, 500);
+                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetData().get(i).m_PPG), true, 500);
                     m_nPPGGraphLastX += 0.02;
                 }
                 m_nLastDataIndex = currentDataIndex;
@@ -191,12 +191,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case VALSALVA_WAIT_FOR_PRESSURE:
             case VALSALVA:
-                currentDataIndex = PatientInfo.getInstance().GetRealtimeData().GetData().size();
+                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetData().size();
                 double tempSum = 0.0;
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
                     // sum up all the pressures from this set of data
-                    tempSum += PatientInfo.getInstance().GetRealtimeData().GetData().get(i).m_pressure;
+                    tempSum += PatientInfo.getInstance().getRealtimeData().GetData().get(i).m_pressure;
                 }
                 double thisAvg = tempSum / (currentDataIndex - m_nLastDataIndex);
                 m_nLastDataIndex = currentDataIndex;
@@ -566,6 +566,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 {
                     if (m_nAvgPressure > VALSALVA_MIN_PRESSURE)
                     {
+                        // Valsalva is starting
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_START_VALSALVA,
+                                PatientInfo.getInstance().getRealtimeData().GetData().size() - 1);
                         m_testingState = Testing_State.VALSALVA;
                         m_periodicTimer.Start(this, ONE_SEC, false);
                         m_nCountdownSecLeft = VALSALVA_DURATION_SECONDS;
@@ -601,6 +604,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
+                        // Valsalva is over
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_END_VALSALVA,
+                                PatientInfo.getInstance().getRealtimeData().GetData().size() - 1);
+
                         m_periodicTimer.Cancel();
                         SetupLoadingResultsView();
                         m_testingState = Testing_State.LOADING_RESULTS;

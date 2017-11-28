@@ -83,7 +83,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
 
     public void iNotify()
     {
-        int currentIndex = PatientInfo.getInstance().GetRealtimeData().GetData().size();
-        pvg.setBallPressure((float) PatientInfo.getInstance().GetRealtimeData().GetData().get(currentIndex-1).m_pressure);
+        int currentIndex = PatientInfo.getInstance().getRealtimeData().GetData().size();
+        pvg.setBallPressure((float) PatientInfo.getInstance().getRealtimeData().GetData().get(currentIndex-1).m_pressure);
     }
 }

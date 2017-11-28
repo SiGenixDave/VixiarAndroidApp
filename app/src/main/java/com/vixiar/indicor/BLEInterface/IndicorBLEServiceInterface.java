@@ -165,7 +165,7 @@ public class IndicorBLEServiceInterface implements TimerCallback
             {
                 // TODO: Need to implement some sort of timeout here that would be able to detect the loss of connection to the handheld faster than the BLE timeout of 20 seconds
 
-                PatientInfo.getInstance().GetRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
+                PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
                 m_CallbackInterface.iNotify();
 
                 // if this is the first notification received, we need to read the battery level
