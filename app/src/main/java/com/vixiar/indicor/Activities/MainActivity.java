@@ -3,7 +3,6 @@ package com.vixiar.indicor.Activities;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -11,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,9 +21,11 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.vixiar.indicor.BuildConfig;
+import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
+import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.R;
 
-public class MainActivity extends Activity
+public class MainActivity extends Activity implements CustomDialogInterface
 {
     private final String TAG = this.getClass().getSimpleName();
 
@@ -31,15 +33,23 @@ public class MainActivity extends Activity
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
     // this is a request code that is used if BLE isn't turned on...
-    // it tells the response handlet to start the data collection intent if the user enables ble
+    // it tells the response m_deviceCheckHandler to start the data collection intent if the user enables ble
     private static final int REQUEST_START_CONNECTION_BLE = 1;
 
-    Handler handler = new Handler();
-    final Runnable r = new Runnable()
+    // dialog numbers so the callback m_deviceCheckHandler knows what's going on
+    private static final int DLG_ID_NO_BLE = 0;
+    private static final int DLG_ID_LOCATION_SERVICES = 1;
+    private static final int DLG_ID_BLE_NOT_ENABLED = 2;
+    private static final int DLG_ID_LOCATION_ACCESS_PRE = 3;
+    private static final int DLG_ID_LOCATION_ACCESS_NOT_ENABLED = 4;
+    private static final int DLG_ID_BLE_NOT_ENABLED_PRE = 5;
+
+    Handler m_deviceCheckHandler = new Handler();
+    final Runnable m_deviceCheckRunnable = new Runnable()
     {
         public void run()
         {
-            CheckBLE();
+            checkDeviceSetup();
         }
     };
 
@@ -90,8 +100,8 @@ public class MainActivity extends Activity
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         */
-        // wait a couple seconds then check the BLE stuff
-        handler.postDelayed(r, 2000);
+        // wait a couple seconds then check the device for the proper configuration and settings
+        m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);
     }
 
     //This method required for Android 6.0 (Marshmallow)
@@ -104,28 +114,20 @@ public class MainActivity extends Activity
             {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
-                    Log.d("Permission for 6.0:", "Coarse location permission granted");
+                    Log.d(TAG, "Coarse location permission granted");
                 }
                 else
                 {
-                    final android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-                    builder.setTitle("Functionality limited");
-                    builder.setMessage("Since location access has not been granted, this app will not be able to communicate with handheld devices.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener()
-                    {
-                        @Override
-                        public void onDismiss(DialogInterface dialog)
-                        {
-                            finish();
-                            System.exit(0);
-                        }
-                    });
-                    builder.show();
+                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                            getString(R.string.dlg_title_location_access_no),
+                            getString(R.string.dlg_msg_location_access_no),
+                            "Ok",
+                            null,
+                            this, DLG_ID_LOCATION_ACCESS_NOT_ENABLED);
                 }
             }
         }
-    } //End of section for Android 6.0 (Marshmallow)
+    }
 
 
     // quick stuff to check that BLE is supported and turned on
@@ -134,31 +136,6 @@ public class MainActivity extends Activity
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
         return bluetoothManager.getAdapter();
-    }
-
-    public boolean IsBLEAvailable()
-    {
-        return GetAdapter() != null;
-    }
-
-    public boolean IsBLEEnabled()
-    {
-        BluetoothAdapter adapter = GetAdapter();
-        if (adapter != null)
-        {
-            // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
-            // fire an intent to display a dialog asking the user to grant permission to enable it.
-            if (!adapter.isEnabled())
-            {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_START_CONNECTION_BLE);
-            }
-            return adapter.isEnabled();
-        }
-        else
-        {
-            return false;
-        }
     }
 
     // this get's called after the user either accepts or denys turning ble on
@@ -178,38 +155,24 @@ public class MainActivity extends Activity
                     // Android M Permission check 
                     if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                     {
-                        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setTitle("This app requires location access in order to function properly.");
-                        builder.setMessage("Please grant location access so this app can communicate with handheld devices.");
-                        builder.setPositiveButton(android.R.string.ok, null);
-                        builder.setOnDismissListener(new DialogInterface.OnDismissListener()
-                        {
-                            public void onDismiss(DialogInterface dialog)
-                            {
-                                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
-                            }
-                        });
-                        builder.show();
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                                getString(R.string.dlg_title_location_access_pre),
+                                getString(R.string.dlg_msg_location_access_pre),
+                                "Ok",
+                                null,
+                                this, DLG_ID_LOCATION_ACCESS_PRE);
                     }
                 } //End of section for Android 6.0 (Marshmallow)
             }
             else
             {
                 Log.i(TAG, "BLE was not enabled");
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("BLE not enabled");
-                builder.setMessage("BLE must be enabled.  BLE is required to communicate to the handheld.");
-                builder.setPositiveButton("OK",
-                        new DialogInterface.OnClickListener()
-                        {
-                            public void onClick(DialogInterface dialog,
-                                                int which)
-                            {
-                                finish();
-                                System.exit(0);
-                            }
-                        });
-                builder.show();
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                        getString(R.string.dlg_title_ble_not_enabled),
+                        getString(R.string.dlg_msg_ble_not_enabled),
+                        "Ok",
+                        null,
+                        this, DLG_ID_BLE_NOT_ENABLED);
             }
         }
     }
@@ -220,57 +183,122 @@ public class MainActivity extends Activity
         startActivity(intent);
     }
 
-    private void CheckBLE()
+    private void checkDeviceSetup()
     {
-        // TODO: check that location services are enabled on the device
-        // verify that this device supports bluetooth and it's turned on
-        if (!IsBLEAvailable())
+        if (deviceSupportsBLE())
         {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("BLE not supported");
-            builder.setMessage("This device does not support Bluetooth Low Energy which is required to communicate to the handheld.");
-            builder.setPositiveButton("OK",
-                    new DialogInterface.OnClickListener()
+            if (locationServicesOn())
+            {
+                if (isBLEEnabled())
+                {
+                    if (!doesAppHaveLocationPermission())
                     {
-                        public void onClick(DialogInterface dialog,
-                                            int which)
-                        {
-                            finish();
-                            System.exit(0);
-                        }
-                    });
-            builder.show();
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                                getString(R.string.dlg_title_location_access_pre),
+                                getString(R.string.dlg_msg_location_access_pre),
+                                "Ok",
+                                null,
+                                this, DLG_ID_LOCATION_ACCESS_PRE);
+                    }
+                }
+                else
+                {
+                    // If BLE is not enabled, put up a dialog alerting the user to enable it
+                    // In the ok m_deviceCheckHandler for the dialog, the intent to enable BLE will be fired
+                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                            getString(R.string.dlg_title_ble_enable_pre),
+                            getString(R.string.dlg_msg_ble_enable_pre),
+                            "Ok",
+                            null,
+                            this, DLG_ID_BLE_NOT_ENABLED_PRE);
+                }
+            }
+            else
+            {
+                // location services are off, inform the user what to do
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                        getString(R.string.dlg_title_location_service),
+                        getString(R.string.dlg_msg_location_service),
+                        "Ok",
+                        null, this, DLG_ID_LOCATION_SERVICES);
+            }
         }
         else
         {
-            // this call will check if BLE is enabled, if it isn't the user will be given the chance to
-            // enable it.  If they don't the app will quit
-            // if it is enabled, we need to make sure location access is enabled
-
-            // This section required for Android 6.0 (Marshmallow)
-            // Make sure location access is on or BLE won't scan
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            {
-                if (IsBLEEnabled())
-                {
-                    // Android M Permission check 
-                    if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                    {
-                        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setTitle("This app requires location access in order to function properly.");
-                        builder.setMessage("Please grant location access so this app can communicate with handheld devices.");
-                        builder.setPositiveButton(android.R.string.ok, null);
-                        builder.setOnDismissListener(new DialogInterface.OnDismissListener()
-                        {
-                            public void onDismiss(DialogInterface dialog)
-                            {
-                                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
-                            }
-                        });
-                        builder.show();
-                    }
-                }
-            } //End of section for Android 6.0 (Marshmallow)
+            // device does not support BLE, inform the user
+            CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                    getString(R.string.dlg_title_ble_not_supported),
+                    getString(R.string.dlg_msg_ble_not_supported),
+                    "Ok",
+                    null,
+                    this, DLG_ID_NO_BLE);
         }
+    }
+
+    private boolean locationServicesOn()
+    {
+        LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (manager != null)
+        {
+            return manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private boolean deviceSupportsBLE()
+    {
+        return GetAdapter() != null;
+    }
+
+    public boolean isBLEEnabled()
+    {
+        BluetoothAdapter adapter = GetAdapter();
+        if (adapter != null)
+        {
+            return adapter.isEnabled();
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private boolean doesAppHaveLocationPermission()
+    {
+        // Check for location access
+        return (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+    }
+
+    @Override
+    public void onClickPositiveButton(DialogInterface dialog, int dialogID)
+    {
+        switch (dialogID)
+        {
+            case DLG_ID_LOCATION_SERVICES:
+            case DLG_ID_NO_BLE:
+            case DLG_ID_BLE_NOT_ENABLED:
+            case DLG_ID_LOCATION_ACCESS_NOT_ENABLED:
+                finish();
+                System.exit(0);
+                break;
+
+            case DLG_ID_LOCATION_ACCESS_PRE:
+                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+                break;
+
+            case DLG_ID_BLE_NOT_ENABLED_PRE:
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_START_CONNECTION_BLE);
+                break;
+        }
+    }
+
+    @Override
+    public void onClickNegativeButton(DialogInterface dialog, int dialogID)
+    {
+
     }
 }

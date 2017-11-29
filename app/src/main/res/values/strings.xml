@@ -76,5 +76,35 @@
     <string name="results">Results</string>
     <string name="end_test">End Test</string>
 
+    <!-- Messages -->
+    <string name="dlg_title_ble_not_supported">BLE not supported</string>
+    <string name="dlg_msg_ble_not_supported">This device does not support Bluetooth Low Energy (BLE)
+        which is required to communicate to the handheld."</string>
+
+    <string name="dlg_title_ble_enable_pre">BLE must be enabled</string>
+    <string name="dlg_msg_ble_enable_pre">The next screen will allow you to enable Bluetooth
+        Low Energy (BLE).  Please enable BLE so this app can communicate
+        with handheld devices.</string>
+
+    <string name="dlg_title_ble_not_enabled">BLE must be enabled</string>
+    <string name="dlg_msg_ble_not_enabled">Bluetooth Low Energy (BLE) must be enabled.
+        BLE is required to communicate with the Vixiar handheld device.</string>
+
+    <string name="dlg_title_location_service">Location access</string>
+    <string name="dlg_msg_location_service">Android must have location services
+        enabled in order to connect to the Vixiar handheld device. This is a requirement
+        from Google for any app connecting to a Bluetooth Low Energy (BLE) device. To enable
+        location services, open your devices settings app, scroll to location and tap.  Then turn on
+        location services.
+        Restart this app once location services are enabled.</string>
+
+    <string name="dlg_title_location_access_pre">Location access required</string>
+    <string name="dlg_msg_location_access_pre">The next screen will allow you to grant location
+        access to this app.  Please grant location access so this app can communicate
+        with handheld devices.</string>
+
+    <string name="dlg_title_location_access_no">Location access required</string>
+    <string name="dlg_msg_location_access_no">Since location access has not been granted, this app
+        will not be able to communicate with handheld devices.</string>
 
 </resources>

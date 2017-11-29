@@ -263,7 +263,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         m_seriesPPGData = new LineGraphSeries<>();
         m_seriesPPGData.setColor(getResources().getColor(R.color.colorChartLine));
-        m_seriesPPGData.setThickness(8);
+        m_seriesPPGData.setThickness(5);
         m_chartPPG.addSeries(m_seriesPPGData);
     }
 
@@ -639,6 +639,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case RESULTS:
+                //TODO: when countdown goes to 0, need to wait for button press to go to next test
                 //Log.i(TAG, "In state: RESULTS");
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
