@@ -81,7 +81,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         onBackPressed();
     }
 
-    public void iNotify()
+    public void iRealtimeDataNotification()
     {
         int currentIndex = PatientInfo.getInstance().getRealtimeData().GetData().size();
         pvg.setBallPressure((float) PatientInfo.getInstance().getRealtimeData().GetData().get(currentIndex-1).m_pressure);

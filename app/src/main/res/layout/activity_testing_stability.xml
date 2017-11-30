@@ -19,7 +19,9 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="false"
         android:layout_centerVertical="true"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="30dp"
+        android:paddingTop="30dp">
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -44,11 +46,11 @@
         <com.jjoe64.graphview.GraphView
             android:id="@+id/PPGStabilityGraph"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
+            android:layout_height="450dp"
             android:layout_gravity="center"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="30dp"
-            android:layout_marginTop="100dp"/>
+            android:layout_marginTop="60dp"/>
 
 
     </LinearLayout>

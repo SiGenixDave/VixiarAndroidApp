@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static android.bluetooth.BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 /**
@@ -45,19 +46,21 @@ public class IndicorBLEService extends Service
     final static String CONNECTED = "connected";
     final static String DISCONNECTED = "disconnected";
     final static String SERVICES_DISCOVERED = "services_discovered";
-    final static String ERROR_WRITING_DESCRIPTOR = "descriptor_write_error";
+    final static String AUTHENTICATION_ERROR = "authentication_error";
     final static String RT_DATA_RECEIVED = "rt_data";
     final static String BATTERY_LEVEL_RECEIVED = "batt_level";
+    final static String REVISION_INFO_RECEIVED = "revision_info";
+    final static String EXTERNAL_CONNECTION_INFO_RECEIVED = "external_connection_info";
 
     // UUIDs for the service and characteristics that the Vixiar service uses
     private final static String RT_DATA_CHARACTERISTIC_UUID = "7991CF92-D18B-40EB-AFBE-4EECB596C677";
     private final static String BATTERY_LEVEL_CHARACTERISTIC_UUID = "590D5C82-2999-4C12-9D75-A3BC343FBCA5";
+    private final static String REVISION_INFO_CHARACTERISTIC_UUID = "95D09D70-E371-40B7-931F-EF46B143E4D6";
+    private final static String EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID = "B4A5C92C-30A6-4DCB-BB8B-02D3CC4AD835";
+    private final static String PPG_DRIVE_CHARACTERISTIC_UUID = "D45680E8-5B7C-41D6-8B98-5D08346AD7C4";
+
     private final static String CCCD_UUID = "00002902-0000-1000-8000-00805f9b34fb";
     private final static String VIXIAR_REALTIME_SERVICE_UUID = "83638348-96D8-455A-8451-0630BCD02558";
-
-    // Offsets to data in characteristics
-    private final static int BATTERY_LEVEL_PCT_INDEX = 0;
-    private final static int BATTERY_LEVEL_MV_INDEX = 1;
 
     // Bluetooth objects that we need to interact with
     private static BluetoothManager m_BluetoothManager;
@@ -68,6 +71,9 @@ public class IndicorBLEService extends Service
     // Bluetooth characteristics that we need to read/write
     private static BluetoothGattCharacteristic m_RTDataCharacteristic;
     private static BluetoothGattCharacteristic m_BatteryLevelCharacteristic;
+    private static BluetoothGattCharacteristic m_RevisionInfoCharacteristic;
+    private static BluetoothGattCharacteristic m_ExternalConnectionsCharacteristic;
+    private static BluetoothGattCharacteristic m_PPGDriveCharacteristic;
     private static BluetoothGattDescriptor m_RTNotificationCCCD;
 
     private final IBinder m_Binder = new LocalBinder();
@@ -102,26 +108,28 @@ public class IndicorBLEService extends Service
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
         {
-            // if this comes back with a status of 0, the write didn't work, which may mean that the
-            // handheld lost pairing
             super.onDescriptorWrite(gatt, descriptor, status);
-            if (status != GATT_SUCCESS)
+            // if this comes back without a status of 0, the write didn't work, which may mean that the
+            // handheld lost pairing
+            Log.i(TAG, "onDescriptorWrite; status = " + status);
+            if (status == GATT_INSUFFICIENT_AUTHENTICATION)
             {
-                SendDataToConnectionClass(ERROR_WRITING_DESCRIPTOR, null);
+                SendDataToConnectionClass(AUTHENTICATION_ERROR, null);
             }
         }
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
         {
+            Log.i(TAG, "onConnectionStateChange; status = " + status + " newState = " + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED)
             {
-                Log.i(TAG, "Connected to GATT server.");
+                Log.i(TAG, "Connected to GATT server");
                 SendDataToConnectionClass(CONNECTED, null);
             }
             else if (newState == BluetoothProfile.STATE_DISCONNECTED)
             {
-                Log.i(TAG, "Disconnected from GATT server.");
+                Log.i(TAG, "Disconnected from GATT server");
                 SendDataToConnectionClass(DISCONNECTED, null);
             }
         }
@@ -129,15 +137,35 @@ public class IndicorBLEService extends Service
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status)
         {
+            Log.i(TAG, "onServicesDiscovered status = " + status);
+
             // Get just the service that we are looking for
             BluetoothGattService mService = gatt.getService(UUID.fromString(VIXIAR_REALTIME_SERVICE_UUID));
 
             // Get characteristics from our desired service
             m_RTDataCharacteristic = mService.getCharacteristic(UUID.fromString(RT_DATA_CHARACTERISTIC_UUID));
             m_BatteryLevelCharacteristic = mService.getCharacteristic(UUID.fromString(BATTERY_LEVEL_CHARACTERISTIC_UUID));
+            m_PPGDriveCharacteristic = mService.getCharacteristic(UUID.fromString(PPG_DRIVE_CHARACTERISTIC_UUID));
+            m_ExternalConnectionsCharacteristic = mService.getCharacteristic(UUID.fromString(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID));
+            m_RevisionInfoCharacteristic = mService.getCharacteristic(UUID.fromString(REVISION_INFO_CHARACTERISTIC_UUID));
 
             // Get the descriptor
             m_RTNotificationCCCD = m_RTDataCharacteristic.getDescriptor(UUID.fromString(CCCD_UUID));
+
+            if (m_RTDataCharacteristic == null || m_BatteryLevelCharacteristic == null ||
+                    m_PPGDriveCharacteristic == null || m_ExternalConnectionsCharacteristic == null ||
+                    m_RevisionInfoCharacteristic == null)
+            {
+                Log.i(TAG, "characteristic came back as null");
+            }
+            if (m_BatteryLevelCharacteristic == null)
+            {
+                Log.i(TAG, "m_BatteryLevelCharacteristic = null");
+            }
+            if (m_RTNotificationCCCD == null)
+            {
+                Log.i(TAG, "m_RTNotificationCCCD = null");
+            }
 
             // Broadcast that service/characteristic/descriptor discovery is done
             SendDataToConnectionClass(SERVICES_DISCOVERED, null);
@@ -158,11 +186,20 @@ public class IndicorBLEService extends Service
                 // use a switch statement here to operate on each one separately.
                 if (uuid.toUpperCase().equals(BATTERY_LEVEL_CHARACTERISTIC_UUID))
                 {
-                    final byte[] data = characteristic.getValue();
-                    int batteryLevel = data[BATTERY_LEVEL_PCT_INDEX] & 0xFF;
-                    SendDataToConnectionClass(BATTERY_LEVEL_RECEIVED, batteryLevel);
-                    // TODO: finish reading all of the characteristics
+                    SendDataToConnectionClass(BATTERY_LEVEL_RECEIVED, characteristic.getValue());
                 }
+                else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID))
+                {
+                    SendDataToConnectionClass(EXTERNAL_CONNECTION_INFO_RECEIVED, characteristic.getValue());
+                }
+                else if (uuid.toUpperCase().equals(REVISION_INFO_CHARACTERISTIC_UUID))
+                {
+                    SendDataToConnectionClass(REVISION_INFO_RECEIVED, characteristic.getValue());
+                }
+            }
+            else if (status == GATT_INSUFFICIENT_AUTHENTICATION)
+            {
+                SendDataToConnectionClass(AUTHENTICATION_ERROR, null);
             }
         }
 
@@ -174,14 +211,13 @@ public class IndicorBLEService extends Service
 
             String uuid = characteristic.getUuid().toString();
 
-            // In this case, the notifications the apps gets are the PPG and pressure data.
-            // If the application had additional notifications we could
-            // use a switch statement here to operate on each one separately.
-            String temp = uuid.toUpperCase();
-
             if (uuid.toUpperCase().equals(RT_DATA_CHARACTERISTIC_UUID))
             {
                 SendDataToConnectionClass(RT_DATA_RECEIVED, characteristic.getValue());
+            }
+            else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID))
+            {
+                SendDataToConnectionClass(EXTERNAL_CONNECTION_INFO_RECEIVED, characteristic.getValue());
             }
         }
     };
@@ -191,6 +227,7 @@ public class IndicorBLEService extends Service
     @Override
     public IBinder onBind(Intent intent)
     {
+        Log.i(TAG, "onBind");
         return m_Binder;
     }
 
@@ -198,6 +235,7 @@ public class IndicorBLEService extends Service
     public boolean onUnbind(Intent intent)
     {
         // The BLE Close method is called when we unbind the service to free up the resources.
+        Log.i(TAG, "onUnbind");
         Close();
         return super.onUnbind(intent);
     }
@@ -208,7 +246,6 @@ public class IndicorBLEService extends Service
         {
             return IndicorBLEService.this;
         }
-
     }
 
 
@@ -290,12 +327,14 @@ public class IndicorBLEService extends Service
 
     public void DiscoverIndicorServices()
     {
-        if (m_BluetoothAdapter == null || m_BluetoothGatt == null)
+        if (m_BluetoothAdapter != null || m_BluetoothGatt != null)
+        {
+            m_BluetoothGatt.discoverServices();
+        }
+        else
         {
             Log.e(TAG, "BluetoothAdapter not initialized");
-            return;
         }
-        m_BluetoothGatt.discoverServices();
     }
 
     public void DisconnectFromIndicor()
@@ -318,29 +357,49 @@ public class IndicorBLEService extends Service
         m_BluetoothGatt = null;
     }
 
-    public void WriteRTDataNotification(boolean value)
+    public void SubscribeToRealtimeDataNotification(boolean value)
     {
-        if (m_RTDataCharacteristic != null)
+        if (m_RTDataCharacteristic != null && m_BluetoothGatt != null && m_RTNotificationCCCD != null)
         {
+            Log.i(TAG, "Setting real time notification " + value);
+
             // Set notifications locally in the CCCD
             m_BluetoothGatt.setCharacteristicNotification(m_RTDataCharacteristic, value);
 
             // Write Notification value to the device
-            Log.i(TAG, "Setting real time notification " + value);
             m_RTNotificationCCCD.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             m_BluetoothGatt.writeDescriptor(m_RTNotificationCCCD);
         }
     }
 
+    public void ReadRevisionInformation()
+    {
+        if (m_RevisionInfoCharacteristic != null && m_BluetoothGatt != null)
+        {
+            Log.i(TAG, "Asking for revision information");
+            if (m_BluetoothGatt != null)
+            {
+                m_BluetoothGatt.readCharacteristic(m_RevisionInfoCharacteristic);
+            }
+        }
+        else
+        {
+            Log.i(TAG, "Failure reading revision information");
+        }
+    }
+
     public void ReadBatteryLevel()
     {
-        if (m_BatteryLevelCharacteristic != null)
+        if (m_BatteryLevelCharacteristic != null && m_BluetoothGatt != null)
         {
             Log.i(TAG, "Asking for battery level");
-            boolean b = m_BluetoothGatt.readCharacteristic(m_BatteryLevelCharacteristic);
-            if (!b)
+            if (m_BluetoothGatt != null)
             {
-                Log.i(TAG, "Read battery failed");
+                m_BluetoothGatt.readCharacteristic(m_BatteryLevelCharacteristic);
+            }
+            else
+            {
+                Log.i(TAG, "Failure reading battery level");
             }
         }
     }

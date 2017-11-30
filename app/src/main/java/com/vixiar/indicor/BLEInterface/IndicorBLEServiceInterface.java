@@ -35,6 +35,7 @@ public class IndicorBLEServiceInterface implements TimerCallback
 {
     // make this a singleton class
     private static IndicorBLEServiceInterface ourInstance = new IndicorBLEServiceInterface();
+
     public static IndicorBLEServiceInterface getInstance()
     {
         return ourInstance;
@@ -49,7 +50,7 @@ public class IndicorBLEServiceInterface implements TimerCallback
     private static boolean m_ConnectState;
     private static boolean m_ServiceConnected;
     private static IndicorBLEService m_VixiarHHBLEService;
-    private static boolean m_bFirstBarreryReadRequest;
+    private static boolean m_bFirstBatteryReadRequest;
 
     private AlertDialog m_connectionDialog;
     private Context m_Context;
@@ -85,12 +86,24 @@ public class IndicorBLEServiceInterface implements TimerCallback
     public static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
     public static final int ERROR_WRITING_DESCRIPTOR = 3;
 
+    // Offsets to data in characteristics
+    private final static int BATTERY_LEVEL_PCT_INDEX = 0;
+    private final static int BATTERY_LEVEL_MV_INDEX = 1;
+
+
+
     /**
      * This manages the lifecycle of the BLE service.
      * When the service starts we get the service object and Initialize the service.
      */
     private final ServiceConnection m_ServiceConnection = new ServiceConnection()
     {
+        @Override
+        public void onBindingDied(ComponentName name)
+        {
+            Log.i(TAG, "onBindingDied");
+        }
+
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service)
         {
@@ -161,26 +174,34 @@ public class IndicorBLEServiceInterface implements TimerCallback
             {
                 BLEServicesDiscovered();
             }
-            else if (arg1.hasExtra(IndicorBLEService.RT_DATA_RECEIVED))
+            else if (arg1.hasExtra(IndicorBLEService.REVISION_INFO_RECEIVED))
+            {
+
+            }
+            else if (arg1.hasExtra(IndicorBLEService.EXTERNAL_CONNECTION_INFO_RECEIVED))
+            {
+
+            }
+            if (arg1.hasExtra(IndicorBLEService.RT_DATA_RECEIVED))
             {
                 // TODO: Need to implement some sort of timeout here that would be able to detect the loss of connection to the handheld faster than the BLE timeout of 20 seconds
 
                 PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
-                m_CallbackInterface.iNotify();
+                m_CallbackInterface.iRealtimeDataNotification();
 
                 // if this is the first notification received, we need to read the battery level
                 // it has to be done this way because you can't chain gatt reads or writes...you have to
                 // wait till one finishes to start another one
-                if (m_bFirstBarreryReadRequest)
+                if (m_bFirstBatteryReadRequest)
                 {
-                    m_bFirstBarreryReadRequest = false;
+                    m_bFirstBatteryReadRequest = false;
                     m_batteryLevel = -1;
                     m_VixiarHHBLEService.ReadBatteryLevel();
                     // start the timer to update the battery level
                     m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
                 }
             }
-            else if (arg1.hasExtra(IndicorBLEService.ERROR_WRITING_DESCRIPTOR))
+            else if (arg1.hasExtra(IndicorBLEService.AUTHENTICATION_ERROR))
             {
                 //TODO: Need to switch this to use the custom dialog
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
@@ -202,7 +223,8 @@ public class IndicorBLEServiceInterface implements TimerCallback
             }
             else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
             {
-                m_batteryLevel = arg1.getIntExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED, 0);
+                byte x[] = arg1.getByteArrayExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED);
+                //m_batteryLevel x[]
                 m_CallbackInterface.iBatteryLevelRead(m_batteryLevel);
             }
         }
@@ -216,7 +238,7 @@ public class IndicorBLEServiceInterface implements TimerCallback
 
     private void BLEConnected()
     {
-        Log.i("IND", "iConnected");
+        Log.i(TAG, "iConnected");
         m_VixiarHHBLEService.DiscoverIndicorServices();
         m_CallbackInterface.iConnected();
     }
@@ -251,8 +273,9 @@ public class IndicorBLEServiceInterface implements TimerCallback
         // once the services are discovered, turn on the real time data notification
         // in the notification callback, we'll start reading the battery level and other
         // characteristics
-        m_VixiarHHBLEService.WriteRTDataNotification(true);
-        m_bFirstBarreryReadRequest = true;
+        m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
+        //m_VixiarHHBLEService.ReadBatteryLevel();
+        m_bFirstBatteryReadRequest = true;
     }
 
     @Override
@@ -314,7 +337,8 @@ public class IndicorBLEServiceInterface implements TimerCallback
             {
                 // if it's bonded, connect to it
                 m_VixiarHHBLEService.ConnectToSpecificIndicor(device);
-            } else
+            }
+            else
             {
                 // TODO: this is temporary...need to use the custom dialog class
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
@@ -388,27 +412,27 @@ public class IndicorBLEServiceInterface implements TimerCallback
         return null;
     }
 
-    private class VixiarDeviceParams
+private class VixiarDeviceParams
+{
+
+    private int mTotalRssi;
+    private int mNumAdvertisements;
+
+    public VixiarDeviceParams()
     {
-
-        private int mTotalRssi;
-        private int mNumAdvertisements;
-
-        public VixiarDeviceParams()
-        {
-            mTotalRssi = 0;
-            mNumAdvertisements = 0;
-        }
-
-        public void Accumulate(int rssi)
-        {
-            mTotalRssi += rssi;
-            mNumAdvertisements++;
-        }
-
-        public int Average()
-        {
-            return mTotalRssi / mNumAdvertisements;
-        }
+        mTotalRssi = 0;
+        mNumAdvertisements = 0;
     }
+
+    public void Accumulate(int rssi)
+    {
+        mTotalRssi += rssi;
+        mNumAdvertisements++;
+    }
+
+    public int Average()
+    {
+        return mTotalRssi / mNumAdvertisements;
+    }
+}
 }

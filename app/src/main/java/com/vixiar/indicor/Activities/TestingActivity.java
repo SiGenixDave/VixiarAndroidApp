@@ -95,7 +95,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int PERIODIC_TIMER_ID = 2;
 
     // Timing constants
-    private final int STABILIZING_TIME_MS = 10000;
+    private final int STABILIZING_TIME_MS = 20000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
@@ -173,7 +173,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     }
 
     @Override
-    public void iNotify()
+    public void iRealtimeDataNotification()
     {
         // see if we need to do anything wit the data based on the state
         switch (m_testingState)
@@ -249,7 +249,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         m_chartPPG.getViewport().setXAxisBoundsManual(true);
         m_chartPPG.getViewport().setMinX(0);
-        m_chartPPG.getViewport().setMaxX(10);
+        m_chartPPG.getViewport().setMaxX(5);
         m_chartPPG.getGridLabelRenderer().setVerticalAxisTitle(getResources().getString(R.string.pulse_amplitude));
         m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitle(getResources().getString(R.string.time));
         m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
@@ -263,7 +263,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         m_seriesPPGData = new LineGraphSeries<>();
         m_seriesPPGData.setColor(getResources().getColor(R.color.colorChartLine));
-        m_seriesPPGData.setThickness(5);
+        m_seriesPPGData.setThickness(3);
         m_chartPPG.addSeries(m_seriesPPGData);
     }
 
@@ -292,6 +292,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         {
             HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
         }
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        Log.i(TAG, "OnBackPressed");
+        super.onBackPressed();
     }
 
     private void SwitchToTestingView()
@@ -350,6 +357,20 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             {
             }
         });
+    }
+
+    @Override
+    protected void onPause()
+    {
+        Log.i(TAG, "onPause");
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop()
+    {
+        Log.i(TAG, "onStop");
+        super.onStop();
     }
 
     private void SetupLoadingResultsView()

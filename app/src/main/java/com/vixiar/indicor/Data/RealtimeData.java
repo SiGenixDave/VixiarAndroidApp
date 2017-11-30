@@ -28,13 +28,16 @@ public class RealtimeData
         int ppg_value = 0;
         for (int i = 1; i < new_data.length; i += 4)
         {
-            ppg_value = (256 * (int) (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
+            // convert the a/d counts from the handheld to pressure in mmHg
             pressure_counts = (256 * (int) (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
             pressure_value = ((double) pressure_counts * (-0.0263)) + 46.726;
             if (pressure_value < 0.0)
             {
                 pressure_value = 0.0;
             }
+
+            ppg_value = (256 * (int) (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
+
             PPG_PressureSample pd = new PPG_PressureSample(ppg_value, pressure_value);
             data.add(pd);
         }
