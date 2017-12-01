@@ -18,6 +18,8 @@ import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
+import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
+import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.Data.RealtimeDataMarker;
 import com.vixiar.indicor.Graphics.TestPressureGraph;
@@ -27,11 +29,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class TestingActivity extends Activity implements IndicorBLEServiceInterfaceCallbacks, TimerCallback
+public class TestingActivity extends Activity implements IndicorBLEServiceInterfaceCallbacks, TimerCallback, CustomDialogInterface
 {
     //TODO: need to put data markers at the beginning and end of valsalva
 
     private final String TAG = this.getClass().getSimpleName();
+
 
     private static Double m_nPPGGraphLastX = 0.0;
     private int m_nCountdownSecLeft;
@@ -93,6 +96,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private final int ONESHOT_TIMER_ID = 1;
     private final int PERIODIC_TIMER_ID = 2;
+
+    private final int DLG_ID_PRESSURE_ERROR_START = 0;
+    private final int DLG_ID_PRESSURE_ERROR_RUNNING = 1;
 
     // Timing constants
     private final int STABILIZING_TIME_MS = 20000;
@@ -299,6 +305,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     {
         // TODO: (1) need to tell the interface class to cleanup and stop the battery update timer
         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+
+        // stop any running timers
+        m_periodicTimer.Cancel();
+        m_oneShotTimer.Cancel();
+
         Log.i(TAG, "OnBackPressed");
         super.onBackPressed();
     }
@@ -515,22 +526,22 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         return simpleDateFormat.format(date);
     }
 
-    private void PressureError()
+    private void PressureErrorOnStart()
     {
-        // TODO: (1) bring up dialog about pressure error, handle result
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setTitle("Pressure error");
-        alertDialogBuilder.setMessage("Something happened with the pressure");
-        alertDialogBuilder.setPositiveButton("Ok",
-                new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface arg0, int arg1)
-                    {
-                    }
-                });
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
+        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                getString(R.string.dlg_title_pressure_error_start),
+                getString(R.string.dlg_msg_pressure_error_start),
+                "Try Again",
+                "End Test", this, DLG_ID_PRESSURE_ERROR_START, this);
+    }
+
+    private void PressureErrorRunning()
+    {
+        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                getString(R.string.dlg_title_pressure_error_running),
+                getString(R.string.dlg_msg_pressure_error_running),
+                "Try Again",
+                "End Test", this, DLG_ID_PRESSURE_ERROR_RUNNING, this);
     }
 
     private void TestingStateMachine(Testing_Events event)
@@ -601,7 +612,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    PressureError();
+                    PressureErrorOnStart();
                     m_testingState = Testing_State.PRESSURE_ERROR;
                 }
                 break;
@@ -614,7 +625,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
                     {
                         m_periodicTimer.Cancel();
-                        PressureError();
+                        PressureErrorRunning();
                         m_testingState = Testing_State.PRESSURE_ERROR;
                     }
                 }
@@ -697,4 +708,19 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         }
     }
+
+    @Override
+    public void onClickPositiveButton(DialogInterface dialog, int dialogID)
+    {
+        // TODO: this needs to take the user to the right place
+        onBackPressed();
+    }
+
+    @Override
+    public void onClickNegativeButton(DialogInterface dialog, int dialogID)
+    {
+        // TODO: this needs to take the user to the right place
+        onBackPressed();
+    }
+
 }

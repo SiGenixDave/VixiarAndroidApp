@@ -122,4 +122,11 @@
     <string name="dlg_msg_no_handhelds">No Indicor handhelds were detected.  Please make sure
         the Indicor handheld is powered on and the blue LED is flashing.</string>
 
+    <string name="dlg_title_pressure_error_start">Error</string>
+    <string name="dlg_msg_pressure_error_start">You have 10 seconds from when the test starts
+        to hold the pressure in the testing range.</string>
+
+    <string name="dlg_title_pressure_error_running">Error</string>
+    <string name="dlg_msg_pressure_error_running">You must maintain the pressure within the testing
+        range until the test is complete.</string>
 </resources>
