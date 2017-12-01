@@ -153,7 +153,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     }
 
     @Override
-    public void iConnected()
+    public void iFullyConnected()
     {
         TestingStateMachine(Testing_Events.EVT_CONNECTED);
     }
@@ -298,6 +298,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     public void onBackPressed()
     {
         // TODO: (1) need to tell the interface class to cleanup and stop the battery update timer
+        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
         Log.i(TAG, "OnBackPressed");
         super.onBackPressed();
     }

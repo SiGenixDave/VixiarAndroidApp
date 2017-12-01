@@ -54,7 +54,6 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private static boolean m_ConnectState;
     private static boolean m_ServiceConnected;
     private static IndicorBLEService m_VixiarHHBLEService;
-    private static boolean m_bFirstBatteryReadRequest;
 
     private AlertDialog m_connectionDialog;
     private Context m_Context;
@@ -63,7 +62,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     {
         public void run()
         {
-            ScanTimeout();
+            ConnectionStateMachine(Connection_Event.EVT_SCAN_TIMEOUT);
         }
     };
     private int m_batteryLevel;
@@ -84,10 +83,32 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private final int DLG_ID_NO_PAIRED_DEVICE = 1;
     private final int DLG_ID_NO_HANDHELDS = 2;
 
-    public void initialize(Context c, IndicorBLEServiceInterfaceCallbacks dataInterface)
+    private enum Connection_State
     {
-        m_Context = c;
-        m_CallbackInterface = dataInterface;
+        STATE_NOT_CONNECTED,
+        STATE_SCANNING,
+        STATE_WAITING_TO_CONNECT,
+        STATE_SERVICES_READ,
+        STATE_REQUESTED_REVISION,
+        STATE_REQUESTED_BATTERY,
+        STATE_REQUESTED_RT_NOTIFICATION,
+        STATE_REQUESTED_CONNECTION_NOTIFICATION,
+        STATE_OPERATIONAL
+    }
+
+    private Connection_State m_ConnectionState;
+
+    private enum Connection_Event
+    {
+        EVT_SERVICE_CONNECTED,
+        EVT_SCAN_TIMEOUT,
+        EVT_BLE_CONNECTED,
+        EVT_SERVICES_READ,
+        EVT_REVISION_READ,
+        EVT_BATTERY_READ,
+        EVT_NOTIFICATION_WRITTEN,
+        EVT_DISCONNECTED,
+        EVT_AUTHENTICATION_ERROR
     }
 
     // list of errors
@@ -118,17 +139,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             m_VixiarHHBLEService = ((IndicorBLEService.LocalBinder) service).getService();
             m_ServiceConnected = true;
             m_VixiarHHBLEService.Initialize();
-
-            // delete everything from the scan list
-            m_ScanList.clear();
-
-            DisplayConnectingDialog();
-
-            // start scanning
-            m_VixiarHHBLEService.ScanForIndicorHandhelds();
-
-            // start the timer to wait for scan results
-            m_handler.postDelayed(m_ScanTimeoutRunnable, SCAN_TIME_MS);
+            ConnectionStateMachine(Connection_Event.EVT_SERVICE_CONNECTED);
         }
 
         @Override
@@ -138,6 +149,12 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             m_VixiarHHBLEService = null;
         }
     };
+
+    public void initialize(Context c, IndicorBLEServiceInterfaceCallbacks dataInterface)
+    {
+        m_Context = c;
+        m_CallbackInterface = dataInterface;
+    }
 
     public void ConnectToIndicor()
     {
@@ -152,135 +169,26 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(IndicorBLEService.MESSAGE_ID);
         m_Context.registerReceiver(m_BLEMessageReceiver, intentFilter);
+
+        m_ConnectionState = Connection_State.STATE_NOT_CONNECTED;
+    }
+
+    public void DisconnectFromIndicor()
+    {
+        m_VixiarHHBLEService.DisconnectFromIndicor();
+
+        // unbind the service, and unregister the intent receiver
+        m_Context.unbindService(m_ServiceConnection);
+        m_Context.unregisterReceiver(m_BLEMessageReceiver);
+        m_ConnectionState = Connection_State.STATE_NOT_CONNECTED;
+
+        // stop the battery read timer if it's running
+        m_updateBatteryTimer.Cancel();
     }
 
     public int GetLastReadBatteryLevel()
     {
         return m_batteryLevel;
-    }
-
-    private class MyBLEMessageReceiver extends BroadcastReceiver
-    {
-        @Override
-        public void onReceive(Context arg0, Intent arg1)
-        {
-            //Log.i(TAG, "onReceive");
-            if (arg1.hasExtra(IndicorBLEService.SCAN_RESULT))
-            {
-                BLEScanCallback((ScanResult) arg1.getParcelableExtra(IndicorBLEService.SCAN_RESULT));
-            }
-            else if (arg1.hasExtra(IndicorBLEService.CONNECTED))
-            {
-                BLEConnected();
-            }
-            else if (arg1.hasExtra(IndicorBLEService.DISCONNECTED))
-            {
-                BLEDisconnected();
-            }
-            else if (arg1.hasExtra(IndicorBLEService.SERVICES_DISCOVERED))
-            {
-                BLEServicesDiscovered();
-            }
-            else if (arg1.hasExtra(IndicorBLEService.REVISION_INFO_RECEIVED))
-            {
-
-            }
-            else if (arg1.hasExtra(IndicorBLEService.EXTERNAL_CONNECTION_INFO_RECEIVED))
-            {
-
-            }
-            if (arg1.hasExtra(IndicorBLEService.RT_DATA_RECEIVED))
-            {
-                // TODO: Need to implement some sort of timeout here that would be able to detect the loss of connection to the handheld faster than the BLE timeout of 20 seconds
-
-                PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
-                m_CallbackInterface.iRealtimeDataNotification();
-
-                // if this is the first notification received, we need to read the battery level
-                // it has to be done this way because you can't chain gatt reads or writes...you have to
-                // wait till one finishes to start another one
-                if (m_bFirstBatteryReadRequest)
-                {
-                    m_bFirstBatteryReadRequest = false;
-                    m_batteryLevel = -1;
-                    m_VixiarHHBLEService.ReadBatteryLevel();
-                    // start the timer to update the battery level
-                    m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
-                }
-            }
-            else if (arg1.hasExtra(IndicorBLEService.AUTHENTICATION_ERROR))
-            {
-                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
-                        m_Context.getString(R.string.dlg_title_authentication_error),
-                        m_Context.getString(R.string.dlg_msg_authentication_error),
-                        "Ok",
-                        null,
-                        m_Context, DLG_ID_AUTHENTICATION_ERROR, IndicorBLEServiceInterface.this);
-            }
-            else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
-            {
-                byte x[] = arg1.getByteArrayExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED);
-                //m_batteryLevel x[]
-                m_CallbackInterface.iBatteryLevelRead(m_batteryLevel);
-            }
-        }
-    }
-
-    private void BLEScanCallback(ScanResult result)
-    {
-        //Log.i("IND", "Got a callback");
-        m_ScanList.add(result);
-    }
-
-    private void BLEConnected()
-    {
-        Log.i(TAG, "iConnected");
-        m_VixiarHHBLEService.DiscoverIndicorServices();
-        m_CallbackInterface.iConnected();
-    }
-
-    private void BLEDisconnected()
-    {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
-        alertDialogBuilder.setMessage("The handheld device has become disconnected.");
-        alertDialogBuilder.setTitle("Disconnected");
-        alertDialogBuilder.setPositiveButton("Ok",
-                new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface arg0, int arg1)
-                    {
-                        m_connectionDialog.cancel();
-                        // notify the activity of the problem
-                        m_CallbackInterface.iDisconnected();
-                    }
-                });
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
-    }
-
-    private void BLEServicesDiscovered()
-    {
-        if (m_connectionDialog != null)
-        {
-            m_connectionDialog.cancel();
-        }
-
-        // once the services are discovered, turn on the real time data notification
-        // in the notification callback, we'll start reading the battery level and other
-        // characteristics
-        //m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
-        m_VixiarHHBLEService.ReadBatteryLevel();
-        m_bFirstBatteryReadRequest = true;
-    }
-
-    @Override
-    public void TimerExpired(int id)
-    {
-        if (id == BATTERY_READ_TIMER_ID)
-        {
-            m_VixiarHHBLEService.ReadBatteryLevel();
-        }
     }
 
     private void DisplayConnectingDialog()
@@ -298,40 +206,263 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         m_connectionDialog.show();
     }
 
-    private void ScanTimeout()
+    private void ConnectionStateMachine(Connection_Event event)
     {
-        m_VixiarHHBLEService.StopScanning();
-
-        // TODO: add logic to figure out which device to connect to based on which one is paired, strongest signal, etc.
-        BluetoothDevice device = GetLargestSignalDevice();
-
-        // see if there are any devices
-        if (device == null)
+        switch (m_ConnectionState)
         {
-            CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
-                    m_Context.getString(R.string.dlg_title_no_handhelds),
-                    m_Context.getString(R.string.dlg_msg_no_handhelds),
-                    "Ok",
-                    null,
-                    m_Context, DLG_ID_NO_HANDHELDS, IndicorBLEServiceInterface.this);
+            case STATE_NOT_CONNECTED:
+                if (event == Connection_Event.EVT_SERVICE_CONNECTED)
+                {
+                    // delete everything from the scan list
+                    m_ScanList.clear();
+
+                    DisplayConnectingDialog();
+
+                    // start scanning
+                    m_VixiarHHBLEService.ScanForIndicorHandhelds();
+
+                    // start the timer to wait for scan results
+                    m_handler.postDelayed(m_ScanTimeoutRunnable, SCAN_TIME_MS);
+
+                    Log.i(TAG, "STATE_SCANNING");
+
+                    m_ConnectionState = Connection_State.STATE_SCANNING;
+                }
+                break;
+
+            case STATE_SCANNING:
+                if (event == Connection_Event.EVT_SCAN_TIMEOUT)
+                {
+                    m_VixiarHHBLEService.StopScanning();
+
+                    // TODO: add logic to figure out which device to connect to based on which one is paired, strongest signal, etc.
+                    BluetoothDevice device = GetLargestSignalDevice();
+
+                    // see if there are any devices
+                    if (device == null)
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                                m_Context.getString(R.string.dlg_title_no_handhelds),
+                                m_Context.getString(R.string.dlg_msg_no_handhelds),
+                                "Ok",
+                                null,
+                                m_Context, DLG_ID_NO_HANDHELDS, IndicorBLEServiceInterface.this);
+                    }
+                    else
+                    {
+                        // see if this device is paired
+                        if (device.getBondState() == BluetoothDevice.BOND_BONDED)
+                        {
+                            // if it's bonded, try to connect to it
+                            m_VixiarHHBLEService.ConnectToSpecificIndicor(device);
+                            m_ConnectionState = Connection_State.STATE_WAITING_TO_CONNECT;
+
+                            Log.i(TAG, "STATE_WAITING_TO_CONNECT");
+                        }
+                        else
+                        {
+                            CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                                    m_Context.getString(R.string.dlg_title_no_paired_devices),
+                                    m_Context.getString(R.string.dlg_msg_no_paired_devices),
+                                    "Ok",
+                                    null,
+                                    m_Context, DLG_ID_NO_PAIRED_DEVICE, this);
+                        }
+                    }
+                }
+                break;
+
+            case STATE_WAITING_TO_CONNECT:
+                if (event == Connection_Event.EVT_BLE_CONNECTED)
+                {
+                    m_VixiarHHBLEService.DiscoverIndicorServices();
+                    m_ConnectionState = Connection_State.STATE_SERVICES_READ;
+
+                    Log.i(TAG, "STATE_SERVICES_READ");
+                }
+                break;
+
+            case STATE_SERVICES_READ:
+                if (event == Connection_Event.EVT_SERVICES_READ)
+                {
+                    // get the battery level
+                    m_VixiarHHBLEService.ReadRevisionInformation();
+                    m_ConnectionState = Connection_State.STATE_REQUESTED_REVISION;
+                    Log.i(TAG, "STATE_REQUESTED_REVISION");
+                }
+                break;
+
+            case STATE_REQUESTED_REVISION:
+                if (event == Connection_Event.EVT_REVISION_READ)
+                {
+                    m_VixiarHHBLEService.ReadBatteryLevel();
+                    // start the timer to update the battery level
+                    m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
+                    m_ConnectionState = Connection_State.STATE_REQUESTED_BATTERY;
+                    Log.i(TAG, "STATE_REQUESTED_BATTERY");
+                }
+                break;
+
+            case STATE_REQUESTED_BATTERY:
+                if (event == Connection_Event.EVT_BATTERY_READ)
+                {
+                    m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
+                    m_ConnectionState = Connection_State.STATE_REQUESTED_RT_NOTIFICATION;
+                    Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
+                }
+                break;
+
+            case STATE_REQUESTED_RT_NOTIFICATION:
+                if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
+                {
+                    m_VixiarHHBLEService.SubscribeToConnectionNotification(true);
+                    m_ConnectionState = Connection_State.STATE_REQUESTED_CONNECTION_NOTIFICATION;
+                    Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
+                }
+                break;
+
+            case STATE_REQUESTED_CONNECTION_NOTIFICATION:
+                if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
+                {
+                    m_ConnectionState = Connection_State.STATE_OPERATIONAL;
+
+                    // remove the dialog showing the connection progress bar
+                    if (m_connectionDialog != null)
+                    {
+                        m_connectionDialog.cancel();
+                    }
+
+                    // tell the activity the everything is good to go
+                    m_CallbackInterface.iFullyConnected();
+                    Log.i(TAG, "STATE_OPERATIONAL");
+                }
+                break;
+
+            case STATE_OPERATIONAL:
+                break;
+
         }
-        else
+    }
+
+    @Override
+    public void TimerExpired(int id)
+    {
+        if (id == BATTERY_READ_TIMER_ID)
         {
-            // see if this device is paired
-            if (device.getBondState() == BluetoothDevice.BOND_BONDED)
+            m_VixiarHHBLEService.ReadBatteryLevel();
+        }
+    }
+
+    @Override
+    public void onClickPositiveButton(DialogInterface dialog, int dialogID)
+    {
+        switch (dialogID)
+        {
+            case DLG_ID_AUTHENTICATION_ERROR:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(AUTHENTICATION_ERROR);
+                break;
+
+            case DLG_ID_NO_PAIRED_DEVICE:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(ERROR_NO_PAIRED_DEVICES_FOUND);
+                break;
+
+            case DLG_ID_NO_HANDHELDS:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(ERROR_NO_DEVICES_FOUND);
+                break;
+        }
+    }
+
+    @Override
+    public void onClickNegativeButton(DialogInterface dialog, int dialogID)
+    {
+
+    }
+
+    private class MyBLEMessageReceiver extends BroadcastReceiver
+    {
+        @Override
+        public void onReceive(Context arg0, Intent arg1)
+        {
+            //Log.i(TAG, "onReceive");
+            if (arg1.hasExtra(IndicorBLEService.SCAN_RESULT))
             {
-                // if it's bonded, connect to it
-                m_VixiarHHBLEService.ConnectToSpecificIndicor(device);
+                m_ScanList.add((ScanResult)arg1.getParcelableExtra(IndicorBLEService.SCAN_RESULT));
             }
-            else
+            else if (arg1.hasExtra(IndicorBLEService.CONNECTED))
             {
+                ConnectionStateMachine(Connection_Event.EVT_BLE_CONNECTED);
+            }
+            else if (arg1.hasExtra(IndicorBLEService.DISCONNECTED))
+            {
+                ConnectionStateMachine(Connection_Event.EVT_DISCONNECTED);
+            }
+            else if (arg1.hasExtra(IndicorBLEService.SERVICES_DISCOVERED))
+            {
+                ConnectionStateMachine(Connection_Event.EVT_SERVICES_READ);
+            }
+            else if (arg1.hasExtra(IndicorBLEService.REVISION_INFO_RECEIVED))
+            {
+                ConnectionStateMachine(Connection_Event.EVT_REVISION_READ);
+            }
+            else if (arg1.hasExtra(IndicorBLEService.NOTIFICATION_WRITTEN))
+            {
+                ConnectionStateMachine(Connection_Event.EVT_NOTIFICATION_WRITTEN);
+            }
+            else if (arg1.hasExtra(IndicorBLEService.EXTERNAL_CONNECTION_INFO_RECEIVED))
+            {
+
+            }
+            if (arg1.hasExtra(IndicorBLEService.RT_DATA_RECEIVED))
+            {
+                // TODO: Need to implement some sort of timeout here that would be able to detect the loss of connection to the handheld faster than the BLE timeout of 20 seconds
+
+                PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
+                m_CallbackInterface.iRealtimeDataNotification();
+            }
+            else if (arg1.hasExtra(IndicorBLEService.AUTHENTICATION_ERROR))
+            {
+                ConnectionStateMachine(Connection_Event.EVT_AUTHENTICATION_ERROR);
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
-                        m_Context.getString(R.string.dlg_title_no_paired_devices),
-                        m_Context.getString(R.string.dlg_msg_no_paired_devices),
+                        m_Context.getString(R.string.dlg_title_authentication_error),
+                        m_Context.getString(R.string.dlg_msg_authentication_error),
                         "Ok",
                         null,
-                        m_Context, DLG_ID_NO_PAIRED_DEVICE, this);
+                        m_Context, DLG_ID_AUTHENTICATION_ERROR, IndicorBLEServiceInterface.this);
             }
+            else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
+            {
+                byte x[] = arg1.getByteArrayExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED);
+                m_batteryLevel = x[BATTERY_LEVEL_PCT_INDEX];
+                m_CallbackInterface.iBatteryLevelRead(m_batteryLevel);
+                ConnectionStateMachine(Connection_Event.EVT_BATTERY_READ);
+            }
+        }
+    }
+
+    private class VixiarDeviceParams
+    {
+
+        private int mTotalRssi;
+        private int mNumAdvertisements;
+
+        public VixiarDeviceParams()
+        {
+            mTotalRssi = 0;
+            mNumAdvertisements = 0;
+        }
+
+        public void Accumulate(int rssi)
+        {
+            mTotalRssi += rssi;
+            mNumAdvertisements++;
+        }
+
+        public int Average()
+        {
+            return mTotalRssi / mNumAdvertisements;
         }
     }
 
@@ -384,58 +515,5 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         }
 
         return null;
-    }
-
-    @Override
-    public void onClickPositiveButton(DialogInterface dialog, int dialogID)
-    {
-        switch (dialogID)
-        {
-            case DLG_ID_AUTHENTICATION_ERROR:
-                m_connectionDialog.cancel();
-                m_CallbackInterface.iError(AUTHENTICATION_ERROR);
-                break;
-
-            case DLG_ID_NO_PAIRED_DEVICE:
-                m_connectionDialog.cancel();
-                m_CallbackInterface.iError(ERROR_NO_PAIRED_DEVICES_FOUND);
-                break;
-
-            case DLG_ID_NO_HANDHELDS:
-                m_connectionDialog.cancel();
-                m_CallbackInterface.iError(ERROR_NO_DEVICES_FOUND);
-                break;
-        }
-    }
-
-    @Override
-    public void onClickNegativeButton(DialogInterface dialog, int dialogID)
-    {
-
-    }
-
-
-    private class VixiarDeviceParams
-    {
-
-        private int mTotalRssi;
-        private int mNumAdvertisements;
-
-        public VixiarDeviceParams()
-        {
-            mTotalRssi = 0;
-            mNumAdvertisements = 0;
-        }
-
-        public void Accumulate(int rssi)
-        {
-            mTotalRssi += rssi;
-            mNumAdvertisements++;
-        }
-
-        public int Average()
-        {
-            return mTotalRssi / mNumAdvertisements;
-        }
     }
 }

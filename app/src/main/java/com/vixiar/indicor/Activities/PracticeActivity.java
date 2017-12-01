@@ -60,7 +60,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         });
     }
 
-    public void iConnected()
+    public void iFullyConnected()
     {
         Log.i(TAG, "Connected");
     }
