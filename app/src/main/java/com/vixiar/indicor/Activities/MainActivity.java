@@ -123,7 +123,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                             getString(R.string.dlg_msg_location_access_no),
                             "Ok",
                             null,
-                            this, DLG_ID_LOCATION_ACCESS_NOT_ENABLED);
+                            this, DLG_ID_LOCATION_ACCESS_NOT_ENABLED, this);
                 }
             }
         }
@@ -160,7 +160,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                                 getString(R.string.dlg_msg_location_access_pre),
                                 "Ok",
                                 null,
-                                this, DLG_ID_LOCATION_ACCESS_PRE);
+                                this, DLG_ID_LOCATION_ACCESS_PRE, this);
                     }
                 } //End of section for Android 6.0 (Marshmallow)
             }
@@ -172,7 +172,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                         getString(R.string.dlg_msg_ble_not_enabled),
                         "Ok",
                         null,
-                        this, DLG_ID_BLE_NOT_ENABLED);
+                        this, DLG_ID_BLE_NOT_ENABLED, this);
             }
         }
     }
@@ -198,7 +198,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                                 getString(R.string.dlg_msg_location_access_pre),
                                 "Ok",
                                 null,
-                                this, DLG_ID_LOCATION_ACCESS_PRE);
+                                this, DLG_ID_LOCATION_ACCESS_PRE, this);
                     }
                 }
                 else
@@ -210,7 +210,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                             getString(R.string.dlg_msg_ble_enable_pre),
                             "Ok",
                             null,
-                            this, DLG_ID_BLE_NOT_ENABLED_PRE);
+                            this, DLG_ID_BLE_NOT_ENABLED_PRE, this);
                 }
             }
             else
@@ -220,7 +220,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                         getString(R.string.dlg_title_location_service),
                         getString(R.string.dlg_msg_location_service),
                         "Ok",
-                        null, this, DLG_ID_LOCATION_SERVICES);
+                        null, this, DLG_ID_LOCATION_SERVICES, this);
             }
         }
         else
@@ -231,7 +231,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                     getString(R.string.dlg_msg_ble_not_supported),
                     "Ok",
                     null,
-                    this, DLG_ID_NO_BLE);
+                    this, DLG_ID_NO_BLE, this);
         }
     }
 

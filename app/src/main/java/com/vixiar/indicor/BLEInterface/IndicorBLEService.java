@@ -197,7 +197,7 @@ public class IndicorBLEService extends Service
                     SendDataToConnectionClass(REVISION_INFO_RECEIVED, characteristic.getValue());
                 }
             }
-            else if (status == GATT_INSUFFICIENT_AUTHENTICATION)
+            else //if (status == GATT_INSUFFICIENT_AUTHENTICATION)
             {
                 SendDataToConnectionClass(AUTHENTICATION_ERROR, null);
             }

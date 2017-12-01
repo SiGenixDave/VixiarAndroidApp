@@ -297,6 +297,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onBackPressed()
     {
+        // TODO: (1) need to tell the interface class to cleanup and stop the battery update timer
         Log.i(TAG, "OnBackPressed");
         super.onBackPressed();
     }
@@ -466,7 +467,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_imgRestIcon.setVisibility(View.INVISIBLE);
         m_lblRest.setText("");
         m_lblBottomCountdownNumber.setText("");
-        // TODO: display the save and home icons
+        // TODO: (1) display the save and home icons
         // TODO: move the test complete label to the center
     }
 
@@ -515,7 +516,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private void PressureError()
     {
-        // TODO: bring up dialog about pressure error, handle result
+        // TODO: (1) bring up dialog about pressure error, handle result
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Pressure error");
         alertDialogBuilder.setMessage("Something happened with the pressure");
@@ -660,7 +661,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case RESULTS:
-                //TODO: when countdown goes to 0, need to wait for button press to go to next test
+                // TODO: when countdown goes to 0, need to wait for button press to go to next test
                 //Log.i(TAG, "In state: RESULTS");
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
@@ -685,12 +686,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case COMPLETE:
                 //Log.i(TAG, "In state: COMPLETE");
-                // TODO: handle test complete state
+                // TODO: (1) handle test complete state
                 break;
 
             case PRESSURE_ERROR:
                 //Log.i(TAG, "In state: PRESSURE_ERROR");
-                // TODO: handle pressure error state
+                // TODO: (1) handle pressure error state
                 break;
 
         }

@@ -65,8 +65,16 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         Log.i(TAG, "Connected");
     }
 
+    @Override
+    public void onBackPressed()
+    {
+        // TODO: need to tell the interface class to cleanup and stop the battery update timer
+        super.onBackPressed();
+    }
+
     public void iBatteryLevelRead(int level)
     {
+        // TODO: Need to display battery level on practice screen
     }
 
     public void iDisconnected()

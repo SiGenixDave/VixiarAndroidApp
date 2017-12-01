@@ -8,6 +8,8 @@ import java.util.Date;
 
 public class PatientInfo
 {
+    // TODO: Build a function to write the data to a CSV file
+
     private static final PatientInfo ourInstance = new PatientInfo();
     private String PatientId;
     private int systolicBloodPressure;

@@ -18,6 +18,8 @@ import android.view.View;
 
 import com.vixiar.indicor.Activities.GenericTimer;
 import com.vixiar.indicor.Activities.TimerCallback;
+import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
+import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
 
@@ -31,8 +33,10 @@ import static android.content.Context.BIND_AUTO_CREATE;
  * Created by gyurk on 11/6/2017.
  */
 
-public class IndicorBLEServiceInterface implements TimerCallback
+public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogInterface
 {
+    // TODO: (1) Implement a state machine to do all the connection stuff, read initial values, and start notifications
+
     // make this a singleton class
     private static IndicorBLEServiceInterface ourInstance = new IndicorBLEServiceInterface();
 
@@ -75,6 +79,11 @@ public class IndicorBLEServiceInterface implements TimerCallback
 
     private final int SCAN_TIME_MS = 5000;
 
+    // dialog ids handled here
+    private final int DLG_ID_AUTHENTICATION_ERROR = 0;
+    private final int DLG_ID_NO_PAIRED_DEVICE = 1;
+    private final int DLG_ID_NO_HANDHELDS = 2;
+
     public void initialize(Context c, IndicorBLEServiceInterfaceCallbacks dataInterface)
     {
         m_Context = c;
@@ -84,13 +93,11 @@ public class IndicorBLEServiceInterface implements TimerCallback
     // list of errors
     public static final int ERROR_NO_DEVICES_FOUND = 1;
     public static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
-    public static final int ERROR_WRITING_DESCRIPTOR = 3;
+    public static final int AUTHENTICATION_ERROR = 3;
 
     // Offsets to data in characteristics
     private final static int BATTERY_LEVEL_PCT_INDEX = 0;
     private final static int BATTERY_LEVEL_MV_INDEX = 1;
-
-
 
     /**
      * This manages the lifecycle of the BLE service.
@@ -203,23 +210,12 @@ public class IndicorBLEServiceInterface implements TimerCallback
             }
             else if (arg1.hasExtra(IndicorBLEService.AUTHENTICATION_ERROR))
             {
-                //TODO: Need to switch this to use the custom dialog
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
-                alertDialogBuilder.setMessage("A handheld device was detected, however it is not paired with this tablet.  See Instructions for Use for how to pair the handheld with this device.");
-                alertDialogBuilder.setTitle("No handheld paired");
-                alertDialogBuilder.setPositiveButton("Ok",
-                        new DialogInterface.OnClickListener()
-                        {
-                            @Override
-                            public void onClick(DialogInterface arg0, int arg1)
-                            {
-                                m_connectionDialog.cancel();
-                                // notify the activity of the problem
-                                m_CallbackInterface.iError(ERROR_WRITING_DESCRIPTOR);
-                            }
-                        });
-                AlertDialog alertDialog = alertDialogBuilder.create();
-                alertDialog.show();
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                        m_Context.getString(R.string.dlg_title_authentication_error),
+                        m_Context.getString(R.string.dlg_msg_authentication_error),
+                        "Ok",
+                        null,
+                        m_Context, DLG_ID_AUTHENTICATION_ERROR, IndicorBLEServiceInterface.this);
             }
             else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
             {
@@ -273,8 +269,8 @@ public class IndicorBLEServiceInterface implements TimerCallback
         // once the services are discovered, turn on the real time data notification
         // in the notification callback, we'll start reading the battery level and other
         // characteristics
-        m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
-        //m_VixiarHHBLEService.ReadBatteryLevel();
+        //m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
+        m_VixiarHHBLEService.ReadBatteryLevel();
         m_bFirstBatteryReadRequest = true;
     }
 
@@ -312,23 +308,12 @@ public class IndicorBLEServiceInterface implements TimerCallback
         // see if there are any devices
         if (device == null)
         {
-            // TODO: this is temporary...need to use the custom dialog class
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
-            alertDialogBuilder.setMessage("No Indicor handhelds were detected");
-            alertDialogBuilder.setTitle("No handheld found");
-            alertDialogBuilder.setPositiveButton("Ok",
-                    new DialogInterface.OnClickListener()
-                    {
-                        @Override
-                        public void onClick(DialogInterface arg0, int arg1)
-                        {
-                            m_connectionDialog.cancel();
-                            // notify the activity of the problem
-                            m_CallbackInterface.iError(ERROR_NO_DEVICES_FOUND);
-                        }
-                    });
-            AlertDialog alertDialog = alertDialogBuilder.create();
-            alertDialog.show();
+            CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                    m_Context.getString(R.string.dlg_title_no_handhelds),
+                    m_Context.getString(R.string.dlg_msg_no_handhelds),
+                    "Ok",
+                    null,
+                    m_Context, DLG_ID_NO_HANDHELDS, IndicorBLEServiceInterface.this);
         }
         else
         {
@@ -340,23 +325,12 @@ public class IndicorBLEServiceInterface implements TimerCallback
             }
             else
             {
-                // TODO: this is temporary...need to use the custom dialog class
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_Context);
-                alertDialogBuilder.setMessage("A handheld device was detected, however it is not paired with this tablet.  See Instructions for Use for how to pair the handheld with this device.");
-                alertDialogBuilder.setTitle("No handheld paired");
-                alertDialogBuilder.setPositiveButton("Ok",
-                        new DialogInterface.OnClickListener()
-                        {
-                            @Override
-                            public void onClick(DialogInterface arg0, int arg1)
-                            {
-                                m_connectionDialog.cancel();
-                                // notify the activity of the problem
-                                m_CallbackInterface.iError(ERROR_NO_PAIRED_DEVICES_FOUND);
-                            }
-                        });
-                AlertDialog alertDialog = alertDialogBuilder.create();
-                alertDialog.show();
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                        m_Context.getString(R.string.dlg_title_no_paired_devices),
+                        m_Context.getString(R.string.dlg_msg_no_paired_devices),
+                        "Ok",
+                        null,
+                        m_Context, DLG_ID_NO_PAIRED_DEVICE, this);
             }
         }
     }
@@ -412,27 +386,56 @@ public class IndicorBLEServiceInterface implements TimerCallback
         return null;
     }
 
-private class VixiarDeviceParams
-{
-
-    private int mTotalRssi;
-    private int mNumAdvertisements;
-
-    public VixiarDeviceParams()
+    @Override
+    public void onClickPositiveButton(DialogInterface dialog, int dialogID)
     {
-        mTotalRssi = 0;
-        mNumAdvertisements = 0;
+        switch (dialogID)
+        {
+            case DLG_ID_AUTHENTICATION_ERROR:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(AUTHENTICATION_ERROR);
+                break;
+
+            case DLG_ID_NO_PAIRED_DEVICE:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(ERROR_NO_PAIRED_DEVICES_FOUND);
+                break;
+
+            case DLG_ID_NO_HANDHELDS:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(ERROR_NO_DEVICES_FOUND);
+                break;
+        }
     }
 
-    public void Accumulate(int rssi)
+    @Override
+    public void onClickNegativeButton(DialogInterface dialog, int dialogID)
     {
-        mTotalRssi += rssi;
-        mNumAdvertisements++;
+
     }
 
-    public int Average()
+
+    private class VixiarDeviceParams
     {
-        return mTotalRssi / mNumAdvertisements;
+
+        private int mTotalRssi;
+        private int mNumAdvertisements;
+
+        public VixiarDeviceParams()
+        {
+            mTotalRssi = 0;
+            mNumAdvertisements = 0;
+        }
+
+        public void Accumulate(int rssi)
+        {
+            mTotalRssi += rssi;
+            mNumAdvertisements++;
+        }
+
+        public int Average()
+        {
+            return mTotalRssi / mNumAdvertisements;
+        }
     }
-}
 }

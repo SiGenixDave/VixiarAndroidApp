@@ -44,22 +44,22 @@ public class CustomAlertDialog implements CustomDialogInterface, DialogInterface
 
     /**
      * Show confirmation dialog with two buttons
-     *
-     * @param numButtons
+     *  @param numButtons
      * @param dialogTitle
      * @param message
      * @param positiveButton
      * @param negativeButton
      * @param context
      * @param dialogID
+     * @param callbackInterface
      */
     public void showConfirmDialog(Custom_Dialog_Type type,
                                   int numButtons, String dialogTitle, String message,
                                   String positiveButton, String negativeButton,
-                                  Context context, final int dialogID)
+                                  Context context, final int dialogID, CustomDialogInterface callbackInterface)
     {
 
-        mDialogClickInterface = (CustomDialogInterface) context;
+        mDialogClickInterface = callbackInterface;
         mDialogIdentifier = dialogID;
         mContext = context;
 

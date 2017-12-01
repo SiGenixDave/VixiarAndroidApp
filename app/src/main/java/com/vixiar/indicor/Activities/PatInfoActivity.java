@@ -166,6 +166,7 @@ public class PatInfoActivity extends Activity
 
     private void initializeControls()
     {
+        // TODO: theres some kind of divide by 0 when this runs
         // --------------------------------------------------------------------------------------------------------
         // patient ID
         txtPatientID = (EditText) findViewById(R.id.txtPatientID);
