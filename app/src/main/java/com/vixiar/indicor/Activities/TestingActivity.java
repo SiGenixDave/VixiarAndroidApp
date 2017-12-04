@@ -303,7 +303,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onBackPressed()
     {
-        // TODO: (1) need to tell the interface class to cleanup and stop the battery update timer
         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
 
         // stop any running timers

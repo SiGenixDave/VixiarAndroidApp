@@ -41,6 +41,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_ball));
         HeaderFooterControl.getInstance().UnDimNextButton(this);
         HeaderFooterControl.getInstance().HidePracticeButton(this);
+        HeaderFooterControl.getInstance().HideBatteryIcon(this);
         HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
         {
             @Override
@@ -63,18 +64,19 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
     public void iFullyConnected()
     {
         Log.i(TAG, "Connected");
+        HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
     }
 
     @Override
     public void onBackPressed()
     {
-        // TODO: need to tell the interface class to cleanup and stop the battery update timer
+        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
         super.onBackPressed();
     }
 
     public void iBatteryLevelRead(int level)
     {
-        // TODO: Need to display battery level on practice screen
+        HeaderFooterControl.getInstance().ShowBatteryIcon(this, level);
     }
 
     public void iDisconnected()

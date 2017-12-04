@@ -437,6 +437,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 byte x[] = arg1.getByteArrayExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED);
                 m_batteryLevel = x[BATTERY_LEVEL_PCT_INDEX];
                 m_CallbackInterface.iBatteryLevelRead(m_batteryLevel);
+                Log.i(TAG, "Battery = " + m_batteryLevel);
                 ConnectionStateMachine(Connection_Event.EVT_BATTERY_READ);
             }
         }
