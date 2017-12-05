@@ -35,8 +35,6 @@ import static android.content.Context.BIND_AUTO_CREATE;
 
 public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogInterface
 {
-    // TODO: (1) Implement a state machine to do all the connection stuff, read initial values, and start notifications
-
     // make this a singleton class
     private static IndicorBLEServiceInterface ourInstance = new IndicorBLEServiceInterface();
 

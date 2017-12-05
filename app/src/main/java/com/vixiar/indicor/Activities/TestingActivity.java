@@ -1,7 +1,6 @@
 package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -89,6 +88,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         EVT_CONNECTED,
         EVT_PERIODIC_TIMER_TICK,
         EVT_VALSALVA_PRESSURE_UPDATE,
+        EVT_HR_STABLE,
     }
 
     // Timer stuff
@@ -101,9 +101,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int DLG_ID_PRESSURE_ERROR_START = 0;
     private final int DLG_ID_PRESSURE_ERROR_RUNNING = 1;
     private final int DLG_ID_CANCEL_TEST = 2;
+    private final int DLG_ID_HR_NOT_STABLE = 4;
 
     // Timing constants
-    private final int STABILIZING_TIME_MS = 20000;
+    private final int STABILIZING_TIMEOUT_MS = 60000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
@@ -196,6 +197,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_nPPGGraphLastX += 0.02;
                 }
                 m_nLastDataIndex = currentDataIndex;
+
+                // see if the HR is stable
+                if (PatientInfo.getInstance().getRealtimeData().IsHeartRateStable())
+                {
+                    TestingStateMachine(Testing_Events.EVT_HR_STABLE);
+                }
                 break;
 
             case VALSALVA_WAIT_FOR_PRESSURE:
@@ -260,6 +267,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     {
         switch (dialogID)
         {
+            case DLG_ID_HR_NOT_STABLE:
             case DLG_ID_PRESSURE_ERROR_START:
             case DLG_ID_PRESSURE_ERROR_RUNNING:
             // this is the "Try again" button, we need to restart this test
@@ -269,9 +277,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_testingState = Testing_State.STABILIZING;
 
                 // start the stability timer
-                m_oneShotTimer.Start(this, STABILIZING_TIME_MS, true);
-                break;
+                m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
 
+                break;
         }
     }
 
@@ -280,6 +288,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     {
         switch (dialogID)
         {
+            case DLG_ID_HR_NOT_STABLE:
             case DLG_ID_PRESSURE_ERROR_START:
             case DLG_ID_PRESSURE_ERROR_RUNNING:
                 // this is the "End test" button, we need to go back to the main screen
@@ -338,7 +347,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     {
         m_seriesPPGData = new LineGraphSeries<>();
         m_seriesPPGData.setColor(getResources().getColor(R.color.colorChartLine));
-        m_seriesPPGData.setThickness(3);
+        m_seriesPPGData.setThickness(5);
         m_chartPPG.addSeries(m_seriesPPGData);
     }
 
@@ -599,12 +608,16 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_testingState = Testing_State.STABILIZING;
 
                     // start the stability timer
-                    m_oneShotTimer.Start(this, STABILIZING_TIME_MS, true);
+                    m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
+
+                    // start checking for stability
+                    PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
                 }
                 break;
+
             case STABILIZING:
                 //Log.i(TAG, "In state: STABILIZING");
-                if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
+                if (event == Testing_Events.EVT_HR_STABLE)
                 {
                     SwitchToTestingView();
                     InactivateTestingView();
@@ -612,6 +625,15 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_periodicTimer.Start(this, ONE_SEC, false);
                     m_nCountdownSecLeft = AFTER_STABLE_DELAY_SECONDS;
                     UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                }
+                else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
+                {
+                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                            getString(R.string.dlg_title_hr_not_stable),
+                            getString(R.string.dlg_msg_hr_not_stable),
+                            "Try Again",
+                            "End Test",
+                            this, DLG_ID_HR_NOT_STABLE, this);
                 }
                 break;
 
@@ -730,9 +752,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         m_nTestNumber++;
                         SwitchToStabilityView();
                         ActivateStabilityView();
-                        // TODO: clear the data on the stability graph so it starts a fresh display
                         m_testingState = Testing_State.STABILIZING;
-                        m_oneShotTimer.Start(this, STABILIZING_TIME_MS, true);
+                        m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
+
+                        // start checking for stability
+                        PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
                     }
                 }
                 break;

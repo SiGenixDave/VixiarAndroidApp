@@ -26,7 +26,6 @@ public class RealtimeData
         PeakValleyDetect.getInstance ().Initialize (1000, 1000, false);
         PeakValleyDetect.getInstance ().ResetAlgorithm();
         HeartRateInfo.getInstance ().Initialize (50, 4, 5, 40, 120, 20);
-        StartHeartRateValidation();
     }
 
     public void AppendNewSample(byte[] new_data)
