@@ -77,20 +77,20 @@
     <string name="end_test">End Test</string>
 
     <!-- Messages -->
-    <string name="dlg_title_ble_not_supported">BLE not supported</string>
+    <string name="dlg_title_ble_not_supported">BLE NOT SUPPORTED</string>
     <string name="dlg_msg_ble_not_supported">This device does not support Bluetooth Low Energy (BLE)
         which is required to communicate to the handheld.</string>
 
-    <string name="dlg_title_ble_enable_pre">BLE must be enabled</string>
+    <string name="dlg_title_ble_enable_pre">BLE MUST BE ENABLED</string>
     <string name="dlg_msg_ble_enable_pre">The next screen will allow you to enable Bluetooth
         Low Energy (BLE).  Please enable BLE so this app can communicate
         with handheld devices.</string>
 
-    <string name="dlg_title_ble_not_enabled">BLE must be enabled</string>
+    <string name="dlg_title_ble_not_enabled">BLE MUST BE ENABLED</string>
     <string name="dlg_msg_ble_not_enabled">Bluetooth Low Energy (BLE) must be enabled.
         BLE is required to communicate with the Vixiar handheld device.</string>
 
-    <string name="dlg_title_location_service">Location access</string>
+    <string name="dlg_title_location_service">LOCATION ACCESS</string>
     <string name="dlg_msg_location_service">Android must have location services
         enabled in order to connect to the Vixiar handheld device. This is a requirement
         from Google for any app connecting to a Bluetooth Low Energy (BLE) device. To enable
@@ -98,35 +98,39 @@
         location services.
         Restart this app once location services are enabled.</string>
 
-    <string name="dlg_title_location_access_pre">Location access required</string>
+    <string name="dlg_title_location_access_pre">LOCATION ACCESS REQUIRED</string>
     <string name="dlg_msg_location_access_pre">The next screen will allow you to grant location
         access to this app.  Please grant location access so this app can communicate
         with handheld devices.</string>
 
-    <string name="dlg_title_location_access_no">Location access required</string>
+    <string name="dlg_title_location_access_no">LOCATION ACCESS REQUIRED</string>
     <string name="dlg_msg_location_access_no">Since location access has not been granted, this app
         will not be able to communicate with handheld devices.</string>
 
-    <string name="dlg_title_authentication_error">Pairing issue</string>
+    <string name="dlg_title_authentication_error">PAIRING ISSUE</string>
     <string name="dlg_msg_authentication_error">A handheld device was detected, however it is
         not paired with this tablet. It may show as paired in the Android settings, but could have since
         been paired with a different tablet. See Instructions for Use for instructions on how to
         pair the handheld with this device.</string>
 
-    <string name="dlg_title_no_paired_devices">No paired devices</string>
+    <string name="dlg_title_no_paired_devices">NO PAIRED DEVICES</string>
     <string name="dlg_msg_no_paired_devices">A handheld device was detected, however it is
         not paired with this tablet. See Instructions for Use for instructions on how to
         pair the handheld with this device.</string>
 
-    <string name="dlg_title_no_handhelds">No handheld found</string>
+    <string name="dlg_title_no_handhelds">NO HANDHELD FOUND</string>
     <string name="dlg_msg_no_handhelds">No Indicor handhelds were detected.  Please make sure
         the Indicor handheld is powered on and the blue LED is flashing.</string>
 
-    <string name="dlg_title_pressure_error_start">Error</string>
+    <string name="dlg_title_pressure_error_start">ERROR</string>
     <string name="dlg_msg_pressure_error_start">You have 10 seconds from when the test starts
         to hold the pressure in the testing range.</string>
 
-    <string name="dlg_title_pressure_error_running">Error</string>
+    <string name="dlg_title_pressure_error_running">ERROR</string>
     <string name="dlg_msg_pressure_error_running">You must maintain the pressure within the testing
         range until the test is complete.</string>
+
+    <string name="dlg_title_cancel_test">CANCEL TEST?</string>
+    <string name="dlg_msg_cancel_test">Patient information will not be saved.</string>
+
 </resources>
