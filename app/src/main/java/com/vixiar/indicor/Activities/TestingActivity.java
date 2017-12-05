@@ -3,6 +3,7 @@ package com.vixiar.indicor.Activities;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
@@ -35,7 +36,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private final String TAG = this.getClass().getSimpleName();
 
-
+    private int m_nLastDataIndex = 0;
     private static Double m_nPPGGraphLastX = 0.0;
     private int m_nCountdownSecLeft;
     private int m_nTestNumber;
@@ -99,6 +100,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private final int DLG_ID_PRESSURE_ERROR_START = 0;
     private final int DLG_ID_PRESSURE_ERROR_RUNNING = 1;
+    private final int DLG_ID_CANCEL_TEST = 2;
 
     // Timing constants
     private final int STABILIZING_TIME_MS = 20000;
@@ -115,18 +117,19 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final double PRESSURE_FILTER_OLD_VALUE_MULTIPLIER = 0.3;
     private final double PRESSURE_FILTER_NEW_VALUE_MULTIPLIER = (1.0 - PRESSURE_FILTER_OLD_VALUE_MULTIPLIER);
 
-    private int[] m_tenSecCountdownImages = new int[]{
-            R.drawable.countdown0sec,
-            R.drawable.countdown1sec,
-            R.drawable.countdown2sec,
-            R.drawable.countdown3sec,
-            R.drawable.countdown4sec,
-            R.drawable.countdown5sec,
-            R.drawable.countdown6sec,
-            R.drawable.countdown7sec,
-            R.drawable.countdown8sec,
-            R.drawable.countdown9sec,
-    };
+    private int[] m_tenSecCountdownImages = new int[]
+            {
+                    R.drawable.countdown0sec,
+                    R.drawable.countdown1sec,
+                    R.drawable.countdown2sec,
+                    R.drawable.countdown3sec,
+                    R.drawable.countdown4sec,
+                    R.drawable.countdown5sec,
+                    R.drawable.countdown6sec,
+                    R.drawable.countdown7sec,
+                    R.drawable.countdown8sec,
+                    R.drawable.countdown9sec,
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -225,7 +228,68 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, level);
     }
 
-    private int m_nLastDataIndex = 0;
+    @Override
+    protected void onPause()
+    {
+        Log.i(TAG, "onPause");
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop()
+    {
+        Log.i(TAG, "onStop");
+        super.onStop();
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+
+        // stop any running timers
+        m_periodicTimer.Cancel();
+        m_oneShotTimer.Cancel();
+
+        Log.i(TAG, "OnBackPressed");
+        super.onBackPressed();
+    }
+
+    @Override
+    public void onClickPositiveButton(DialogInterface dialog, int dialogID)
+    {
+        switch (dialogID)
+        {
+            case DLG_ID_PRESSURE_ERROR_START:
+            case DLG_ID_PRESSURE_ERROR_RUNNING:
+            // this is the "Try again" button, we need to restart this test
+                SwitchToStabilityView();
+                ActivateStabilityView();
+
+                m_testingState = Testing_State.STABILIZING;
+
+                // start the stability timer
+                m_oneShotTimer.Start(this, STABILIZING_TIME_MS, true);
+                break;
+
+        }
+    }
+
+    @Override
+    public void onClickNegativeButton(DialogInterface dialog, int dialogID)
+    {
+        switch (dialogID)
+        {
+            case DLG_ID_PRESSURE_ERROR_START:
+            case DLG_ID_PRESSURE_ERROR_RUNNING:
+                // this is the "End test" button, we need to go back to the main screen
+                IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+                Intent intent = new Intent(this, MainActivity.class);
+                startActivity(intent);
+                break;
+
+        }
+    }
 
     // GUI functions
 
@@ -267,6 +331,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
         m_chartPPG.getViewport().setDrawBorder(true);
 
+        CreateChartSeriesAddToChart();
+    }
+
+    private void CreateChartSeriesAddToChart()
+    {
         m_seriesPPGData = new LineGraphSeries<>();
         m_seriesPPGData.setColor(getResources().getColor(R.color.colorChartLine));
         m_seriesPPGData.setThickness(3);
@@ -288,29 +357,16 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private void ActivateStabilityView()
     {
         m_lblAcquiring.setVisibility(View.VISIBLE);
+
+        // clear any data in the PPG chart
+        m_chartPPG.removeAllSeries();
+        m_seriesPPGData = null;
+
+        CreateChartSeriesAddToChart();
+
         m_chartPPG.setVisibility(View.VISIBLE);
         m_spinnerProgress.setVisibility(View.VISIBLE);
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
-
-        // if the battery level was read at least once since the connection, display it, otherwise
-        // it will be updated when it comes back from the handheld
-        if (IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel() != -1)
-        {
-            HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
-        }
-    }
-
-    @Override
-    public void onBackPressed()
-    {
-        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
-
-        // stop any running timers
-        m_periodicTimer.Cancel();
-        m_oneShotTimer.Cancel();
-
-        Log.i(TAG, "OnBackPressed");
-        super.onBackPressed();
     }
 
     private void SwitchToTestingView()
@@ -369,20 +425,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             {
             }
         });
-    }
-
-    @Override
-    protected void onPause()
-    {
-        Log.i(TAG, "onPause");
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop()
-    {
-        Log.i(TAG, "onStop");
-        super.onStop();
     }
 
     private void SetupLoadingResultsView()
@@ -519,7 +561,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
 
-    private String getDateTime() {
+    private String getDateTime()
+    {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss", Locale.getDefault());
         Date date = new Date();
         return simpleDateFormat.format(date);
@@ -672,7 +715,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case RESULTS:
-                // TODO: when countdown goes to 0, need to wait for button press to go to next test
                 //Log.i(TAG, "In state: RESULTS");
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
@@ -707,19 +749,4 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         }
     }
-
-    @Override
-    public void onClickPositiveButton(DialogInterface dialog, int dialogID)
-    {
-        // TODO: this needs to take the user to the right place
-        onBackPressed();
-    }
-
-    @Override
-    public void onClickNegativeButton(DialogInterface dialog, int dialogID)
-    {
-        // TODO: this needs to take the user to the right place
-        onBackPressed();
-    }
-
 }
