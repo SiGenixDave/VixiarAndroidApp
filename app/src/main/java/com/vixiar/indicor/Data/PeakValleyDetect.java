@@ -16,8 +16,14 @@ public class PeakValleyDetect {
     // / Enumerations
     // //////////////////////////////////////////////////////////////////////////
     public enum ePVDStates {
-        DETECTING_PEAK, DETECTING_VALLEY
+        DETECTING_PEAK,
+        DETECTING_VALLEY
     };
+
+    public enum eSlopeZero {
+        PEAK,
+        VALLEY
+    }
 
     // //////////////////////////////////////////////////////////////////////////
     // / Attributes
@@ -138,31 +144,41 @@ public class PeakValleyDetect {
     }
 
     // returns the current number of peaks detected between indices
-    public List<Integer> PeakIndexesBetween(int startIndex, int endIndex) {
+    public List<Integer> GetIndexesBetween(int startIndex, int endIndex, eSlopeZero type) {
 
-        List<Integer> peakIndexList = new ArrayList<>();
-        int numPeaks = m_PeaksIndexes.size();
+        List<Integer> transitionIndexList = new ArrayList<>();
+        List<Integer> transitionList;
 
-        if (numPeaks != 0) {
+
+        int numTransitions;
+        if (type == eSlopeZero.PEAK) {
+            transitionList = m_PeaksIndexes;
+        }
+        else if (type == eSlopeZero.VALLEY) {
+            transitionList = m_ValleysIndexes;
+        }
+        else {
+            return null;
+        }
+
+        numTransitions = transitionList.size();
+
+        if (numTransitions != 0) {
             // when endIndex = -1, the caller wants to find peaks all the way to
             // the end of the list
             if (endIndex == -1) {
-                endIndex = m_PeaksIndexes.get(numPeaks - 1);
+                endIndex = transitionList.get(numTransitions - 1);
             }
 
-            int peaksIndex = 0;
-            while (peaksIndex < numPeaks) {
-                int currentPeakIndex = m_PeaksIndexes.get(peaksIndex);
-
-                if ((currentPeakIndex >= startIndex)
-                        && (currentPeakIndex <= endIndex)) {
-                    peakIndexList.add(currentPeakIndex);
+            for (int index = 0; index < numTransitions; index++)  {
+                int currentIndex = transitionList.get(index);
+                if ((currentIndex >= startIndex) && (currentIndex <= endIndex)) {
+                    transitionIndexList.add(currentIndex);
                 }
-                peaksIndex++;
             }
         }
 
-        return peakIndexList;
+        return transitionIndexList;
     }
 
     // returns the current number of valleys detected
