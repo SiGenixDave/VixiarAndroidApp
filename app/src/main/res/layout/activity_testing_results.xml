@@ -214,9 +214,22 @@
             android:layout_centerVertical="true"
             android:layout_gravity="center_horizontal"
             android:layout_weight="1"
-            android:paddingBottom="@dimen/main_screen_vertical_spacing"
-            android:paddingTop="@dimen/main_screen_vertical_spacing"
-            android:src="@drawable/rest_period_icon"/>
+            android:paddingBottom="22dp"
+            android:paddingTop="22dp"
+            android:src="@drawable/rest_period_icon" />
+
+        <ImageView
+            android:id="@+id/imgHomeIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="false"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
+            android:src="@drawable/home_button" />
 
         <TextView
             android:id="@+id/lblRest"
@@ -245,7 +258,20 @@
             android:paddingEnd="10sp"
             android:text="@string/test_will_resume"
             android:textColor="@android:color/background_light"
-            android:textSize="@dimen/bottom_bar_font_size"/>
+            android:textSize="@dimen/bottom_bar_font_size" />
+
+        <TextView
+            android:id="@+id/txtMessageCentered"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="false"
+            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true"
+            android:layout_centerVertical="true"
+            android:fontFamily="@font/roboto_light"
+            android:text="@string/test_complete"
+            android:textColor="@android:color/background_light"
+            android:textSize="@dimen/bottom_bar_font_size" />
 
         <TextView
             android:id="@+id/txtCountdown"

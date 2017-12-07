@@ -52,6 +52,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private ImageView m_imgTimeRemaining;
     private TextView m_lblTimeRemaining;
     private TextView m_lblBottomMessage;
+    private TextView m_lblBottomMessageCentered;
     private TextView m_lblBottomCountdownNumber;
     private TestPressureGraph m_graphPressure;
 
@@ -60,6 +61,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private ImageView m_imgResults2Checkbox;
     private ImageView m_imgResults3Checkbox;
     private ImageView m_imgRestIcon;
+    private ImageView m_imgHomeButton;
     private TextView m_lblRest;
     private TextView m_lblPatID;
     private TextView m_txtPatID;
@@ -452,11 +454,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         setContentView(R.layout.activity_testing_results);
 
         m_lblBottomMessage = findViewById(R.id.txtMessage);
+        m_lblBottomMessageCentered = findViewById(R.id.txtMessageCentered);
         m_lblBottomCountdownNumber = findViewById(R.id.txtCountdown);
         m_imgResults1Checkbox = findViewById(R.id.imgMeasurement1Checkbox);
         m_imgResults2Checkbox = findViewById(R.id.imgMeasurement2Checkbox);
         m_imgResults3Checkbox = findViewById(R.id.imgMeasurement3Checkbox);
         m_imgRestIcon = findViewById(R.id.imgRestIcon);
+        m_imgHomeButton = findViewById(R.id.imgHomeIcon);
         m_lblRest = findViewById(R.id.lblRest);
         m_lblPatID = findViewById(R.id.lblID);
         m_txtPatID = findViewById(R.id.txtPatID);
@@ -466,10 +470,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_lblPatID.setTypeface(m_robotoRegularTypeface);
         m_txtDateTime.setTypeface(m_robotoRegularTypeface);
         m_txtPatID.setTypeface(m_robotoRegularTypeface);
+        m_lblBottomMessageCentered.setTypeface(m_robotoRegularTypeface);
 
         m_txtPatID.setText(PatientInfo.getInstance().getPatientId());
 
         m_txtDateTime.setText(PatientInfo.getInstance().getTestDate());
+
+        m_lblBottomMessageCentered.setText("");
+        m_imgHomeButton.setVisibility(View.INVISIBLE);
 
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.end_test));
@@ -526,12 +534,22 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private void SetResultsViewComplete()
     {
         UpdateResults();
-        m_lblBottomMessage.setText(R.string.test_complete);
+        m_lblBottomMessage.setText("");
         m_imgRestIcon.setVisibility(View.INVISIBLE);
         m_lblRest.setText("");
         m_lblBottomCountdownNumber.setText("");
-        // TODO: (1) display the save and home icons
-        // TODO: move the test complete label to the center
+        m_imgHomeButton.setVisibility(View.VISIBLE);
+        m_lblBottomMessageCentered.setText(getString(R.string.test_complete));
+
+        m_imgHomeButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                Intent intent = new Intent(TestingActivity.this, MainActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void UpdateBottomCountdownNumber(int value)
@@ -732,6 +750,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     {
                         SwitchToResultsView();
                         SetResultsViewComplete();
+                        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
                         m_testingState = Testing_State.COMPLETE;
                     }
                 }
@@ -763,8 +782,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case COMPLETE:
-                //Log.i(TAG, "In state: COMPLETE");
-                // TODO: (1) handle test complete state
+                // sit here and wait for the user to click the home button
                 break;
 
             case PRESSURE_ERROR:
