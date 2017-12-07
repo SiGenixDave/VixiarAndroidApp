@@ -36,7 +36,8 @@ import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 // This is required to allow us to use the lollipop and later APIs
-public class IndicorBLEService extends Service {
+public class IndicorBLEService extends Service
+{
     private final static String TAG = IndicorBLEService.class.getSimpleName();
 
     // the ID used to filter messages from the service to the handler class
@@ -85,31 +86,38 @@ public class IndicorBLEService extends Service {
     // ----------------------------- BLE Callbacks -----------------------------------------------
     // this is the callback used for older devices
     private BluetoothAdapter.LeScanCallback m_LeScanCallback =
-            new BluetoothAdapter.LeScanCallback() {
+            new BluetoothAdapter.LeScanCallback()
+            {
                 @Override
-                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
+                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
+                {
                     //TODO: this probably should be handled for older devices
                     //Log.i(TAG, "LEScan Callback");
                 }
             };
 
     // this is the callback used for newer devices
-    private final ScanCallback m_ScanCallback = new ScanCallback() {
+    private final ScanCallback m_ScanCallback = new ScanCallback()
+    {
         @Override
-        public void onScanResult(int callbackType, ScanResult result) {
+        public void onScanResult(int callbackType, ScanResult result)
+        {
             //Log.i(TAG, "Scan Callback");
             SendDataToConnectionClass(SCAN_RESULT, result);
         }
     };
 
-    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback()
+    {
         @Override
-        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
+        {
             super.onDescriptorWrite(gatt, descriptor, status);
             // if this comes back without a status of 0, the write didn't work, which may mean that the
             // handheld lost pairing
             Log.i(TAG, "onDescriptorWrite; status = " + status);
-            if (status == GATT_INSUFFICIENT_AUTHENTICATION) {
+            if (status == GATT_INSUFFICIENT_AUTHENTICATION)
+            {
                 SendDataToConnectionClass(AUTHENTICATION_ERROR, null);
             }
             else
@@ -119,19 +127,24 @@ public class IndicorBLEService extends Service {
         }
 
         @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
+        {
             Log.i(TAG, "onConnectionStateChange; status = " + status + " newState = " + newState);
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
+            if (newState == BluetoothProfile.STATE_CONNECTED)
+            {
                 Log.i(TAG, "onConnectionStateChange CONNECTED");
                 SendDataToConnectionClass(CONNECTED, null);
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            }
+            else if (newState == BluetoothProfile.STATE_DISCONNECTED)
+            {
                 Log.i(TAG, "onConnectionStateChange DISCONNECTED");
                 SendDataToConnectionClass(DISCONNECTED, null);
             }
         }
 
         @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+        public void onServicesDiscovered(BluetoothGatt gatt, int status)
+        {
             Log.i(TAG, "onServicesDiscovered status = " + status);
 
             // Get just the service that we are looking for
@@ -151,7 +164,8 @@ public class IndicorBLEService extends Service {
             if (m_RTDataCharacteristic == null || m_BatteryLevelCharacteristic == null ||
                     m_PPGDriveCharacteristic == null || m_ExternalConnectionsCharacteristic == null ||
                     m_RevisionInfoCharacteristic == null || m_RTNotificationCCCD == null ||
-                    m_ExternalConnectionNotificationCCCD == null) {
+                    m_ExternalConnectionNotificationCCCD == null)
+            {
                 Log.i(TAG, "characteristic came back as null");
             }
             else
@@ -164,22 +178,30 @@ public class IndicorBLEService extends Service {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic,
-                                         int status) {
+                                         int status)
+        {
             Log.i(TAG, "onCharacteristicRead status =" + status);
-            if (status == GATT_SUCCESS) {
+            if (status == GATT_SUCCESS)
+            {
                 // Verify that the read was the battery level
                 String uuid = characteristic.getUuid().toString();
                 // In this case, the only read the app does is the battery level.
                 // If the application had additional characteristics to read we could
                 // use a switch statement here to operate on each one separately.
-                if (uuid.toUpperCase().equals(BATTERY_LEVEL_CHARACTERISTIC_UUID)) {
+                if (uuid.toUpperCase().equals(BATTERY_LEVEL_CHARACTERISTIC_UUID))
+                {
                     SendDataToConnectionClass(BATTERY_LEVEL_RECEIVED, characteristic.getValue());
-                } else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID)) {
+                }
+                else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID))
+                {
                     SendDataToConnectionClass(EXTERNAL_CONNECTION_INFO_RECEIVED, characteristic.getValue());
-                } else if (uuid.toUpperCase().equals(REVISION_INFO_CHARACTERISTIC_UUID)) {
+                }
+                else if (uuid.toUpperCase().equals(REVISION_INFO_CHARACTERISTIC_UUID))
+                {
                     SendDataToConnectionClass(REVISION_INFO_RECEIVED, characteristic.getValue());
                 }
-            } else if (status == GATT_INSUFFICIENT_AUTHENTICATION)
+            }
+            else if (status == GATT_INSUFFICIENT_AUTHENTICATION)
             {
                 SendDataToConnectionClass(AUTHENTICATION_ERROR, null);
             }
@@ -191,14 +213,18 @@ public class IndicorBLEService extends Service {
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
+                                            BluetoothGattCharacteristic characteristic)
+        {
             //Log.i(TAG, "Characteristic notification");
 
             String uuid = characteristic.getUuid().toString();
 
-            if (uuid.toUpperCase().equals(RT_DATA_CHARACTERISTIC_UUID)) {
+            if (uuid.toUpperCase().equals(RT_DATA_CHARACTERISTIC_UUID))
+            {
                 SendDataToConnectionClass(RT_DATA_RECEIVED, characteristic.getValue());
-            } else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID)) {
+            }
+            else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID))
+            {
                 SendDataToConnectionClass(EXTERNAL_CONNECTION_INFO_RECEIVED, characteristic.getValue());
             }
         }
@@ -207,21 +233,25 @@ public class IndicorBLEService extends Service {
     // --------------------------End of BLE callbacks -------------------------------------------
 
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent)
+    {
         Log.i(TAG, "onBind");
         return m_Binder;
     }
 
     @Override
-    public boolean onUnbind(Intent intent) {
+    public boolean onUnbind(Intent intent)
+    {
         // The BLE Close method is called when we unbind the service to free up the resources.
         Log.i(TAG, "onUnbind");
         Close();
         return super.onUnbind(intent);
     }
 
-    public class LocalBinder extends Binder {
-        IndicorBLEService getService() {
+    public class LocalBinder extends Binder
+    {
+        IndicorBLEService getService()
+        {
             return IndicorBLEService.this;
         }
     }
@@ -229,34 +259,42 @@ public class IndicorBLEService extends Service {
 
     // --------------------------- Public interface functions -------------------------------------------
 
-    public boolean Initialize() {
+    public boolean Initialize()
+    {
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
-        if (m_BluetoothManager == null) {
+        if (m_BluetoothManager == null)
+        {
             m_BluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            if (m_BluetoothManager == null) {
+            if (m_BluetoothManager == null)
+            {
                 Log.e(TAG, "Unable to Initialize BluetoothManager.");
                 return false;
             }
         }
         m_BluetoothAdapter = m_BluetoothManager.getAdapter();
-        if (m_BluetoothAdapter == null) {
+        if (m_BluetoothAdapter == null)
+        {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
         return true;
     }
 
-    public void ScanForIndicorHandhelds() {
+    public void ScanForIndicorHandhelds()
+    {
         /* Scan for devices and look for the one with the service that we want */
         UUID handheldService = UUID.fromString(VIXIAR_REALTIME_SERVICE_UUID);
         UUID[] handheldServiceArray = {handheldService};
 
         // Use old ScanForIndicorHandhelds method for versions older than lollipop
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
+        {
             //noinspection deprecation
             m_BluetoothAdapter.startLeScan(handheldServiceArray, m_LeScanCallback);
-        } else { // New BLE scanning introduced in LOLLIPOP
+        }
+        else
+        { // New BLE scanning introduced in LOLLIPOP
             ScanSettings settings;
             List<ScanFilter> filters;
             m_LEScanner = m_BluetoothAdapter.getBluetoothLeScanner();
@@ -273,14 +311,17 @@ public class IndicorBLEService extends Service {
         }
     }
 
-    public boolean ConnectToSpecificIndicor(BluetoothDevice device) {
-        if (m_BluetoothAdapter == null) {
+    public boolean ConnectToSpecificIndicor(BluetoothDevice device)
+    {
+        if (m_BluetoothAdapter == null)
+        {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return false;
         }
 
         // Previously connected device.  Try to reconnect.
-        if (m_BluetoothGatt != null) {
+        if (m_BluetoothGatt != null)
+        {
             Log.d(TAG, "Trying to use an existing m_BluetoothGatt for connection.");
             return m_BluetoothGatt.connect();
         }
@@ -292,31 +333,40 @@ public class IndicorBLEService extends Service {
         return true;
     }
 
-    public void DiscoverIndicorServices() {
-        if (m_BluetoothAdapter != null || m_BluetoothGatt != null) {
+    public void DiscoverIndicorServices()
+    {
+        if (m_BluetoothAdapter != null || m_BluetoothGatt != null)
+        {
             m_BluetoothGatt.discoverServices();
-        } else {
+        }
+        else
+        {
             Log.e(TAG, "BluetoothAdapter not initialized");
         }
     }
 
-    public void DisconnectFromIndicor() {
-        if (m_BluetoothAdapter != null)
+    public void DisconnectFromIndicor()
+    {
+        if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
         {
             m_BluetoothGatt.disconnect();
         }
     }
 
-    public void Close() {
-        if (m_BluetoothGatt == null) {
+    public void Close()
+    {
+        if (m_BluetoothGatt == null)
+        {
             return;
         }
         m_BluetoothGatt.close();
         m_BluetoothGatt = null;
     }
 
-    public void SubscribeToRealtimeDataNotification(boolean value) {
-        if (m_RTDataCharacteristic != null && m_BluetoothGatt != null && m_RTNotificationCCCD != null) {
+    public void SubscribeToRealtimeDataNotification(boolean value)
+    {
+        if (m_RTDataCharacteristic != null && m_BluetoothGatt != null && m_RTNotificationCCCD != null)
+        {
             Log.i(TAG, "Setting real time notification " + value);
 
             // Set notifications locally in the CCCD
@@ -328,8 +378,10 @@ public class IndicorBLEService extends Service {
         }
     }
 
-    public void SubscribeToConnectionNotification(boolean value) {
-        if (m_ExternalConnectionsCharacteristic != null && m_BluetoothGatt != null && m_ExternalConnectionNotificationCCCD != null) {
+    public void SubscribeToConnectionNotification(boolean value)
+    {
+        if (m_ExternalConnectionsCharacteristic != null && m_BluetoothGatt != null && m_ExternalConnectionNotificationCCCD != null)
+        {
             Log.i(TAG, "Setting connection notification " + value);
 
             // Set notifications locally in the CCCD
@@ -341,45 +393,65 @@ public class IndicorBLEService extends Service {
         }
     }
 
-    public void ReadRevisionInformation() {
-        if (m_RevisionInfoCharacteristic != null && m_BluetoothGatt != null) {
+    public void ReadRevisionInformation()
+    {
+        if (m_RevisionInfoCharacteristic != null && m_BluetoothGatt != null)
+        {
             Log.i(TAG, "Asking for revision information");
-            if (m_BluetoothGatt != null) {
+            if (m_BluetoothGatt != null)
+            {
                 m_BluetoothGatt.readCharacteristic(m_RevisionInfoCharacteristic);
             }
-        } else {
+        }
+        else
+        {
             Log.i(TAG, "Failure reading revision information");
         }
     }
 
-    public void ReadBatteryLevel() {
-        if (m_BatteryLevelCharacteristic != null && m_BluetoothGatt != null) {
+    public void ReadBatteryLevel()
+    {
+        if (m_BatteryLevelCharacteristic != null && m_BluetoothGatt != null)
+        {
             Log.i(TAG, "Asking for battery level");
-            if (m_BluetoothGatt != null) {
+            if (m_BluetoothGatt != null)
+            {
                 m_BluetoothGatt.readCharacteristic(m_BatteryLevelCharacteristic);
-            } else {
+            }
+            else
+            {
                 Log.i(TAG, "Failure reading battery level");
             }
         }
     }
 
-    public void StopScanning() {
-        if (m_LEScanner != null) {
+    public void StopScanning()
+    {
+        if (m_LEScanner != null)
+        {
             m_LEScanner.stopScan(m_ScanCallback);
         }
     }
 
     // ------------------ Utility functions -----------------------------------------------------
-    private void SendDataToConnectionClass(String name, Object data) {
+    private void SendDataToConnectionClass(String name, Object data)
+    {
         Intent intent = new Intent();
         intent.setAction(MESSAGE_ID);
-        if (data instanceof Integer) {
+        if (data instanceof Integer)
+        {
             intent.putExtra(name, (Integer) data);
-        } else if (data instanceof byte[]) {
+        }
+        else if (data instanceof byte[])
+        {
             intent.putExtra(name, (byte[]) data);
-        } else if (data instanceof ScanResult) {
+        }
+        else if (data instanceof ScanResult)
+        {
             intent.putExtra(name, (ScanResult) data);
-        } else {
+        }
+        else
+        {
             intent.putExtra(name, "");
         }
         sendBroadcast(intent);

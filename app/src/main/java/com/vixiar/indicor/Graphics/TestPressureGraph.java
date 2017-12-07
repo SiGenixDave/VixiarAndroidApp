@@ -101,7 +101,7 @@ public class TestPressureGraph extends View
         contentWidth = getWidth() - paddingLeft - paddingRight;
         contentHeight = getHeight() - paddingTop - paddingBottom;
 
-        barWidth = (int)((float)contentWidth * (float)0.85);
+        barWidth = (int)((float)contentWidth * (float)0.35);
         barWidthMax = contentHeight / 4;
 
         if (barWidth > barWidthMax)
@@ -110,7 +110,7 @@ public class TestPressureGraph extends View
         }
         // start the bar 25% in from the left of the usable space
         // this is to make room for the labels
-        barLeftStart = (int)((float)contentWidth * (float)0.25) + paddingLeft;
+        barLeftStart = (int)((float)contentWidth * (float)0.35) + paddingLeft;
 
         // subtract the width from the total space to allow for a half-circle at the top and bottom
         barHeight = contentHeight - barWidth;
