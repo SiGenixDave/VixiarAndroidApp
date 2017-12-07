@@ -697,7 +697,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 else if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
                     m_nCountdownSecLeft--;
-                    if (m_nCountdownSecLeft >= 0)
+                    if (m_nCountdownSecLeft > 0)
                     {
                         UpdateValsalvaCountdown(m_nCountdownSecLeft);
                     }
