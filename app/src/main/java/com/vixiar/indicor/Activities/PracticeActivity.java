@@ -25,7 +25,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         setContentView(R.layout.activity_practice);
 
         pvg = findViewById(R.id.practicePressureGraph);
-        pvg.setBallPressure((float)0.0);
+        pvg.setBallPressure((float) 0.0);
 
         InitializeHeaderAndFooter();
 
@@ -55,6 +55,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
             @Override
             public void onClick(View view)
             {
+                IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
                 Intent intent = new Intent(PracticeActivity.this, TestingActivity.class);
                 startActivity(intent);
             }
@@ -70,8 +71,8 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
     @Override
     public void onBackPressed()
     {
-        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
         super.onBackPressed();
+        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
     }
 
     public void iBatteryLevelRead(int level)
@@ -94,6 +95,6 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
     public void iRealtimeDataNotification()
     {
         int currentIndex = PatientInfo.getInstance().getRealtimeData().GetData().size();
-        pvg.setBallPressure((float) PatientInfo.getInstance().getRealtimeData().GetData().get(currentIndex-1).m_pressure);
+        pvg.setBallPressure((float) PatientInfo.getInstance().getRealtimeData().GetData().get(currentIndex - 1).m_pressure);
     }
 }

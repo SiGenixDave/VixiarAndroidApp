@@ -46,6 +46,7 @@ public class IndicorBLEService extends Service {
     final static String DISCONNECTED = "disconnected";
     final static String SERVICES_DISCOVERED = "services_discovered";
     final static String AUTHENTICATION_ERROR = "authentication_error";
+    final static String CONNECTION_ERROR = "connection_error";
     final static String NOTIFICATION_WRITTEN = "notification_written";
     final static String RT_DATA_RECEIVED = "rt_data";
     final static String BATTERY_LEVEL_RECEIVED = "batt_level";
@@ -121,10 +122,10 @@ public class IndicorBLEService extends Service {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.i(TAG, "onConnectionStateChange; status = " + status + " newState = " + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "Connected to GATT server");
+                Log.i(TAG, "onConnectionStateChange CONNECTED");
                 SendDataToConnectionClass(CONNECTED, null);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "Disconnected from GATT server");
+                Log.i(TAG, "onConnectionStateChange DISCONNECTED");
                 SendDataToConnectionClass(DISCONNECTED, null);
             }
         }
@@ -178,9 +179,13 @@ public class IndicorBLEService extends Service {
                 } else if (uuid.toUpperCase().equals(REVISION_INFO_CHARACTERISTIC_UUID)) {
                     SendDataToConnectionClass(REVISION_INFO_RECEIVED, characteristic.getValue());
                 }
-            } else //if (status == GATT_INSUFFICIENT_AUTHENTICATION)
+            } else if (status == GATT_INSUFFICIENT_AUTHENTICATION)
             {
                 SendDataToConnectionClass(AUTHENTICATION_ERROR, null);
+            }
+            else
+            {
+                SendDataToConnectionClass(CONNECTION_ERROR, null);
             }
         }
 
@@ -296,11 +301,10 @@ public class IndicorBLEService extends Service {
     }
 
     public void DisconnectFromIndicor() {
-        if (m_BluetoothAdapter == null || m_BluetoothGatt == null) {
-            Log.e(TAG, "BluetoothAdapter not initialized");
-            return;
+        if (m_BluetoothAdapter != null)
+        {
+            m_BluetoothGatt.disconnect();
         }
-        m_BluetoothGatt.disconnect();
     }
 
     public void Close() {

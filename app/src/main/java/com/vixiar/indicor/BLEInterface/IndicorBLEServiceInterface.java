@@ -80,6 +80,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private final int DLG_ID_AUTHENTICATION_ERROR = 0;
     private final int DLG_ID_NO_PAIRED_DEVICE = 1;
     private final int DLG_ID_NO_HANDHELDS = 2;
+    private final int DLG_ID_CONNECTION_ERROR = 3;
 
     private enum Connection_State
     {
@@ -106,13 +107,15 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         EVT_BATTERY_READ,
         EVT_NOTIFICATION_WRITTEN,
         EVT_DISCONNECTED,
-        EVT_AUTHENTICATION_ERROR
+        EVT_AUTHENTICATION_ERROR,
+        EVT_CONNECTiON_ERROR
     }
 
     // list of errors
     public static final int ERROR_NO_DEVICES_FOUND = 1;
     public static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
-    public static final int AUTHENTICATION_ERROR = 3;
+    public static final int ERROR_AUTHENTICATION = 3;
+    public static final int ERROR_CONNECTION_ERROR = 4;
 
     // Offsets to data in characteristics
     private final static int BATTERY_LEVEL_PCT_INDEX = 0;
@@ -358,7 +361,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         {
             case DLG_ID_AUTHENTICATION_ERROR:
                 m_connectionDialog.cancel();
-                m_CallbackInterface.iError(AUTHENTICATION_ERROR);
+                m_CallbackInterface.iError(ERROR_AUTHENTICATION);
                 break;
 
             case DLG_ID_NO_PAIRED_DEVICE:
@@ -369,6 +372,11 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case DLG_ID_NO_HANDHELDS:
                 m_connectionDialog.cancel();
                 m_CallbackInterface.iError(ERROR_NO_DEVICES_FOUND);
+                break;
+
+            case DLG_ID_CONNECTION_ERROR:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(ERROR_CONNECTION_ERROR);
                 break;
         }
     }
@@ -429,6 +437,16 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                         "Ok",
                         null,
                         m_Context, DLG_ID_AUTHENTICATION_ERROR, IndicorBLEServiceInterface.this);
+            }
+            else if (arg1.hasExtra(IndicorBLEService.CONNECTION_ERROR))
+            {
+                ConnectionStateMachine(Connection_Event.EVT_CONNECTiON_ERROR);
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                        m_Context.getString(R.string.dlg_title_connection_problem),
+                        m_Context.getString(R.string.dlg_msg_connection_problem),
+                        "Ok",
+                        null,
+                        m_Context, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
             }
             else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
             {
