@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
 
     <ProgressBar
-        android:id="@+id/progressBar2"
-        style="?android:attr/progressBarStyle"
+        android:id="@+id/progressBarConnection"
+        style="@style/ProgressBarStyleVixiar"
         android:layout_width="match_parent"
         android:layout_height="150dp"
-        android:padding="10dp"/>
+        android:indeterminate="true"
+        android:indeterminateDuration="60000"
+        android:padding="10dp" />
 </LinearLayout>

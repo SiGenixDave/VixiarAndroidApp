@@ -3,10 +3,12 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="android:Theme.Holo.Light.NoActionBar">
     </style>
+
     <style name="PatInfoLabel" parent="@android:style/TextAppearance.Medium">
         <item name="android:textColor">#00FF00</item>
         <item name="android:typeface">monospace</item>
     </style>
+
     <style name="PatInfoValue" parent="@android:style/TextAppearance.Medium">
         <item name="android:textSize">@dimen/patient_entry_value_font_size</item>
         <item name="android:fontFamily">"fonts/Roboto-Light.ttf"</item>
@@ -14,8 +16,13 @@
         <item name="android:textColor">@color/colorPatientEntryNormalValue</item>
         <item name="colorAccent">@color/colorPatientEntryHighlightedValue</item>
     </style>
+
     <style name="PatInfoNumberPicker" >
         <item name="android:textSize">@dimen/patient_entry_number_picker_font_size</item>
         <item name="android:textColorPrimary">@color/colorPatientEntryNormalValue</item>
+    </style>
+
+    <style name="ProgressBarStyleVixiar" parent="Base.Widget.AppCompat.ProgressBar">
+        <item name="android:indeterminateDuration">60000</item>
     </style>
 </resources>
