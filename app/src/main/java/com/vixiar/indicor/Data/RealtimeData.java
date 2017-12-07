@@ -18,9 +18,20 @@ doing the math, p(mmHg) = (-0.0263 * counts) + 46.335
 */
 public class RealtimeData
 {
-    private ArrayList<PPG_PressureSample> data = new ArrayList<PPG_PressureSample>();
+    private ArrayList<PPG_PressureSample> rawData = new ArrayList<PPG_PressureSample>();
+    private ArrayList<PPG_PressureSample> filteredData = new ArrayList<PPG_PressureSample>();
     private ArrayList<RealtimeDataMarker> markers = new ArrayList<RealtimeDataMarker>();
     private Boolean enableHeartRateValidation = false;
+
+    // filtering constants
+    private final double SAMPLE_RATE = 50.0;
+    private final double CUTOFF_FREQ = 5.0;
+
+    private final double RC = 1.0 / ( CUTOFF_FREQ * 2 * 3.14159);
+    private final double dt = 1.0 / SAMPLE_RATE;
+    private final double alpha = dt / (RC + dt);
+
+    private double m_lastFilterOutput = 0.0;
 
     public RealtimeData() {
         PeakValleyDetect.getInstance ().Initialize (1000, 1000, false);
@@ -30,7 +41,7 @@ public class RealtimeData
 
     public void AppendNewSample(byte[] new_data)
     {
-        // extract the data...the first byte is the sequence number
+        // extract the rawData...the first byte is the sequence number
         // followed by two bytes of PPG then pressure repetitively
         double pressure_value = 0.0;
         int pressure_counts = 0;
@@ -48,9 +59,13 @@ public class RealtimeData
             ppg_value = (256 * (int) (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
 
             PPG_PressureSample pd = new PPG_PressureSample(ppg_value, pressure_value);
-            data.add(pd);
+            rawData.add(pd);
 
             PeakValleyDetect.getInstance ().AddToDataArray (ppg_value);
+
+            // filter the sample and store it in the filtered array
+            pd = new PPG_PressureSample((int) FilterSample(ppg_value), pressure_value);
+            filteredData.add(pd);
         }
 
         PeakValleyDetect.getInstance ().Execute ();
@@ -61,11 +76,10 @@ public class RealtimeData
                 Log.d ("HeartRate", "Current Heart Rate = " + HeartRateInfo.getInstance ().getCurrentBeatsPerMinute ());
             }
         }
-
     }
 
     public void StartHeartRateValidation () {
-        int currentMarker = data.size () - 1;
+        int currentMarker = rawData.size () - 1;
         if (currentMarker < 0) {
             currentMarker = 0;
         }
@@ -107,14 +121,29 @@ public class RealtimeData
         markers.add(marker);
     }
 
-    public ArrayList<PPG_PressureSample> GetData()
+    public ArrayList<PPG_PressureSample> GetRawData()
     {
-        return data;
+        return rawData;
+    }
+
+    public ArrayList<PPG_PressureSample> GetFilteredData()
+    {
+        return filteredData;
     }
 
     public void ClearAllSamples()
     {
-        data.clear();
+        rawData.clear();
         PeakValleyDetect.getInstance ().ResetAlgorithm();
+    }
+
+    private double FilterSample(int newSample)
+    {
+        double currentFilterOutput;
+
+        currentFilterOutput = m_lastFilterOutput + (alpha * (newSample - m_lastFilterOutput));
+        m_lastFilterOutput = currentFilterOutput;
+
+        return currentFilterOutput;
     }
 }

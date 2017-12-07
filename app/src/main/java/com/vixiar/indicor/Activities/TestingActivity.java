@@ -191,10 +191,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         {
             case STABILIZING:
                 // update the PPG chart
-                int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetData().size();
+                int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
-                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetData().get(i).m_PPG), true, 500);
+                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG), true, 500);
                     m_nPPGGraphLastX += 0.02;
                 }
                 m_nLastDataIndex = currentDataIndex;
@@ -208,12 +208,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case VALSALVA_WAIT_FOR_PRESSURE:
             case VALSALVA:
-                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetData().size();
+                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
                 double tempSum = 0.0;
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
                     // sum up all the pressures from this set of data
-                    tempSum += PatientInfo.getInstance().getRealtimeData().GetData().get(i).m_pressure;
+                    tempSum += PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_pressure;
                 }
                 double thisAvg = tempSum / (currentDataIndex - m_nLastDataIndex);
                 m_nLastDataIndex = currentDataIndex;
@@ -667,7 +667,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     {
                         // Valsalva is starting
                         PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_START_VALSALVA,
-                                PatientInfo.getInstance().getRealtimeData().GetData().size() - 1);
+                                PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         m_testingState = Testing_State.VALSALVA;
                         m_periodicTimer.Start(this, ONE_SEC, false);
                         m_nCountdownSecLeft = VALSALVA_DURATION_SECONDS;
@@ -705,7 +705,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     {
                         // Valsalva is over
                         PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_END_VALSALVA,
-                                PatientInfo.getInstance().getRealtimeData().GetData().size() - 1);
+                                PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
 
                         m_periodicTimer.Cancel();
                         SetupLoadingResultsView();
