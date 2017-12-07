@@ -16,7 +16,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Activities.MainActivity">
+        <activity android:name=".Activities.MainActivity"
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -28,11 +29,14 @@
             android:name=".BLEInterface.IndicorBLEService"
             android:enabled="true"/>
 
-        <activity android:name=".Activities.PatInfoActivity">
+        <activity android:name=".Activities.PatInfoActivity"
+            android:screenOrientation="portrait" >
         </activity>
-        <activity android:name=".Activities.PracticeActivity">
+        <activity android:name=".Activities.PracticeActivity"
+            android:screenOrientation="portrait" >
         </activity>
-        <activity android:name=".Activities.TestingActivity">
+        <activity android:name=".Activities.TestingActivity"
+            android:screenOrientation="portrait" >
         </activity>
     </application>
 
