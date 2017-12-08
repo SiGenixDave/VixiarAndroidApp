@@ -9,10 +9,11 @@ public class RealtimeDataMarker
     public enum Marker_Type
     {
         MARKER_START_VALSALVA,
-        MARKER_END_VALSALVA
+        MARKER_END_VALSALVA,
+        MARKER_TEST_ERROR,
     }
-    private Marker_Type type;
-    private int dataIndex;
+    public Marker_Type type;
+    public int dataIndex;
 
     RealtimeDataMarker(Marker_Type type, int index)
     {

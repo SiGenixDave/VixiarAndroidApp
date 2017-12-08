@@ -45,6 +45,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     // UI Components (Stability Screen)
     private ProgressBar m_spinnerProgress;
     private TextView m_lblAcquiring;
+    private TextView m_txtHeartRate;
     private static LineGraphSeries m_seriesPPGData;
     private GraphView m_chartPPG;
 
@@ -201,6 +202,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 m_nLastDataIndex = currentDataIndex;
 
+                // update the heart rate on the screen
+                double BPM = PatientInfo.getInstance().getRealtimeData().GetCurrentBPM();
+                String sTemp = "HR = " + String.valueOf((int)BPM)+" BPM";
+                m_txtHeartRate.setText(sTemp);
+
                 // see if the HR is stable
                 if (PatientInfo.getInstance().getRealtimeData().IsHeartRateStable())
                 {
@@ -313,8 +319,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_lblAcquiring = findViewById(R.id.txtAcquiringSignal);
         m_spinnerProgress = findViewById(R.id.progressBar);
         m_chartPPG = findViewById(R.id.PPGStabilityGraph);
+        m_txtHeartRate = findViewById(R.id.lblHeartRate);
 
         m_lblAcquiring.setTypeface(m_robotoLightTypeface);
+        m_txtHeartRate.setTypeface(m_robotoLightTypeface);
 
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
@@ -472,9 +480,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_txtPatID.setTypeface(m_robotoRegularTypeface);
         m_lblBottomMessageCentered.setTypeface(m_robotoRegularTypeface);
 
-        m_txtPatID.setText(PatientInfo.getInstance().getPatientId());
+        m_txtPatID.setText(PatientInfo.getInstance().getM_patientId());
 
-        m_txtDateTime.setText(PatientInfo.getInstance().getTestDate());
+        m_txtDateTime.setText(PatientInfo.getInstance().getM_testDate());
 
         m_lblBottomMessageCentered.setText("");
         m_imgHomeButton.setVisibility(View.INVISIBLE);
@@ -578,7 +586,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private void InitTest()
     {
         m_nTestNumber = 1;
-        PatientInfo.getInstance().setTestDate(getDateTime());
+        PatientInfo.getInstance().setM_testDate(getDateTime());
 
         SwitchToStabilityView();
         InactivateStabilityView();
@@ -596,7 +604,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         return simpleDateFormat.format(date);
     }
 
-    private void PressureErrorOnStart()
+    private void DisplayPressureErrorOnStart()
     {
         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
                 getString(R.string.dlg_title_pressure_error_start),
@@ -605,7 +613,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 "End Test", this, DLG_ID_PRESSURE_ERROR_START, this);
     }
 
-    private void PressureErrorRunning()
+    private void DisplayPressureErrorRunning()
     {
         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
                 getString(R.string.dlg_title_pressure_error_running),
@@ -695,7 +703,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    PressureErrorOnStart();
+                    DisplayPressureErrorOnStart();
                     m_testingState = Testing_State.PRESSURE_ERROR;
                 }
                 break;
@@ -708,8 +716,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
                     {
                         m_periodicTimer.Cancel();
-                        PressureErrorRunning();
+                        DisplayPressureErrorRunning();
                         m_testingState = Testing_State.PRESSURE_ERROR;
+                        // mark the error
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR,
+                                PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+
                     }
                 }
                 else if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)

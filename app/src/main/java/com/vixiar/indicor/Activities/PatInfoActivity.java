@@ -89,16 +89,15 @@ public class PatInfoActivity extends Activity
         if (!DEBUG)
         {
             // PATIENT ID
-            PatientInfo.getInstance().setPatientId(txtPatientID.getText().toString());
+            PatientInfo.getInstance().setM_patientId(txtPatientID.getText().toString());
 
             // AGE
             try
             {
-                PatientInfo.getInstance().setAge_years(Integer.parseInt(txtAge.getText().toString()));
-            }
-            catch (NumberFormatException e)
+                PatientInfo.getInstance().setM_age_years(Integer.parseInt(txtAge.getText().toString()));
+            } catch (NumberFormatException e)
             {
-                PatientInfo.getInstance().setAge_years(0);
+                PatientInfo.getInstance().setM_age_years(0);
             }
 
             // HEIGHT
@@ -114,46 +113,45 @@ public class PatInfoActivity extends Activity
                 // convert to an int
                 int height_ft = Integer.parseInt(ft);
                 int height_in = Integer.parseInt(in);
-                PatientInfo.getInstance().setHeight_Inches(height_ft * 12 + height_in);
-            }
-            catch (NumberFormatException e)
+                PatientInfo.getInstance().set_eight_Inches(height_ft * 12 + height_in);
+            } catch (NumberFormatException e)
             {
 
-                PatientInfo.getInstance().setHeight_Inches(0);
+                PatientInfo.getInstance().set_eight_Inches(0);
             }
 
             // WEIGHT
             try
             {
-                PatientInfo.getInstance().setWeight_lbs(Integer.parseInt(txtWeight.getText().toString()));
-            }
-            catch (NumberFormatException e)
+                PatientInfo.getInstance().set_weight_lbs(Integer.parseInt(txtWeight.getText().toString()));
+            } catch (NumberFormatException e)
             {
-                PatientInfo.getInstance().setWeight_lbs(0);
+                PatientInfo.getInstance().set_weight_lbs(0);
             }
 
             // SYSTOLIC PRESSURE
             try
             {
-                PatientInfo.getInstance().setSystolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
-            }
-            catch (NumberFormatException e)
+                PatientInfo.getInstance().set_systolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
+            } catch (NumberFormatException e)
             {
-                PatientInfo.getInstance().setSystolicBloodPressure(0);
+                PatientInfo.getInstance().set_systolicBloodPressure(0);
             }
+
+            // GENDER
+           //PatientInfo.getInstance().set_gender(txtGender);
 
             // DIASTOLIC PRESSURE
             try
             {
-                PatientInfo.getInstance().setDiastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
-            }
-            catch (NumberFormatException e)
+                PatientInfo.getInstance().set_diastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
+            } catch (NumberFormatException e)
             {
-                PatientInfo.getInstance().setDiastolicBloodPressure(0);
+                PatientInfo.getInstance().set_diastolicBloodPressure(0);
             }
 
             // NOTES
-            PatientInfo.getInstance().setNotes(txtNotes.getText().toString());
+            PatientInfo.getInstance().set_notes(txtNotes.getText().toString());
         }
     }
 
@@ -399,8 +397,7 @@ public class PatInfoActivity extends Activity
                         {
                             txtSystolic.setText(String.valueOf(minSystolic));
                         }
-                    }
-                    catch (NumberFormatException e)
+                    } catch (NumberFormatException e)
                     {
 
                     }
@@ -449,8 +446,7 @@ public class PatInfoActivity extends Activity
                         {
                             txtDiastolic.setText(String.valueOf(minDiastolic));
                         }
-                    }
-                    catch (NumberFormatException e)
+                    } catch (NumberFormatException e)
                     {
 
                     }
@@ -527,20 +523,16 @@ public class PatInfoActivity extends Activity
             Method method = npGender.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
             method.setAccessible(true);
             method.invoke(npGender, true);
-        }
-        catch (NoSuchMethodException e)
+        } catch (NoSuchMethodException e)
         {
             e.printStackTrace();
-        }
-        catch (IllegalArgumentException e)
+        } catch (IllegalArgumentException e)
         {
             e.printStackTrace();
-        }
-        catch (IllegalAccessException e)
+        } catch (IllegalAccessException e)
         {
             e.printStackTrace();
-        }
-        catch (InvocationTargetException e)
+        } catch (InvocationTargetException e)
         {
             e.printStackTrace();
         }

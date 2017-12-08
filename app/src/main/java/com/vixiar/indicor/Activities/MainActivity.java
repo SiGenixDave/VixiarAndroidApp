@@ -23,6 +23,7 @@ import android.widget.TextView;
 import com.vixiar.indicor.BuildConfig;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
+import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
 
 public class MainActivity extends Activity implements CustomDialogInterface
@@ -59,6 +60,9 @@ public class MainActivity extends Activity implements CustomDialogInterface
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // just for testing
+        PatientInfo.getInstance().SaveCSVFile();
 
         // setup the top bar
         HeaderFooterControl.getInstance().SetTypefaces(this);

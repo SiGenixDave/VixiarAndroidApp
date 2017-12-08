@@ -48,6 +48,16 @@
             android:textColor="@color/colorBottomBar"
             android:textSize="@dimen/acquiring_signal_font_size" />
 
+        <TextView
+            android:id="@+id/lblHeartRate"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="40dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:textColor="@color/colorBottomBar"
+            android:textSize="30sp" />
+
         <com.jjoe64.graphview.GraphView
             android:id="@+id/PPGStabilityGraph"
             android:layout_width="match_parent"
@@ -55,7 +65,7 @@
             android:layout_gravity="center"
             android:layout_marginLeft="40dp"
             android:layout_marginRight="40dp"
-            android:layout_marginTop="60dp"
+            android:layout_marginTop="0dp"
             android:layout_weight="5" />
 
 
