@@ -25,6 +25,7 @@ import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
+import com.vixiar.indicor.Upload_Interface.UploadServiceInterface;
 
 public class MainActivity extends Activity implements CustomDialogInterface
 {
@@ -99,11 +100,9 @@ public class MainActivity extends Activity implements CustomDialogInterface
         v = (TextView) findViewById(R.id.tagLineLbl);
         v.setTypeface(robotoTypeface);
 
-        // FULL SCREEN (add if FS is desired)
-        /*
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        */
+        UploadServiceInterface.getInstance().initialize(this);
+        UploadServiceInterface.getInstance().ConnectToIndicor();
+
         // wait a couple seconds then check the device for the proper configuration and settings
         m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);
     }
