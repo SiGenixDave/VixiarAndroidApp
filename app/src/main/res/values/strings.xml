@@ -140,4 +140,13 @@
     <string name="dlg_title_connection_problem">PROBLEM CONNECTING</string>
     <string name="dlg_msg_connection_problem">Theere was a problem connecting to the handheld device.
         Try restarting it and connecting again.</string>
+
+    <string name="dlg_title_storage_access_pre">STORAGE ACCESS REQUIRED</string>
+    <string name="dlg_msg_storage_access_pre">The next screen will allow you to enable writing to
+        files.  Please enable "Storage" so this app can save data files.</string>
+
+    <string name="dlg_title_storage_access_no">STORAGE ACCESS REQUIRED</string>
+    <string name="dlg_msg_storage_access_no">Since storage access has not been granted, this app
+        will not be able to communicate with handheld devices.</string>
+
 </resources>

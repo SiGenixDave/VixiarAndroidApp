@@ -210,8 +210,7 @@ public class PatientInfo
         {
             FileOutputStream fos = new FileOutputStream(file);
             PrintWriter pw = new PrintWriter(fos);
-            pw.println("Hi , How are you");
-            pw.println("Hello");
+            WriteContents(pw);
             pw.flush();
             pw.close();
             fos.close();
@@ -224,6 +223,13 @@ public class PatientInfo
         {
             e.printStackTrace();
         }
+        return true;
+    }
+
+    private boolean WriteContents(PrintWriter writer)
+    {
+        writer.println("Hi , How are you");
+        writer.println("Hello");
         return true;
     }
 }
