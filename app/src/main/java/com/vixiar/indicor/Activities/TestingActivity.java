@@ -3,6 +3,7 @@ package com.vixiar.indicor.Activities;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
@@ -340,19 +341,53 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             }
         });
 
-        m_chartPPG.getViewport().setXAxisBoundsManual(true);
-        m_chartPPG.getViewport().setMinX(0);
-        m_chartPPG.getViewport().setMaxX(5);
+        m_chartPPG.getGridLabelRenderer().setHighlightZeroLines(false);
+        m_chartPPG.getGridLabelRenderer().setVerticalLabelsAlign(Paint.Align.LEFT);
+        m_chartPPG.getGridLabelRenderer().setLabelVerticalWidth(100);
+        m_chartPPG.getGridLabelRenderer().setTextSize(20);
+        m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.HORIZONTAL);
+        m_chartPPG.getGridLabelRenderer().setHorizontalLabelsAngle(90);
+        m_chartPPG.getGridLabelRenderer().reloadStyles();
+
         m_chartPPG.getGridLabelRenderer().setVerticalAxisTitle(getResources().getString(R.string.pulse_amplitude));
         m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitle(getResources().getString(R.string.time));
         m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
         m_chartPPG.getGridLabelRenderer().setVerticalAxisTitleTextSize(30f);
-        m_chartPPG.getGridLabelRenderer().setHorizontalLabelsVisible(false);
-        m_chartPPG.getGridLabelRenderer().setVerticalLabelsVisible(false);
-        m_chartPPG.getGridLabelRenderer().setNumVerticalLabels(0);
-        m_chartPPG.getGridLabelRenderer().setNumHorizontalLabels(0);
-        m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
-        m_chartPPG.getViewport().setDrawBorder(true);
+
+        m_chartPPG.getViewport().setXAxisBoundsManual(true);
+        m_chartPPG.getViewport().setMinX(0);
+        m_chartPPG.getViewport().setMaxX(5);
+
+        if (false)
+        {
+            m_chartPPG.getViewport().setXAxisBoundsManual(true);
+            m_chartPPG.getViewport().setMinX(0);
+            m_chartPPG.getViewport().setMaxX(5);
+
+            m_chartPPG.getViewport().setYAxisBoundsManual(true);
+            m_chartPPG.getViewport().setMinY(40000);
+            m_chartPPG.getViewport().setMaxY(30000);
+
+            m_chartPPG.getGridLabelRenderer().setVerticalAxisTitle(getResources().getString(R.string.pulse_amplitude));
+            m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitle(getResources().getString(R.string.time));
+            m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
+            m_chartPPG.getGridLabelRenderer().setVerticalAxisTitleTextSize(30f);
+
+            m_chartPPG.getGridLabelRenderer().setHighlightZeroLines(false);
+            m_chartPPG.getGridLabelRenderer().setVerticalLabelsAlign(Paint.Align.LEFT);
+            m_chartPPG.getGridLabelRenderer().setLabelVerticalWidth(100);
+            m_chartPPG.getGridLabelRenderer().setTextSize(20);
+            m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.HORIZONTAL);
+            m_chartPPG.getGridLabelRenderer().setHorizontalLabelsAngle(120);
+            m_chartPPG.getGridLabelRenderer().reloadStyles();
+
+            //DAS m_chartPPG.getGridLabelRenderer().setHorizontalLabelsVisible(false);
+            //DAS m_chartPPG.getGridLabelRenderer().setVerticalLabelsVisible(false);
+            m_chartPPG.getGridLabelRenderer().setNumVerticalLabels(0);
+            m_chartPPG.getGridLabelRenderer().setNumHorizontalLabels(0);
+            m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
+            m_chartPPG.getViewport().setDrawBorder(true);
+        }
 
         CreateChartSeriesAddToChart();
     }
@@ -384,6 +419,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         // clear any data in the PPG chart
         m_chartPPG.removeAllSeries();
         m_seriesPPGData = null;
+
+        // Set the current data index to the data size so that only the newest data is pulled out
+        // of the buffer and displayed
+        m_nLastDataIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
+        m_nPPGGraphLastX = 0.0;
 
         CreateChartSeriesAddToChart();
 
