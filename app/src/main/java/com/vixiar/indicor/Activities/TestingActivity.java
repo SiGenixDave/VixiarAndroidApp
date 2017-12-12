@@ -586,7 +586,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private void InitTest()
     {
         m_nTestNumber = 1;
-        PatientInfo.getInstance().setM_testDate(getDateTime());
+        PatientInfo.getInstance().set_testDate(getDateTime());
 
         SwitchToStabilityView();
         InactivateStabilityView();
@@ -599,7 +599,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private String getDateTime()
     {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss", Locale.getDefault());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMMM-dd-yyyy HH:mm:ss", Locale.getDefault());
         Date date = new Date();
         return simpleDateFormat.format(date);
     }
@@ -749,6 +749,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: LOADING_RESULTS");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
+                    PatientInfo.getInstance().CalculateResults(m_nTestNumber - 1);
                     if (m_nTestNumber < 3)
                     {
                         SwitchToResultsView();
@@ -760,6 +761,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
+                        PatientInfo.getInstance().SaveCSVFile(this);
                         SwitchToResultsView();
                         SetResultsViewComplete();
                         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();

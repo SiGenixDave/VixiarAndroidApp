@@ -68,9 +68,6 @@ public class MainActivity extends Activity implements CustomDialogInterface
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // just for testing
-        //PatientInfo.getInstance().SaveCSVFile();
-
         // setup the top bar
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().HideBatteryIcon(this);

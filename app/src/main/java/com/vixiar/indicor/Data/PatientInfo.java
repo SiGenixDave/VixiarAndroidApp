@@ -1,6 +1,12 @@
 package com.vixiar.indicor.Data;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
+
+import com.vixiar.indicor.BuildConfig;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -56,26 +62,24 @@ public class PatientInfo
         this.m_firmwareVersion = m_firmwareVersion;
     }
 
-/*
     public double get_LVEDP(int testNumber)
     {
         if (testNumber <= NUM_TESTS)
         {
-            return m_aCalcLVEDP;
+            return m_aCalcLVEDP[testNumber];
         }
         else
         {
             return 0.0;
         }
     }
-*/
 
     public String getM_testDate()
     {
         return m_testDate;
     }
 
-    public void setM_testDate(String m_testDate)
+    public void set_testDate(String m_testDate)
     {
         this.m_testDate = m_testDate;
     }
@@ -105,7 +109,7 @@ public class PatientInfo
         return m_patientId;
     }
 
-    public void setM_patientId(String m_patientId)
+    public void set_patientId(String m_patientId)
     {
         this.m_patientId = m_patientId;
     }
@@ -130,12 +134,12 @@ public class PatientInfo
         this.m_weight_lbs = m_weight_lbs;
     }
 
-    public void setM_age_years(int m_age_years)
+    public void set_age_years(int m_age_years)
     {
         this.m_age_years = m_age_years;
     }
 
-/*
+    // test number is 0 relative
     public boolean CalculateResults(int testNumber)
     {
         TestMarkers tm = GetTestMarkers(testNumber);
@@ -143,14 +147,23 @@ public class PatientInfo
         // make sure the test markers were found
         if (tm.endIndex != 0 && tm.startIndex != 0)
         {
-
+            m_aCalcPAAvgRest[testNumber] = 0;
+            m_aCalcHRAvgRest[testNumber] = 0;
+            m_aCalcPAAvgVM[testNumber] = 0;
+            m_aCalcHRAvgVM[testNumber] = 0;
+            m_aCalcMinPA[testNumber] = 0;
+            m_aCalcEndPA[testNumber] = 0;
+            m_aCalcMinPAR[testNumber] = 0;
+            m_aCalcEndPAR[testNumber] = 0;
+            m_aCalcMinHR[testNumber] = 0;
+            m_aCalcLVEDP[testNumber] = 0;
+            return true;
         }
         else
         {
             return false;
         }
     }
-*/
 
     private TestMarkers GetTestMarkers(int testNumber)
     {
@@ -158,7 +171,7 @@ public class PatientInfo
         m.endIndex = 0;
         m.startIndex = 0;
 
-        int testFound = 0;
+        int testNumberFound = 0;
         int currentIndex = 0;
         boolean finished = false;
 
@@ -173,13 +186,13 @@ public class PatientInfo
                     // make sure the next marker is an end valsalva
                     if (rtd.GetDataMarkers().get(currentIndex + 1).type == RealtimeDataMarker.Marker_Type.MARKER_END_VALSALVA)
                     {
-                        testFound++;
-                        if (testFound == testNumber)
+                        if (testNumberFound == testNumber)
                         {
                             finished = true;
                             m.startIndex = rtd.GetDataMarkers().get(currentIndex).dataIndex;
-                            m.endIndex = rtd.GetDataMarkers().get(currentIndex+1).dataIndex;
+                            m.endIndex = rtd.GetDataMarkers().get(currentIndex + 1).dataIndex;
                         }
+                        testNumberFound++;
                     }
                 }
                 else // there's a start test and not an end test
@@ -199,10 +212,10 @@ public class PatientInfo
         private int endIndex;
     }
 
-    public boolean SaveCSVFile()
+    public boolean SaveCSVFile(Context context)
     {
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String fileName = m_patientId + ".csv";
+        String fileName = m_patientId + "-" + m_testDate + ".csv";
         String filePath = baseDir + File.separator + fileName;
         File file = new File(filePath);
 
@@ -214,6 +227,11 @@ public class PatientInfo
             pw.flush();
             pw.close();
             fos.close();
+
+            // now we need to force android to rescan the file system so the file will show up
+            // if you want to load it via usb
+            context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
+
         } catch (FileNotFoundException e)
         {
             e.printStackTrace();
@@ -228,8 +246,63 @@ public class PatientInfo
 
     private boolean WriteContents(PrintWriter writer)
     {
-        writer.println("Hi , How are you");
-        writer.println("Hello");
+        writer.println("Test date time:, " + m_testDate);
+        writer.println("Application version:, " + BuildConfig.VERSION_NAME);
+        writer.println("Firmware version:, " + m_firmwareVersion);
+        writer.println("Subject ID:, " + m_patientId);
+        writer.println("Age:, " + m_age_years);
+        writer.println("Gender:, " + m_gender);
+        writer.println("Systolic blood pressure:, " + m_systolicBloodPressure);
+        writer.println("Diastolic blood pressure:, " + m_diastolicBloodPressure);
+        writer.println("Mean blood pressure:, " + (2 * m_diastolicBloodPressure + m_systolicBloodPressure) / 3);
+        writer.println("Height (in.), " + m_height_Inches);
+        writer.println("Weight (lbs.):, " + m_weight_lbs);
+
+        // calculate some stuff for BMI
+        double height_m = m_height_Inches * 0.0254;
+        double weight_kg = m_weight_lbs * 0.4536;
+        double bmi = (weight_kg / (height_m * height_m));
+        writer.println("BMI (Kg/m^2):, " + FormatDoubleForPrint(bmi));
+
+        writer.println("Notes:, " + m_notes);
+
+        // print all of the calculated data
+        writer.println("Calculated values-Trial:, 1, 2, 3");
+        writer.println("PA avg rest:, " + FormatDoubleForPrint(m_aCalcPAAvgRest[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcPAAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgRest[2]));
+        writer.println("HR avg (BPM) rest:, " + FormatDoubleForPrint(m_aCalcHRAvgRest[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcHRAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgRest[2]));
+        writer.println("PA avg VM:, " + FormatDoubleForPrint(m_aCalcPAAvgVM[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcPAAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgVM[2]));
+        writer.println("HR avg (BPM) VM:, " + FormatDoubleForPrint(m_aCalcHRAvgVM[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcHRAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgVM[2]));
+        writer.println("Min PA:, " + FormatDoubleForPrint(m_aCalcMinPA[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcMinPA[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPA[2]));
+        writer.println("End PA:, " + FormatDoubleForPrint(m_aCalcEndPA[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcEndPA[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPA[2]));
+        writer.println("Min PAR:, " + FormatDoubleForPrint(m_aCalcMinPAR[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcMinPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPAR[2]));
+        writer.println("End PAR:, " + FormatDoubleForPrint(m_aCalcEndPAR[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcEndPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPAR[2]));
+        writer.println("Min HR:, " + FormatDoubleForPrint(m_aCalcMinHR[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcMinHR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHR[2]));
+        writer.println("LVEDP:, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
+
+        // print all of the realtime data
+        double t = 0.0;
+        writer.println("Time (sec.), PPG, Pressure (mmHg)");
+        for (int i = 0; i < rtd.GetRawData().size(); i++)
+        {
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetRawData().get(i).m_PPG + ", " +  FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
+            t += 0.02;
+        }
+
         return true;
+    }
+
+    private String FormatDoubleForPrint(double value)
+    {
+        return String.format("%1$,.2f", value);
     }
 }
