@@ -67,6 +67,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private TextView m_lblPatID;
     private TextView m_txtPatID;
     private TextView m_txtDateTime;
+    private TextView m_txtResults1;
+    private TextView m_txtResults2;
+    private TextView m_txtResults3;
 
     Typeface m_robotoLightTypeface;
     Typeface m_robotoRegularTypeface;
@@ -467,6 +470,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_imgResults1Checkbox = findViewById(R.id.imgMeasurement1Checkbox);
         m_imgResults2Checkbox = findViewById(R.id.imgMeasurement2Checkbox);
         m_imgResults3Checkbox = findViewById(R.id.imgMeasurement3Checkbox);
+        m_txtResults1 = findViewById(R.id.lblRes1);
+        m_txtResults2 = findViewById(R.id.lblRes2);
+        m_txtResults3 = findViewById(R.id.lblRes3);
         m_imgRestIcon = findViewById(R.id.imgRestIcon);
         m_imgHomeButton = findViewById(R.id.imgHomeIcon);
         m_lblRest = findViewById(R.id.lblRest);
@@ -478,6 +484,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_lblPatID.setTypeface(m_robotoRegularTypeface);
         m_txtDateTime.setTypeface(m_robotoRegularTypeface);
         m_txtPatID.setTypeface(m_robotoRegularTypeface);
+        m_txtResults1.setTypeface(m_robotoRegularTypeface);
+        m_txtResults2.setTypeface(m_robotoRegularTypeface);
+        m_txtResults3.setTypeface(m_robotoRegularTypeface);
         m_lblBottomMessageCentered.setTypeface(m_robotoRegularTypeface);
 
         m_txtPatID.setText(PatientInfo.getInstance().getM_patientId());
@@ -516,18 +525,36 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_unchecked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
+                String result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(0)) +
+                        " mmHg";
+                m_txtResults1.setText(result);
                 break;
 
             case 2:
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
+                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(0)) +
+                        " mmHg";
+                m_txtResults1.setText(result);
+                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(1)) +
+                        " mmHg";
+                m_txtResults2.setText(result);
                 break;
 
             case 3:
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_checked);
+                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(0)) +
+                        " mmHg";
+                m_txtResults1.setText(result);
+                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(1)) +
+                        " mmHg";
+                m_txtResults2.setText(result);
+                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(2)) +
+                        " mmHg";
+                m_txtResults3.setText(result);
                 break;
 
             default:
@@ -599,7 +626,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private String getDateTime()
     {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMMM-dd-yyyy HH:mm:ss", Locale.getDefault());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm", Locale.getDefault());
         Date date = new Date();
         return simpleDateFormat.format(date);
     }

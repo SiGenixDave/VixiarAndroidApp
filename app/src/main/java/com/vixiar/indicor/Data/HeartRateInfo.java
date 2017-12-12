@@ -178,7 +178,7 @@ public class HeartRateInfo {
     // Calculates the average heart rate between 2 samples. It first gets all of the peaks between the first and
     // last sample index. It then gets the sample index of first peak and the sample index of the last peak. It
     // then calculates the average heart rate over that time and returns a value in heart beats per minute
-    public double CalculateAverageHeartRate(int firstSampleIndex, int lastSampleIndex) {
+    public double GetAvgHROverRange(int firstSampleIndex, int lastSampleIndex) {
 
         List<Integer> peaks = PeakValleyDetect.getInstance().GetIndexesBetween(firstSampleIndex, lastSampleIndex,
                 PeakValleyDetect.eSlopeZero.PEAK);
@@ -244,7 +244,7 @@ public class HeartRateInfo {
     // Method calculates and returns the minimum peak to valley amplitude seen between "first" and
     // "last" sample indexes. If "last" = -1, then all of the peaks and valleys collected from "first"
     // until when this method is called will be used.
-    public double MinimumPeakToValley(int firstSampleIndex, int lastSampleIndex) {
+    public double GetMinPAOverRange(int firstSampleIndex, int lastSampleIndex) {
 
         List<Integer> peaks = PeakValleyDetect.getInstance().GetIndexesBetween(firstSampleIndex, lastSampleIndex,
                 PeakValleyDetect.eSlopeZero.PEAK);
@@ -307,7 +307,7 @@ public class HeartRateInfo {
     // Method calculates and returns the peak to valley amplitude average seen between "first" and
     // "last" sample indexes. If "last" = -1, then all of the peaks and valleys collected from "first"
     // until when this method is called will be used.
-    public double PulseAmplitudeAverage(int firstIndex, int lastIndex) {
+    public double GetAvgPAOverRange(int firstIndex, int lastIndex) {
 
         List<Integer> peaks = PeakValleyDetect.getInstance().GetIndexesBetween(firstIndex, lastIndex,
                 PeakValleyDetect.eSlopeZero.PEAK);
@@ -360,7 +360,7 @@ public class HeartRateInfo {
 
     // Returns the average heart rage from "endIndex" looking back in time "numBeats" heart beats
     // -1.0 is returned if there are were no heart beats detected from "endIndex" looking back
-    public double GetHistoricalAvgHeartrate (int endIndex, int numBeats) {
+    public double GetHistoricalAvgHR(int endIndex, int numBeats) {
 
         if (endIndex < 0) {
             endIndex = PeakValleyDetect.getInstance().AmountOfData() - 1;
@@ -409,7 +409,7 @@ public class HeartRateInfo {
     // Returns the average pulse amplitude "peak to valley" from "endIndex" looking back in
     // time "numBeats" heart beats. -1.0 is returned if there were no peak to valleys detected
     // from "endIndex" looking back
-    public double GetHistoricalAvgPulseAmplitude (int endIndex, int numBeats) {
+    public double GetHistoricalAvgPA(int endIndex, int numBeats) {
 
         if (endIndex < 0) {
             endIndex = PeakValleyDetect.getInstance().AmountOfData() - 1;

@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
@@ -105,11 +104,14 @@ public class PatInfoActivity extends Activity
             // convert to an int
             int height_ft = Integer.parseInt(ft);
             int height_in = Integer.parseInt(in);
-            PatientInfo.getInstance().set_eight_Inches(height_ft * 12 + height_in);
+            PatientInfo.getInstance().set_height_Inches(height_ft * 12 + height_in);
         } catch (NumberFormatException e)
         {
 
-            PatientInfo.getInstance().set_eight_Inches(0);
+            PatientInfo.getInstance().set_height_Inches(0);
+        } catch (ArrayIndexOutOfBoundsException e)
+        {
+            PatientInfo.getInstance().set_height_Inches(0);
         }
 
         // WEIGHT

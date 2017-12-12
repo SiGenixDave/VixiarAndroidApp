@@ -133,7 +133,7 @@ public class RealtimeData
 
     public double GetAverageHeartRate(int startMarker, int endMarker)
     {
-        return HeartRateInfo.getInstance().CalculateAverageHeartRate(startMarker, endMarker);
+        return HeartRateInfo.getInstance().GetAvgHROverRange(startMarker, endMarker);
     }
 
     public void CreateMarker(RealtimeDataMarker.Marker_Type type, int index)

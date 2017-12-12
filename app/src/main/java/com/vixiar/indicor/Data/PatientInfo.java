@@ -1,6 +1,5 @@
 package com.vixiar.indicor.Data;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -124,7 +123,7 @@ public class PatientInfo
         this.m_diastolicBloodPressure = m_diastolicBloodPressure;
     }
 
-    public void set_eight_Inches(int m_height_Inches)
+    public void set_height_Inches(int m_height_Inches)
     {
         this.m_height_Inches = m_height_Inches;
     }
@@ -147,16 +146,34 @@ public class PatientInfo
         // make sure the test markers were found
         if (tm.endIndex != 0 && tm.startIndex != 0)
         {
-            m_aCalcPAAvgRest[testNumber] = 0;
-            m_aCalcHRAvgRest[testNumber] = 0;
-            m_aCalcPAAvgVM[testNumber] = 0;
-            m_aCalcHRAvgVM[testNumber] = 0;
-            m_aCalcMinPA[testNumber] = 0;
-            m_aCalcEndPA[testNumber] = 0;
-            m_aCalcMinPAR[testNumber] = 0;
-            m_aCalcEndPAR[testNumber] = 0;
-            m_aCalcMinHR[testNumber] = 0;
-            m_aCalcLVEDP[testNumber] = 0;
+            // get the avg PA during rest
+            m_aCalcPAAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA(tm.startIndex, 12);
+
+            // get the avg HR during rest
+            m_aCalcHRAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR(tm.startIndex, 12);
+
+            // get the avg PA during Valsalva
+            m_aCalcPAAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgPAOverRange(tm.startIndex, tm.endIndex);
+
+            // get the avg HR during Valsalva
+            m_aCalcHRAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgHROverRange(tm.startIndex, tm.endIndex);
+
+            // get the min PA during Valsalva
+            m_aCalcMinPA[testNumber] = HeartRateInfo.getInstance().GetMinPAOverRange(tm.startIndex, tm.endIndex);
+
+            // get the end PA during Valsalva
+            m_aCalcEndPA[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA(tm.endIndex, 1);
+
+            m_aCalcMinPAR[testNumber] = m_aCalcMinPA[testNumber] / m_aCalcPAAvgRest[testNumber];
+
+            m_aCalcEndPAR[testNumber] = m_aCalcEndPA[testNumber] / m_aCalcPAAvgRest[testNumber];
+
+            // get the end HR during valsalva
+            m_aCalcMinHR[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR(tm.endIndex, 1);
+
+            m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * m_aCalcMinPAR[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
+                    (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
+                    (0.16182 * m_aCalcMinHR[testNumber]) - (0.06949 * m_age_years);
             return true;
         }
         else
@@ -165,6 +182,8 @@ public class PatientInfo
         }
     }
 
+    // get the start and end of valsalva markers for a certain test
+    // both markers will be 0 if the test is not found
     private TestMarkers GetTestMarkers(int testNumber)
     {
         TestMarkers m = new TestMarkers();
@@ -303,6 +322,11 @@ public class PatientInfo
 
     private String FormatDoubleForPrint(double value)
     {
-        return String.format("%1$,.2f", value);
+        String result = String.format("%1$,.2f", value);
+
+        // get rid of the commas cause it's going to a csv file
+        String clean = result.replaceAll(",", "");
+
+        return clean;
     }
 }

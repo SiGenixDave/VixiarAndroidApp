@@ -96,8 +96,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/roboto_light"
-                android:text="@string/LVEDP"
-                android:textSize="@dimen/results_measurement_font_size"/>
+                android:text="---"
+                android:textSize="@dimen/results_measurement_font_size" />
         </LinearLayout>
 
         <ImageView
@@ -138,8 +138,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/roboto_light"
-                android:text="@string/LVEDP"
-                android:textSize="@dimen/results_measurement_font_size"/>
+                android:text="---"
+                android:textSize="@dimen/results_measurement_font_size" />
         </LinearLayout>
 
         <ImageView
@@ -175,13 +175,13 @@
                 android:textSize="@dimen/results_measurement_font_size"/>
 
             <TextView
-                android:id="@+id/lblR3"
+                android:id="@+id/lblRes3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/roboto_light"
-                android:text="@string/LVEDP"
-                android:textSize="@dimen/results_measurement_font_size"/>
+                android:text="---"
+                android:textSize="@dimen/results_measurement_font_size" />
         </LinearLayout>
 
         <ImageView
