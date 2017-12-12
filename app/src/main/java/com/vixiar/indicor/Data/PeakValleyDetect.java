@@ -1,3 +1,4 @@
+
 package com.vixiar.indicor.Data;
 
 import java.util.*;
@@ -16,13 +17,11 @@ public class PeakValleyDetect {
     // / Enumerations
     // //////////////////////////////////////////////////////////////////////////
     public enum ePVDStates {
-        DETECTING_PEAK,
-        DETECTING_VALLEY
+        DETECTING_PEAK, DETECTING_VALLEY
     };
 
     public enum eSlopeZero {
-        PEAK,
-        VALLEY
+        PEAK, VALLEY
     }
 
     // //////////////////////////////////////////////////////////////////////////
@@ -114,8 +113,7 @@ public class PeakValleyDetect {
     // //////////////////////////////////////////////////////////////////////////
     // / Public Methods
     // //////////////////////////////////////////////////////////////////////////
-    public void Initialize(int deltaPeak, int deltaValley,
-                           Boolean detectPeakFirst) {
+    public void Initialize(int deltaPeak, int deltaValley, Boolean detectPeakFirst) {
         this.m_DeltaPeak = deltaPeak;
         this.m_DeltaValley = deltaValley;
         // Default value of
@@ -123,6 +121,7 @@ public class PeakValleyDetect {
         if (!detectPeakFirst) {
             this.m_DetectFirst = ePVDStates.DETECTING_VALLEY;
         }
+
     }
 
     // returns the amount of data in the list currently being analyzed
@@ -143,21 +142,57 @@ public class PeakValleyDetect {
         return m_PeaksIndexes.size();
     }
 
+    // Searches either the peak or valley array and returns the index of the peak or valley prior to
+    // the dataIndex
+    public int GetPriorDetect(int dataIndex, eSlopeZero type) {
+
+        List<Integer> transitionList;
+
+        if (type == eSlopeZero.PEAK) {
+            transitionList = m_PeaksIndexes;
+        } else if (type == eSlopeZero.VALLEY) {
+            transitionList = m_ValleysIndexes;
+        } else {
+            return -1;
+        }
+
+        // start the scanning the desired list and find the data index where the previous
+        // peak or valley was found. If there are transitions in the list, MAX_VALUE will be
+        // returned
+        int dataTransitionIndex = Integer.MIN_VALUE;
+        int transitionIndex = transitionList.size() - 1;
+
+
+        while (transitionIndex >= 0) {
+            dataTransitionIndex = transitionList.get(transitionIndex);
+            // peak or valley "just to the left" of the dsiredIndex was found, break out of here
+            if (dataTransitionIndex < dataIndex) {
+                break;
+            }
+            transitionIndex--;
+        }
+
+        // The beginning of the array was reached without finding a transition, inform the
+        // calling function
+        if (transitionIndex == -1) {
+            dataTransitionIndex = Integer.MAX_VALUE;
+        }
+
+        return dataTransitionIndex;
+    }
+
     // returns the current number of peaks detected between indices
     public List<Integer> GetIndexesBetween(int startIndex, int endIndex, eSlopeZero type) {
 
         List<Integer> transitionIndexList = new ArrayList<>();
         List<Integer> transitionList;
 
-
         int numTransitions;
         if (type == eSlopeZero.PEAK) {
             transitionList = m_PeaksIndexes;
-        }
-        else if (type == eSlopeZero.VALLEY) {
+        } else if (type == eSlopeZero.VALLEY) {
             transitionList = m_ValleysIndexes;
-        }
-        else {
+        } else {
             return null;
         }
 
@@ -170,7 +205,7 @@ public class PeakValleyDetect {
                 endIndex = transitionList.get(numTransitions - 1);
             }
 
-            for (int index = 0; index < numTransitions; index++)  {
+            for (int index = 0; index < numTransitions; index++) {
                 int currentIndex = transitionList.get(index);
                 if ((currentIndex >= startIndex) && (currentIndex <= endIndex)) {
                     transitionIndexList.add(currentIndex);
@@ -237,8 +272,8 @@ public class PeakValleyDetect {
 
         while (m_LocalDataIndex < m_LocalData.size()) {
 
-            //System.out.println(m_LocalDataIndex);
-            //System.out.println(m_LocalData.size());
+            // System.out.println(m_LocalDataIndex);
+            // System.out.println(m_LocalData.size());
 
             int currData = m_LocalData.get(m_LocalDataIndex);
 

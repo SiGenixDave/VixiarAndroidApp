@@ -356,6 +356,105 @@ public class HeartRateInfo {
 
     }
 
+
+
+    // Returns the average heart rage from "endIndex" looking back in time "numBeats" heart beats
+    // -1.0 is returned if there are were no heart beats detected from "endIndex" looking back
+    public double GetHistoricalAvgHeartrate (int endIndex, int numBeats) {
+
+        if (endIndex < 0) {
+            endIndex = PeakValleyDetect.getInstance().AmountOfData() - 1;
+        }
+
+        boolean atLeastTwoPeaks = false;
+        int timeMarkerN;
+        int timeMarkerNPlus1 = endIndex;
+        double heartRateAvgSum = 0.0;
+        int numHeartbeats = 0;
+
+
+        // Check if there less peaks (heart beats) than requested to check
+        while (numBeats > 0) {
+            timeMarkerN = PeakValleyDetect.getInstance().GetPriorDetect(timeMarkerNPlus1, PeakValleyDetect.eSlopeZero.PEAK);
+
+            // timeMarkerN becomes equal to Integer.MAX_VALUE when there are no more historical peaks
+            if (timeMarkerN == Integer.MAX_VALUE) {
+                break;
+            }
+
+            // Make sure we have at least 2 peaks before calculating heart rate
+            if (!atLeastTwoPeaks) {
+                atLeastTwoPeaks = true;
+            }
+            else {
+                double heartRate = CalculateHeartRate (timeMarkerN, timeMarkerNPlus1, 1);
+                heartRateAvgSum += heartRate;
+                numHeartbeats++;
+                numBeats--;
+            }
+
+            timeMarkerNPlus1 = timeMarkerN;
+
+        }
+
+        double heartBeatAvg = -1.0;
+        if (numHeartbeats > 0) {
+            heartBeatAvg = heartRateAvgSum / numHeartbeats;
+        }
+
+        return heartBeatAvg;
+
+    }
+
+    // Returns the average pulse amplitude "peak to valley" from "endIndex" looking back in
+    // time "numBeats" heart beats. -1.0 is returned if there were no peak to valleys detected
+    // from "endIndex" looking back
+    public double GetHistoricalAvgPulseAmplitude (int endIndex, int numBeats) {
+
+        if (endIndex < 0) {
+            endIndex = PeakValleyDetect.getInstance().AmountOfData() - 1;
+        }
+
+        int timeMarkerPeakN = endIndex;
+        int timeMarkerValleyN;
+        int numAmplitudes = 0;
+
+        double amplitudeSum = 0.0;
+
+        // Now go back the correct number of heart beats
+        while (numBeats > 0) {
+            timeMarkerValleyN = PeakValleyDetect.getInstance().GetPriorDetect(timeMarkerPeakN, PeakValleyDetect.eSlopeZero.VALLEY);
+
+            // timeMarkerN becomes equal to Integer.MAX_VALUE when there are no more historical peaks
+            if (timeMarkerValleyN == Integer.MAX_VALUE) {
+                break;
+            }
+
+            timeMarkerPeakN = PeakValleyDetect.getInstance().GetPriorDetect(timeMarkerValleyN, PeakValleyDetect.eSlopeZero.PEAK);
+
+            // timeMarkerN becomes equal to Integer.MAX_VALUE when there are no more historical peaks
+            if (timeMarkerPeakN == Integer.MAX_VALUE) {
+                break;
+            }
+
+            int peak = PeakValleyDetect.getInstance().GetData(timeMarkerPeakN);
+            int valley = PeakValleyDetect.getInstance().GetData(timeMarkerValleyN);
+            amplitudeSum += (peak - valley);
+            numBeats--;
+            numAmplitudes++;
+        }
+
+        double amplitudeAvg = -1.0;
+        if (numAmplitudes > 0) {
+            amplitudeAvg = amplitudeSum / numAmplitudes;
+        }
+
+        return amplitudeAvg;
+    }
+
+
+
+
     // Method determines if enough samples are present in the historical data so that the hear rate
     // data can be verified
     private boolean EnoughSamplesPresent() {
