@@ -21,6 +21,7 @@ import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
+import com.vixiar.indicor.Data.PPGDataCalibrate;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.Data.RealtimeDataMarker;
 import com.vixiar.indicor.Graphics.TestPressureGraph;
@@ -72,6 +73,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private TextView m_txtResults2;
     private TextView m_txtResults3;
 
+    private PPGDataCalibrate m_PPPGDataCalibrate = new PPGDataCalibrate();
+
     Typeface m_robotoLightTypeface;
     Typeface m_robotoRegularTypeface;
 
@@ -102,9 +105,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     // Timer stuff
     private GenericTimer m_oneShotTimer;
     private GenericTimer m_periodicTimer;
+    private GenericTimer m_ppgcalTimer;
 
     private final int ONESHOT_TIMER_ID = 1;
     private final int PERIODIC_TIMER_ID = 2;
+    private final int PPG_CAL_TIMER_ID = 3;
 
     private final int DLG_ID_PRESSURE_ERROR_START = 0;
     private final int DLG_ID_PRESSURE_ERROR_RUNNING = 1;
@@ -112,6 +117,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int DLG_ID_HR_NOT_STABLE = 4;
 
     // Timing constants
+    private final int PPGCAL_TIME_MS = 5000;
     private final int STABILIZING_TIMEOUT_MS = 60000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
@@ -167,6 +173,24 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case PERIODIC_TIMER_ID:
                 TestingStateMachine(Testing_Events.EVT_PERIODIC_TIMER_TICK);
                 break;
+
+            case PPG_CAL_TIMER_ID:
+                // Update the y scaling on the chart
+                if (m_PPPGDataCalibrate.Complete(5, 5)) {
+                    double yMaxScaling = m_PPPGDataCalibrate.getYMaxChartScale();
+                    double yMinScaling = m_PPPGDataCalibrate.getYMinChartScale();
+
+                    m_chartPPG.getViewport().setMaxY(yMaxScaling);
+                    m_chartPPG.getViewport().setMinY(yMinScaling);
+
+                    Log.d ("ASCALE", "Max = " + yMaxScaling);
+                    Log.d ("ASCALE", "Min = " + yMinScaling);
+                    m_chartPPG.getViewport().setYAxisBoundsManual(true);
+                }
+                else {
+                    PPGCalibrateSignal();
+                }
+
         }
     }
 
@@ -270,6 +294,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         // stop any running timers
         m_periodicTimer.Cancel();
         m_oneShotTimer.Cancel();
+        m_ppgcalTimer.Cancel();
 
         Log.i(TAG, "OnBackPressed");
         super.onBackPressed();
@@ -288,6 +313,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 ActivateStabilityView();
 
                 m_testingState = Testing_State.STABILIZING;
+
+                PPGCalibrateSignal();
 
                 // start the stability timer
                 m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
@@ -312,6 +339,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         }
     }
+
+    private void PPGCalibrateSignal () {
+        m_PPPGDataCalibrate.Start();
+        m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
+    }
+
 
     // GUI functions
 
@@ -660,6 +693,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         m_oneShotTimer = new GenericTimer(ONESHOT_TIMER_ID);
         m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
+        m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
 
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
@@ -700,6 +734,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     ActivateStabilityView();
 
                     m_testingState = Testing_State.STABILIZING;
+
+                    PPGCalibrateSignal();
 
                     // start the stability timer
                     m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
