@@ -311,9 +311,9 @@ public class PatientInfo
         // print all of the realtime data
         double t = 0.0;
         writer.println("Time (sec.), PPG, Pressure (mmHg)");
-        for (int i = 0; i < rtd.GetRawData().size(); i++)
+        for (int i = 0; i < rtd.GetFilteredData().size(); i++)
         {
-            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetRawData().get(i).m_PPG + ", " +  FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " +  FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
             t += 0.02;
         }
 

@@ -21,6 +21,8 @@ public class RealtimeData
     private ArrayList<PPG_PressureSample> m_rawData = new ArrayList<PPG_PressureSample>();
     private ArrayList<PPG_PressureSample> m_filteredData = new ArrayList<PPG_PressureSample>();
     private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
+    private PPG_FIRFilterData PPGFIRFilterData = new PPG_FIRFilterData();
+    private FIRFilter firFilter = new FIRFilter();
     private Boolean enableHeartRateValidation = false;
 
     // filtering constants
@@ -38,6 +40,7 @@ public class RealtimeData
         PeakValleyDetect.getInstance().Initialize(1000, 1000, false);
         PeakValleyDetect.getInstance().ResetAlgorithm();
         HeartRateInfo.getInstance().InitializeValidation(50.0, 4, 5.0, 40.0, 120.0, 20.0);
+        firFilter.Initialize(PPGFIRFilterData);
     }
 
     public void AppendNewSample(byte[] new_data)
@@ -65,7 +68,8 @@ public class RealtimeData
             PeakValleyDetect.getInstance().AddToDataArray(ppg_value);
 
             // filter the sample and store it in the filtered array
-            pd = new PPG_PressureSample((int) FilterSample(ppg_value), pressure_value);
+            firFilter.PutSample(PPGFIRFilterData, ppg_value);
+            pd = new PPG_PressureSample((int) firFilter.GetOutput(PPGFIRFilterData), pressure_value);
             m_filteredData.add(pd);
         }
 
