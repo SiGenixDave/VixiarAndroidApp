@@ -33,7 +33,6 @@ import java.util.Locale;
 
 public class TestingActivity extends Activity implements IndicorBLEServiceInterfaceCallbacks, TimerCallback, CustomDialogInterface
 {
-    //TODO: need to put data markers at the beginning and end of valsalva
     //TODO: Pressing back button when this activity started from practice causes practice activity to start, should go directly to pat info or main
 
     private final String TAG = this.getClass().getSimpleName();
