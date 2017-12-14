@@ -700,7 +700,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private String getDateTime()
     {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm", Locale.getDefault());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm", Locale.getDefault());
         Date date = new Date();
         return simpleDateFormat.format(date);
     }

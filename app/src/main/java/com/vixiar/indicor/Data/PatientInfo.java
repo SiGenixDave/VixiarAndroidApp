@@ -166,7 +166,7 @@ public class PatientInfo
             m_aCalcEndPAR[testNumber] = m_aCalcEndPA[testNumber] / m_aCalcPAAvgRest[testNumber];
 
             // get the end HR during valsalva
-            m_aCalcMinHR[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR(tm.endIndex, 1);
+            m_aCalcMinHR[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR(tm.endIndex, tm.endIndex);
 
             m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * m_aCalcMinPAR[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
                     (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
@@ -304,6 +304,14 @@ public class PatientInfo
                 FormatDoubleForPrint(m_aCalcMinHR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHR[2]));
         writer.println("LVEDP:, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
+
+        // print all of markers
+        writer.println("Marker index, Type start=0 end=1 error=2");
+        for (int i = 0; i < rtd.m_markers.size(); i++)
+        {
+            writer.println(rtd.m_markers.get(i).dataIndex + ", " + rtd.m_markers.get(i).type);
+        }
+
 
         // print all of the realtime data
         double t = 0.0;

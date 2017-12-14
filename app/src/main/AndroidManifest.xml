@@ -23,9 +23,8 @@
         android:theme="@style/AppTheme">
         <activity android:name=".Activities.MainActivity"
             android:screenOrientation="portrait" >
-            <intent-filter>
+            <intent-filter>g
                 <action android:name="android.intent.action.MAIN"/>
-                <data android:scheme="db-33hl7is0rgjnn3f" />
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>

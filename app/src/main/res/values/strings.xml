@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Indicor</string>
+    <string name="app_name">Indicor Navigator</string>
     <!-- Training Activity -->
     <string name="pressure">Pressure</string>
     <string name="timer">Timer</string>

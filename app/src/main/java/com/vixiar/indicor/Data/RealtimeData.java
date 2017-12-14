@@ -20,7 +20,7 @@ public class RealtimeData
 {
     private ArrayList<PPG_PressureSample> m_rawData = new ArrayList<PPG_PressureSample>();
     private ArrayList<PPG_PressureSample> m_filteredData = new ArrayList<PPG_PressureSample>();
-    private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
+    public ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
     private PPG_FIRFilterData PPGFIRFilterData = new PPG_FIRFilterData();
     private FIRFilter firFilter = new FIRFilter();
     private Boolean enableHeartRateValidation = false;
