@@ -65,6 +65,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     };
     private int m_batteryLevel;
 
+    private String m_handheldFirmwareRevision;
+
     private ArrayList<ScanResult> m_ScanList = new ArrayList<ScanResult>()
     {
     };
@@ -411,6 +413,9 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             }
             else if (arg1.hasExtra(IndicorBLEService.REVISION_INFO_RECEIVED))
             {
+                byte x[] = arg1.getByteArrayExtra(IndicorBLEService.REVISION_INFO_RECEIVED);
+                m_handheldFirmwareRevision = x[1] + "." + x[2] + "." + x[3] + "." + x[4];
+                PatientInfo.getInstance().set_firmwareRevision(m_handheldFirmwareRevision);
                 ConnectionStateMachine(Connection_Event.EVT_REVISION_READ);
             }
             else if (arg1.hasExtra(IndicorBLEService.NOTIFICATION_WRITTEN))
