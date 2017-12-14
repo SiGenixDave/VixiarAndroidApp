@@ -1,6 +1,8 @@
 
 package com.vixiar.indicor.Data;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +17,8 @@ public class HeartRateInfo {
         public double heartRate;
         // Starting sample (index into data array) where heart rate calculation started
         public int startSampleIndex;
-
+        // Last sample (index into data array) where heart rate calculation ended
+        public int lastSampleIndex;
     }
 
     // //////////////////////////////////////////////////////////////////////////
@@ -128,6 +131,10 @@ public class HeartRateInfo {
         List<Integer> peaks = PeakValleyDetect.getInstance().GetIndexesBetween(m_CurrentStartIndex, -1,
                 PeakValleyDetect.eSlopeZero.PEAK);
 
+        // Discard any old samples from history to ensure the window if interest "slides". This also ensures
+        // that if any dead time exists (no peaks), they get flushed also
+        DiscardOldSamples(PeakValleyDetect.getInstance().AmountOfData() - 1);
+
         // The number of peaks detected exceeds the required amount. In order to calculate heart rate, the number of
         // peaks + 1 is required since the difference between is needed. So if m_NumHeartBeatsToAverage is X,
         // then X+1 peaks (p0, p1, ... pX) are needed. The algorithm then calculates heart rate by performing
@@ -140,6 +147,9 @@ public class HeartRateInfo {
             int firstPeakSampleIndex = peaks.get(0);
             int lastPeakSampleIndex = peaks.get(m_NumHeartBeatsToAverage);
 
+            Log.d ("AVG_HR", " firstPeakSampleIndex: " + firstPeakSampleIndex + " lastPeakSampleIndex: " + lastPeakSampleIndex);
+
+
             // Calculate the average heart rate over the sample window
             m_CurrentBeatsPerMinute = CalculateHeartRate(firstPeakSampleIndex, lastPeakSampleIndex,
                     m_NumHeartBeatsToAverage);
@@ -148,13 +158,20 @@ public class HeartRateInfo {
             HistoricalData historicalData = new HistoricalData();
             historicalData.heartRate = m_CurrentBeatsPerMinute;
             historicalData.startSampleIndex = firstPeakSampleIndex;
+            historicalData.lastSampleIndex = lastPeakSampleIndex;
             m_HistoricalDataList.add(historicalData);
+
+            Log.d ("HIST", "-------------------------------------------------------" );
+            for (HistoricalData h: m_HistoricalDataList) {
+                Log.d ("HIST", "h.heartRate: " + h.heartRate +
+                                        " h.startSampleIndex: " + h.startSampleIndex +
+                                        " h.lastSampleIndex: " + h.lastSampleIndex );
+            }
 
             // Verify enough average samples are present (meets or exceeds window length)
             if (EnoughSamplesPresent()) {
 
-                // Discard any old samples to ensure the window if interest "slides"
-                DiscardOldSamples();
+                Log.d ("AVG_HR", "EnoughSamplesPresent() = true");
 
                 boolean allSamplesWithinRange = VerifyHeartRateInRange();
                 boolean allSamplesTwoSigma = VerifyDeviation();
@@ -460,8 +477,9 @@ public class HeartRateInfo {
     private boolean EnoughSamplesPresent() {
 
         int indexFirst = m_HistoricalDataList.get(0).startSampleIndex;
-        int indexLast = m_HistoricalDataList.get(m_HistoricalDataList.size() - 1).startSampleIndex;
+        int indexLast = m_HistoricalDataList.get(m_HistoricalDataList.size() - 1).lastSampleIndex;
 
+        Log.d ("AVG_HR", "... " + indexLast + " ... " + indexFirst);
         boolean answer = false;
         // The time over which the data is validated is converted to samples based on the
         // data sampling frequency
@@ -473,15 +491,17 @@ public class HeartRateInfo {
     }
 
     // Method purges old historical samples that fall outside the desired window
-    private void DiscardOldSamples() {
+    private void DiscardOldSamples(int currentSampleIndex) {
 
-        int lastSampleIndex = m_HistoricalDataList.get(m_HistoricalDataList.size() - 1).startSampleIndex;
+        if (m_HistoricalDataList.size() == 0) {
+            return;
+        }
+
         int purgeCount = 0;
 
         // Scan for old samples that fall outside the desired window
         for (HistoricalData p : m_HistoricalDataList) {
-            int currentSampleIndex = p.startSampleIndex;
-            if ((lastSampleIndex - currentSampleIndex) > m_StableTimeWindowSamples) {
+            if ((currentSampleIndex - p.startSampleIndex) > (m_StableTimeWindowSamples * 120 /100)) {
                 purgeCount++;
             } else {
                 break;
@@ -518,11 +538,15 @@ public class HeartRateInfo {
         // Scan all historical data until a heart rate falls outside of the range
         for (HistoricalData p : m_HistoricalDataList) {
             if ((p.heartRate < m_MinHeartRate) || (p.heartRate > m_MaxHeartRate)) {
+                Log.d ("AVG_HR", "Bad heartrate = " + p.heartRate);
                 inRange = false;
                 break;
             }
         }
 
+        if (inRange) {
+            Log.d ("AVG_HR", "Range OK");
+        }
         return inRange;
     }
 
@@ -548,6 +572,7 @@ public class HeartRateInfo {
             if (twoSamplesExtracted) {
                 if ((largest - smallest) > m_MaxDeviationBeatsPerMinute) {
                     inRange = false;
+                    Log.d ("AVG_HR", "Deviation FALSE = " + (largest - smallest));
                     break;
                 }
             }
@@ -562,6 +587,9 @@ public class HeartRateInfo {
             return false;
         }
 
+        if (inRange) {
+            Log.d ("AVG_HR", "Deviation OK");
+        }
         return inRange;
     }
 

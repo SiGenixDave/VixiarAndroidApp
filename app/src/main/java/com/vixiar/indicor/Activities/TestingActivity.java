@@ -315,6 +315,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_testingState = Testing_State.STABILIZING;
 
                 PPGCalibrateSignal();
+                PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
 
                 // start the stability timer
                 m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
