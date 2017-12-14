@@ -19,9 +19,6 @@ import java.io.PrintWriter;
 
 public class PatientInfo
 {
-    // TODO: Build a function to write the data to a CSV file
-    // TODO: set firmware version from BLE interface
-
     private final static String TAG = PatientInfo.class.getSimpleName();
 
     private static final PatientInfo ourInstance = new PatientInfo();
@@ -56,7 +53,7 @@ public class PatientInfo
         this.m_applicationVersion = m_applicationVersion;
     }
 
-    public void set_firmwareVersion(String m_firmwareVersion)
+    public void set_firmwareRevision(String m_firmwareVersion)
     {
         this.m_firmwareVersion = m_firmwareVersion;
     }
