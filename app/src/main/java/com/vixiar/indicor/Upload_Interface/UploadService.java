@@ -28,9 +28,9 @@ import java.util.TimerTask;
 import java.util.List;
 import java.util.ArrayList;
 
-    /**
-     * Created by gsevinc on 11/28/2017.
-     */
+/**
+ * Created by gsevinc on 11/28/2017.
+ */
 
 /**
  * Service for managing the Upload Service to Dropbox.
@@ -77,51 +77,60 @@ public class UploadService extends Service
      */
     public boolean Initialize() throws DbxException
     {
-        new Thread(new Runnable(){
+        new Thread(new Runnable()
+        {
             @Override
-            public void run() {
-                try {
+            public void run()
+            {
+                try
+                {
                     startDropbox();
-                } catch (DbxException | IOException e) {
+                } catch (DbxException | IOException e)
+                {
                     Log.e("Dropbox exception: ", e.getMessage());
                 }
 
-            }}).start();
+            }
+        }).start();
         return true;
     }
 
-    public void setHaveFilesToUpload() {
+    public void setHaveFilesToUpload()
+    {
         haveFilesToUpload = true;
     }
 
     /*
         Method to start dropbox api. Right now creates a test file and uploads to dropbox
-        TODO: remove createTestFile call from this function from the first run.
      */
-    public void startDropbox() throws DbxException, IOException {
-        if(isNetworkAvailable()) {
+    public void startDropbox() throws DbxException, IOException
+    {
+        if (isNetworkAvailable())
+        {
             Log.i(TAG, "Connecting to dropbox");
             DbxRequestConfig config = DbxRequestConfig.newBuilder("Indicor/1.0").build();
             client = new DbxClientV2(config, ACCESS_TOKEN);
             Log.i(TAG, "Connected to dropbox:" + client.users().getCurrentAccount().getName().getDisplayName());
 
             uploadDirectory = getDropboxDirectory();
-
-            //example upload
-            String path = createTestFile();
-            setHaveFilesToUpload();
-        } else {
+        }
+        else
+        {
             // set a service flag to false
         }
 
         // Run upload check every 10 seconds
         Timer timer = new Timer();
-        timer.schedule(new TimerTask(){
+        timer.schedule(new TimerTask()
+        {
             @Override
-            public void run() {
-                try {
+            public void run()
+            {
+                try
+                {
                     checkFileUploads();
-                } catch (DbxException | IOException e) {
+                } catch (DbxException | IOException e)
+                {
                     Log.e(TAG, "Error uploading files");
                 }
             }
@@ -131,18 +140,24 @@ public class UploadService extends Service
     /*
         Check if there are files to upload, if so, call uploadFilesToDropbox
      */
-    public void checkFileUploads() throws DbxException, IOException {
-        if(isNetworkAvailable()) {
-            if(haveFilesToUpload || haveOfflineFiles) {
+    public void checkFileUploads() throws DbxException, IOException
+    {
+        if (isNetworkAvailable())
+        {
+            if (haveFilesToUpload || haveOfflineFiles)
+            {
                 Log.i(TAG, "Have files to upload.");
                 // Do a test upload
-                Log.i(TAG, "parent dir: " + getApplicationContext().getFilesDir().getParent());
+                Log.i(TAG, "parent dir: " + android.os.Environment.getExternalStorageDirectory().getAbsolutePath());
                 List<String> filePaths = getFilePaths(getApplicationContext().getFilesDir(), getApplicationContext().getFilesDir().getParent());
-                for(String filePath : filePaths) {
+                for (String filePath : filePaths)
+                {
                     Log.i(TAG, "uploading file " + filePath);
                     uploadFileToDropbox(filePath, uploadDirectory);
                 }
-            } else {
+            }
+            else
+            {
                 Log.i(TAG, "No files to upload.");
             }
         }
@@ -151,18 +166,23 @@ public class UploadService extends Service
     /*
         Gets the current directory for indicor application within the OS
      */
-    public String getDropboxDirectory() throws DbxException {
+    public String getDropboxDirectory() throws DbxException
+    {
         ListFolderResult result = client.files().listFolder("");
         String pathToUpload = "";
-        while (true) {
-            for (Metadata metadata : result.getEntries()) {
+        while (true)
+        {
+            for (Metadata metadata : result.getEntries())
+            {
                 String pathLower = metadata.getPathLower();
-                if(pathLower.startsWith("/indicor_res")) {
+                if (pathLower.startsWith("/indicor_res"))
+                {
                     pathToUpload = pathLower;
                 }
             }
 
-            if (!result.getHasMore()) {
+            if (!result.getHasMore())
+            {
                 break;
             }
 
@@ -174,12 +194,15 @@ public class UploadService extends Service
     /*
         Get list of file paths to upload
      */
-    public List<String> getFilePaths(File parentDir, String pathToParentDir) {
+    public List<String> getFilePaths(File parentDir, String pathToParentDir)
+    {
         ArrayList<String> inFiles = new ArrayList<String>();
         File[] fileNames = parentDir.listFiles();
 
-        for (File file : fileNames) {
-            if (file.getName().toLowerCase().endsWith(".csv")) {
+        for (File file : fileNames)
+        {
+            if (file.getName().toLowerCase().endsWith(".csv"))
+            {
                 inFiles.add(file.getAbsolutePath());
             }
         }
@@ -190,17 +213,20 @@ public class UploadService extends Service
     /*
         Creates a test file to test with dropbox
      */
-    public String createTestFile() throws IOException {
+    public String createTestFile() throws IOException
+    {
         String filename = "tester.csv";
         File file = new File(getApplicationContext().getFilesDir(), filename);
         String string = "Hello world!";
         FileOutputStream outputStream;
 
-        try {
+        try
+        {
             outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
             outputStream.write(string.getBytes());
             outputStream.close();
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             e.printStackTrace();
         }
 
@@ -210,7 +236,8 @@ public class UploadService extends Service
     /*
         Check internet connectivity
      */
-    private boolean isNetworkAvailable() {
+    private boolean isNetworkAvailable()
+    {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
@@ -221,14 +248,17 @@ public class UploadService extends Service
     /*
         Uploads file to Dropbox, given a file path and an upload path.
      */
-    public void uploadFileToDropbox (String filePath, String uploadPath) throws DbxException, IOException {
-        if(isNetworkAvailable()) {
+    public void uploadFileToDropbox(String filePath, String uploadPath) throws DbxException, IOException
+    {
+        if (isNetworkAvailable())
+        {
             Log.i(TAG, "Have internet connection.");
             Log.i(TAG, uploadPath);
             File file = new File(filePath);
             Log.i(TAG, "Path: " + file.getCanonicalPath());
             Log.i(TAG, "Name: " + file.getName());
-            try (InputStream in = new FileInputStream(filePath)) {
+            try (InputStream in = new FileInputStream(filePath))
+            {
                 FileMetadata metadata = client.files().uploadBuilder(uploadPath + "/" + file.getName())
                         .uploadAndFinish(in);
                 Thread.sleep(1000);
@@ -237,12 +267,15 @@ public class UploadService extends Service
                 haveFilesToUpload = false;
                 haveOfflineFiles = false;
 
-            } catch (DbxException | IOException | InterruptedException e) {
+            } catch (DbxException | IOException | InterruptedException e)
+            {
                 Log.e(TAG, "Error uploading file");
                 haveOfflineFiles = true;
             }
 
-        } else {
+        }
+        else
+        {
             //set a service flag to false
             Log.i(TAG, "No internet connection.");
             haveOfflineFiles = true;
