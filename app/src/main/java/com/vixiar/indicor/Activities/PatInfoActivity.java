@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
@@ -39,22 +38,18 @@ public class PatInfoActivity extends Activity
     private EditText txtDiastolic;
     private EditText txtGender;
     private EditText txtNotes;
-    private TextView txtMessage;
 
     private NumberPicker npAge;
     private NumberPicker npHeightFeet;
     private NumberPicker npHeightInches;
     private NumberPicker npWeight;
-    private NumberPicker npSystolic;
-    private NumberPicker npDiastolic;
     private NumberPicker npGender;
 
     private String[] monthString;
     private String[] genderString;
 
-    private ImageButton btnStartTest;
-    private ImageButton btnPractice;
 
+    //TODO: go through the controls on the patient info screen and make sure the focus is being handled properly. Also make sure the keyboard is being hidden when it needs to.
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -84,75 +79,73 @@ public class PatInfoActivity extends Activity
         super.onPause();
 
         // store the data entered to the patient class
-        if (!DEBUG)
+        // PATIENT ID
+        PatientInfo.getInstance().set_patientId(txtPatientID.getText().toString());
+
+        // AGE
+        try
         {
-            // PATIENT ID
-            PatientInfo.getInstance().setPatientId(txtPatientID.getText().toString());
-
-            // AGE
-            try
-            {
-                PatientInfo.getInstance().setAge_years(Integer.parseInt(txtAge.getText().toString()));
-            }
-            catch (NumberFormatException e)
-            {
-                PatientInfo.getInstance().setAge_years(0);
-            }
-
-            // HEIGHT
-            try
-            {
-                // split the height up into ft and inches
-                String[] splitHeight = txtHeight.getText().toString().split("/");
-
-                // get rid of the whitespace
-                String ft = splitHeight[0].replaceAll("\\s", "");
-                String in = splitHeight[1].replaceAll("\\s", "");
-
-                // convert to an int
-                int height_ft = Integer.parseInt(ft);
-                int height_in = Integer.parseInt(in);
-                PatientInfo.getInstance().setHeight_Inches(height_ft * 12 + height_in);
-            }
-            catch (NumberFormatException e)
-            {
-
-                PatientInfo.getInstance().setHeight_Inches(0);
-            }
-
-            // WEIGHT
-            try
-            {
-                PatientInfo.getInstance().setWeight_lbs(Integer.parseInt(txtWeight.getText().toString()));
-            }
-            catch (NumberFormatException e)
-            {
-                PatientInfo.getInstance().setWeight_lbs(0);
-            }
-
-            // SYSTOLIC PRESSURE
-            try
-            {
-                PatientInfo.getInstance().setSystolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
-            }
-            catch (NumberFormatException e)
-            {
-                PatientInfo.getInstance().setSystolicBloodPressure(0);
-            }
-
-            // DIASTOLIC PRESSURE
-            try
-            {
-                PatientInfo.getInstance().setDiastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
-            }
-            catch (NumberFormatException e)
-            {
-                PatientInfo.getInstance().setDiastolicBloodPressure(0);
-            }
-
-            // NOTES
-            PatientInfo.getInstance().setNotes(txtNotes.getText().toString());
+            PatientInfo.getInstance().set_age_years(Integer.parseInt(txtAge.getText().toString()));
+        } catch (NumberFormatException e)
+        {
+            PatientInfo.getInstance().set_age_years(0);
         }
+
+        // HEIGHT
+        try
+        {
+            // split the height up into ft and inches
+            String[] splitHeight = txtHeight.getText().toString().split("/");
+
+            // get rid of the whitespace
+            String ft = splitHeight[0].replaceAll("\\s", "");
+            String in = splitHeight[1].replaceAll("\\s", "");
+
+            // convert to an int
+            int height_ft = Integer.parseInt(ft);
+            int height_in = Integer.parseInt(in);
+            PatientInfo.getInstance().set_height_Inches(height_ft * 12 + height_in);
+        } catch (NumberFormatException e)
+        {
+
+            PatientInfo.getInstance().set_height_Inches(0);
+        } catch (ArrayIndexOutOfBoundsException e)
+        {
+            PatientInfo.getInstance().set_height_Inches(0);
+        }
+
+        // WEIGHT
+        try
+        {
+            PatientInfo.getInstance().set_weight_lbs(Integer.parseInt(txtWeight.getText().toString()));
+        } catch (NumberFormatException e)
+        {
+            PatientInfo.getInstance().set_weight_lbs(0);
+        }
+
+        // SYSTOLIC PRESSURE
+        try
+        {
+            PatientInfo.getInstance().set_systolicBloodPressure(Integer.parseInt(txtSystolic.getText().toString()));
+        } catch (NumberFormatException e)
+        {
+            PatientInfo.getInstance().set_systolicBloodPressure(0);
+        }
+
+        // GENDER
+        PatientInfo.getInstance().set_gender(txtGender.getText().toString());
+
+        // DIASTOLIC PRESSURE
+        try
+        {
+            PatientInfo.getInstance().set_diastolicBloodPressure(Integer.parseInt(txtDiastolic.getText().toString()));
+        } catch (NumberFormatException e)
+        {
+            PatientInfo.getInstance().set_diastolicBloodPressure(0);
+        }
+
+        // NOTES
+        PatientInfo.getInstance().set_notes(txtNotes.getText().toString());
     }
 
     @Override
@@ -397,8 +390,7 @@ public class PatInfoActivity extends Activity
                         {
                             txtSystolic.setText(String.valueOf(minSystolic));
                         }
-                    }
-                    catch (NumberFormatException e)
+                    } catch (NumberFormatException e)
                     {
 
                     }
@@ -447,8 +439,7 @@ public class PatInfoActivity extends Activity
                         {
                             txtDiastolic.setText(String.valueOf(minDiastolic));
                         }
-                    }
-                    catch (NumberFormatException e)
+                    } catch (NumberFormatException e)
                     {
 
                     }
@@ -525,20 +516,16 @@ public class PatInfoActivity extends Activity
             Method method = npGender.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
             method.setAccessible(true);
             method.invoke(npGender, true);
-        }
-        catch (NoSuchMethodException e)
+        } catch (NoSuchMethodException e)
         {
             e.printStackTrace();
-        }
-        catch (IllegalArgumentException e)
+        } catch (IllegalArgumentException e)
         {
             e.printStackTrace();
-        }
-        catch (IllegalAccessException e)
+        } catch (IllegalAccessException e)
         {
             e.printStackTrace();
-        }
-        catch (InvocationTargetException e)
+        } catch (InvocationTargetException e)
         {
             e.printStackTrace();
         }

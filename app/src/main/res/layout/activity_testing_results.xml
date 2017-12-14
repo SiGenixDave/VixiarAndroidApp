@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:foregroundGravity="bottom"
+    android:keepScreenOn="true"
     android:gravity="center_horizontal"
     android:orientation="vertical">
 
@@ -95,8 +96,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/roboto_light"
-                android:text="@string/LVEDP"
-                android:textSize="@dimen/results_measurement_font_size"/>
+                android:text="---"
+                android:textSize="@dimen/results_measurement_font_size" />
         </LinearLayout>
 
         <ImageView
@@ -137,8 +138,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/roboto_light"
-                android:text="@string/LVEDP"
-                android:textSize="@dimen/results_measurement_font_size"/>
+                android:text="---"
+                android:textSize="@dimen/results_measurement_font_size" />
         </LinearLayout>
 
         <ImageView
@@ -174,13 +175,13 @@
                 android:textSize="@dimen/results_measurement_font_size"/>
 
             <TextView
-                android:id="@+id/lblR3"
+                android:id="@+id/lblRes3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/roboto_light"
-                android:text="@string/LVEDP"
-                android:textSize="@dimen/results_measurement_font_size"/>
+                android:text="---"
+                android:textSize="@dimen/results_measurement_font_size" />
         </LinearLayout>
 
         <ImageView
@@ -213,9 +214,22 @@
             android:layout_centerVertical="true"
             android:layout_gravity="center_horizontal"
             android:layout_weight="1"
-            android:paddingBottom="@dimen/main_screen_vertical_spacing"
-            android:paddingTop="@dimen/main_screen_vertical_spacing"
-            android:src="@drawable/rest_period_icon"/>
+            android:paddingBottom="22dp"
+            android:paddingTop="22dp"
+            android:src="@drawable/rest_period_icon" />
+
+        <ImageView
+            android:id="@+id/imgHomeIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="false"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
+            android:src="@drawable/home_button" />
 
         <TextView
             android:id="@+id/lblRest"
@@ -244,7 +258,20 @@
             android:paddingEnd="10sp"
             android:text="@string/test_will_resume"
             android:textColor="@android:color/background_light"
-            android:textSize="@dimen/bottom_bar_font_size"/>
+            android:textSize="@dimen/bottom_bar_font_size" />
+
+        <TextView
+            android:id="@+id/txtMessageCentered"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="false"
+            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true"
+            android:layout_centerVertical="true"
+            android:fontFamily="@font/roboto_light"
+            android:text="@string/test_complete"
+            android:textColor="@android:color/background_light"
+            android:textSize="@dimen/bottom_bar_font_size" />
 
         <TextView
             android:id="@+id/txtCountdown"

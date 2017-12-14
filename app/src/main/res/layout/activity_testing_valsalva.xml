@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorMainBackground"
     android:foregroundGravity="bottom"
+    android:keepScreenOn="true"
     android:gravity="center_horizontal"
     android:orientation="vertical">
 
@@ -34,17 +35,17 @@
                 android:id="@+id/testPressureGraph"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:paddingBottom="30dp"
-                android:paddingLeft="30dp"
-                android:paddingRight="120dp"
-                android:paddingTop="30dp"/>
+                android:paddingLeft="0dp"
+                android:paddingRight="0dp"
+                android:paddingTop="30dp" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:orientation="vertical">
 
                 <ImageView
@@ -52,9 +53,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="40dp"
-                    android:src="@drawable/countdown10sec_dim"/>
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:src="@drawable/countdown10sec_dim" />
 
                 <TextView
                     android:id="@+id/txtTimeRemaining"
@@ -66,7 +67,7 @@
                     android:paddingRight="30dp"
                     android:text="@string/time_remaining"
                     android:textColor="@color/colorPatientEntryNormalValue"
-                    android:textSize="@dimen/time_remaining_font_size"/>
+                    android:textSize="@dimen/time_remaining_font_size" />
             </LinearLayout>
 
         </LinearLayout>

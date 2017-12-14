@@ -23,14 +23,19 @@ import android.widget.TextView;
 import com.vixiar.indicor.BuildConfig;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
+import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
+import com.vixiar.indicor.Upload_Interface.UploadServiceInterface;
+
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity extends Activity implements CustomDialogInterface
 {
     private final String TAG = this.getClass().getSimpleName();
 
-    //This is required for Android 6.0 (Marshmallow)
+    // These are local request code so you know when the result callback happens, which request it was from
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
+    private static final int PERMISSION_REQUEST_STORAGE = 2;
 
     // this is a request code that is used if BLE isn't turned on...
     // it tells the response m_deviceCheckHandler to start the data collection intent if the user enables ble
@@ -43,6 +48,9 @@ public class MainActivity extends Activity implements CustomDialogInterface
     private static final int DLG_ID_LOCATION_ACCESS_PRE = 3;
     private static final int DLG_ID_LOCATION_ACCESS_NOT_ENABLED = 4;
     private static final int DLG_ID_BLE_NOT_ENABLED_PRE = 5;
+    private static final int DLG_ID_STORAGE_NOT_ENABLED_PRE = 6;
+    private static final int DLG_ID_STORAGE_NOT_ENABLED = 7;
+
 
     Handler m_deviceCheckHandler = new Handler();
     final Runnable m_deviceCheckRunnable = new Runnable()
@@ -95,11 +103,9 @@ public class MainActivity extends Activity implements CustomDialogInterface
         v = (TextView) findViewById(R.id.tagLineLbl);
         v.setTypeface(robotoTypeface);
 
-        // FULL SCREEN (add if FS is desired)
-        /*
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        */
+        //UploadServiceInterface.getInstance().initialize(this);
+        //UploadServiceInterface.getInstance().ConnectToIndicor();
+
         // wait a couple seconds then check the device for the proper configuration and settings
         m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);
     }
@@ -115,6 +121,15 @@ public class MainActivity extends Activity implements CustomDialogInterface
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
                     Log.d(TAG, "Coarse location permission granted");
+                    if(!doesAppHaveStoragePermission())
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                                getString(R.string.dlg_title_storage_access_pre),
+                                getString(R.string.dlg_msg_storage_access_pre),
+                                "Ok",
+                                null,
+                                this, DLG_ID_STORAGE_NOT_ENABLED_PRE, this);
+                    }
                 }
                 else
                 {
@@ -126,6 +141,22 @@ public class MainActivity extends Activity implements CustomDialogInterface
                             this, DLG_ID_LOCATION_ACCESS_NOT_ENABLED, this);
                 }
             }
+
+            case PERMISSION_REQUEST_STORAGE:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Log.d(TAG, "Storage location permission granted");
+                }
+                else
+                {
+                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                            getString(R.string.dlg_title_storage_access_no),
+                            getString(R.string.dlg_msg_storage_access_no),
+                            "Ok",
+                            null,
+                            this, DLG_ID_STORAGE_NOT_ENABLED, this);
+                }
+                break;
         }
     }
 
@@ -191,8 +222,21 @@ public class MainActivity extends Activity implements CustomDialogInterface
             {
                 if (isBLEEnabled())
                 {
-                    if (!doesAppHaveLocationPermission())
+                    if (doesAppHaveLocationPermission())
                     {
+                        if(!doesAppHaveStoragePermission())
+                        {
+                            CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                                    getString(R.string.dlg_title_storage_access_pre),
+                                    getString(R.string.dlg_msg_storage_access_pre),
+                                    "Ok",
+                                    null,
+                                    this, DLG_ID_STORAGE_NOT_ENABLED_PRE, this);
+                        }
+                    }
+                    else
+                    {
+
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                                 getString(R.string.dlg_title_location_access_pre),
                                 getString(R.string.dlg_msg_location_access_pre),
@@ -272,6 +316,12 @@ public class MainActivity extends Activity implements CustomDialogInterface
         return (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
     }
 
+    private boolean doesAppHaveStoragePermission()
+    {
+        // Check for location access
+        return (this.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+    }
+
     @Override
     public void onClickPositiveButton(DialogInterface dialog, int dialogID)
     {
@@ -281,6 +331,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
             case DLG_ID_NO_BLE:
             case DLG_ID_BLE_NOT_ENABLED:
             case DLG_ID_LOCATION_ACCESS_NOT_ENABLED:
+            case DLG_ID_STORAGE_NOT_ENABLED:
                 finish();
                 System.exit(0);
                 break;
@@ -292,6 +343,10 @@ public class MainActivity extends Activity implements CustomDialogInterface
             case DLG_ID_BLE_NOT_ENABLED_PRE:
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_START_CONNECTION_BLE);
+                break;
+
+            case DLG_ID_STORAGE_NOT_ENABLED_PRE:
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_STORAGE);
                 break;
         }
     }

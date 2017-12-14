@@ -35,8 +35,6 @@ import static android.content.Context.BIND_AUTO_CREATE;
 
 public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogInterface
 {
-    // TODO: (1) Implement a state machine to do all the connection stuff, read initial values, and start notifications
-
     // make this a singleton class
     private static IndicorBLEServiceInterface ourInstance = new IndicorBLEServiceInterface();
 
@@ -67,6 +65,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     };
     private int m_batteryLevel;
 
+    private String m_handheldFirmwareRevision;
+
     private ArrayList<ScanResult> m_ScanList = new ArrayList<ScanResult>()
     {
     };
@@ -82,6 +82,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private final int DLG_ID_AUTHENTICATION_ERROR = 0;
     private final int DLG_ID_NO_PAIRED_DEVICE = 1;
     private final int DLG_ID_NO_HANDHELDS = 2;
+    private final int DLG_ID_CONNECTION_ERROR = 3;
 
     private enum Connection_State
     {
@@ -108,13 +109,15 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         EVT_BATTERY_READ,
         EVT_NOTIFICATION_WRITTEN,
         EVT_DISCONNECTED,
-        EVT_AUTHENTICATION_ERROR
+        EVT_AUTHENTICATION_ERROR,
+        EVT_CONNECTiON_ERROR
     }
 
     // list of errors
     public static final int ERROR_NO_DEVICES_FOUND = 1;
     public static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
-    public static final int AUTHENTICATION_ERROR = 3;
+    public static final int ERROR_AUTHENTICATION = 3;
+    public static final int ERROR_CONNECTION_ERROR = 4;
 
     // Offsets to data in characteristics
     private final static int BATTERY_LEVEL_PCT_INDEX = 0;
@@ -360,7 +363,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         {
             case DLG_ID_AUTHENTICATION_ERROR:
                 m_connectionDialog.cancel();
-                m_CallbackInterface.iError(AUTHENTICATION_ERROR);
+                m_CallbackInterface.iError(ERROR_AUTHENTICATION);
                 break;
 
             case DLG_ID_NO_PAIRED_DEVICE:
@@ -371,6 +374,11 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case DLG_ID_NO_HANDHELDS:
                 m_connectionDialog.cancel();
                 m_CallbackInterface.iError(ERROR_NO_DEVICES_FOUND);
+                break;
+
+            case DLG_ID_CONNECTION_ERROR:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(ERROR_CONNECTION_ERROR);
                 break;
         }
     }
@@ -405,6 +413,9 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             }
             else if (arg1.hasExtra(IndicorBLEService.REVISION_INFO_RECEIVED))
             {
+                byte x[] = arg1.getByteArrayExtra(IndicorBLEService.REVISION_INFO_RECEIVED);
+                m_handheldFirmwareRevision = x[1] + "." + x[2] + "." + x[3] + "." + x[4];
+                PatientInfo.getInstance().set_firmwareRevision(m_handheldFirmwareRevision);
                 ConnectionStateMachine(Connection_Event.EVT_REVISION_READ);
             }
             else if (arg1.hasExtra(IndicorBLEService.NOTIFICATION_WRITTEN))
@@ -432,11 +443,22 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                         null,
                         m_Context, DLG_ID_AUTHENTICATION_ERROR, IndicorBLEServiceInterface.this);
             }
+            else if (arg1.hasExtra(IndicorBLEService.CONNECTION_ERROR))
+            {
+                ConnectionStateMachine(Connection_Event.EVT_CONNECTiON_ERROR);
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                        m_Context.getString(R.string.dlg_title_connection_problem),
+                        m_Context.getString(R.string.dlg_msg_connection_problem),
+                        "Ok",
+                        null,
+                        m_Context, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+            }
             else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
             {
                 byte x[] = arg1.getByteArrayExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED);
                 m_batteryLevel = x[BATTERY_LEVEL_PCT_INDEX];
                 m_CallbackInterface.iBatteryLevelRead(m_batteryLevel);
+                Log.i(TAG, "Battery = " + m_batteryLevel);
                 ConnectionStateMachine(Connection_Event.EVT_BATTERY_READ);
             }
         }

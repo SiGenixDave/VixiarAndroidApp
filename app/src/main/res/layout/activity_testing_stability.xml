@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorMainBackground"
     android:foregroundGravity="bottom"
+    android:keepScreenOn="true"
     android:gravity="center_horizontal"
     android:orientation="vertical">
 
@@ -17,45 +18,61 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/bottomBar"
+        android:layout_below="@+id/topBar"
         android:layout_centerInParent="false"
         android:layout_centerVertical="true"
         android:orientation="vertical"
-        android:paddingBottom="30dp"
-        android:paddingTop="30dp">
+        android:paddingBottom="40dp"
+        android:paddingTop="40dp">
 
         <ProgressBar
             android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
+            style="@style/ProgressBarStyleVixiar"
             android:layout_width="match_parent"
-            android:layout_height="150dp"
+            android:layout_height="0dp"
             android:layout_below="@+id/topBar"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="30dp"
-            android:layout_marginTop="30dp"
-            android:indeterminateTint="@color/colorBottomBar"/>
+            android:layout_weight="3"
+            android:indeterminateTint="@color/colorBottomBar" />
 
         <TextView
             android:id="@+id/txtAcquiringSignal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginBottom="30dp"
+            android:layout_marginTop="30dp"
+            android:layout_weight="2"
             android:gravity="center_vertical|center_horizontal"
             android:text="@string/acquiring_signal"
             android:textColor="@color/colorBottomBar"
-            android:textSize="@dimen/acquiring_signal_font_size"/>
+            android:textSize="@dimen/acquiring_signal_font_size" />
+
+        <TextView
+            android:id="@+id/lblHeartRate"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="40dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:textColor="@color/colorBottomBar"
+            android:textSize="30sp" />
 
         <com.jjoe64.graphview.GraphView
             android:id="@+id/PPGStabilityGraph"
             android:layout_width="match_parent"
-            android:layout_height="450dp"
+            android:layout_height="0dp"
             android:layout_gravity="center"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="30dp"
-            android:layout_marginTop="60dp"/>
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginTop="0dp"
+            android:layout_weight="5" />
 
 
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/bottomBar"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_alignParentBottom="true"
@@ -76,7 +93,7 @@
             android:fontFamily="@font/roboto_light"
             android:gravity="center_horizontal"
             android:textColor="@android:color/background_light"
-            android:textSize="@dimen/bottom_bar_font_size"/>
+            android:textSize="@dimen/bottom_bar_font_size" />
 
     </LinearLayout>
 
