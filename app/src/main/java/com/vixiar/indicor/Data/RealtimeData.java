@@ -65,11 +65,13 @@ public class RealtimeData
             PPG_PressureSample pd = new PPG_PressureSample(ppg_value, pressure_value);
             m_rawData.add(pd);
 
-            PeakValleyDetect.getInstance().AddToDataArray(ppg_value);
-
             // filter the sample and store it in the filtered array
             firFilter.PutSample(PPGFIRFilterData, ppg_value);
-            pd = new PPG_PressureSample((int) firFilter.GetOutput(PPGFIRFilterData), pressure_value);
+            int ppgFiltered = (int) firFilter.GetOutput(PPGFIRFilterData);
+
+            PeakValleyDetect.getInstance().AddToDataArray(ppgFiltered);
+            pd = new PPG_PressureSample(ppgFiltered, pressure_value);
+
             m_filteredData.add(pd);
         }
 
