@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 
 /**
  * Created by Dave on 7/12/2017.
@@ -47,6 +48,31 @@ public class PatientInfo
     private double[] m_aCalcEndPAR = new double[NUM_TESTS];
     private double[] m_aCalcMinHR = new double[NUM_TESTS];
     private double[] m_aCalcLVEDP = new double[NUM_TESTS];
+
+    public void ClearAllPatientData()
+    {
+        m_patientId = "";
+        m_systolicBloodPressure = 0;
+        m_diastolicBloodPressure = 0;
+        m_height_Inches = 0;
+        m_weight_lbs = 0;
+        m_age_years = 0;
+        m_firmwareVersion = "";
+        m_testDate = "";
+        m_gender = "";
+        m_notes = "";
+        Arrays.fill(m_aCalcEndPA, 0.0);
+        Arrays.fill(m_aCalcEndPAR, 0.0);
+        Arrays.fill(m_aCalcHRAvgRest, 0.0);
+        Arrays.fill(m_aCalcHRAvgVM,0.0);
+        Arrays.fill(m_aCalcLVEDP, 0.0);
+        Arrays.fill(m_aCalcMinHR, 0.0);
+        Arrays.fill(m_aCalcMinPA, 0.0);
+        Arrays.fill(m_aCalcMinPAR, 0.0);
+        Arrays.fill(m_aCalcPAAvgRest, 0.0);
+        Arrays.fill(m_aCalcPAAvgVM, 0.0);
+        rtd.ClearAllData();
+    }
 
     public void set_applicationVersion(String m_applicationVersion)
     {
@@ -239,7 +265,7 @@ public class PatientInfo
         {
             FileOutputStream fos = new FileOutputStream(file);
             PrintWriter pw = new PrintWriter(fos);
-            WriteContents(pw);
+            WriteCSVContents(pw);
             pw.flush();
             pw.close();
             fos.close();
@@ -260,7 +286,7 @@ public class PatientInfo
         return true;
     }
 
-    private boolean WriteContents(PrintWriter writer)
+    private boolean WriteCSVContents(PrintWriter writer)
     {
         writer.println("Test date time:, " + m_testDate);
         writer.println("Application version:, " + BuildConfig.VERSION_NAME);
@@ -307,9 +333,9 @@ public class PatientInfo
 
         // print all of markers
         writer.println("Marker index, Type start=0 end=1 error=2");
-        for (int i = 0; i < rtd.m_markers.size(); i++)
+        for (int i = 0; i < rtd.GetDataMarkers().size(); i++)
         {
-            writer.println(rtd.m_markers.get(i).dataIndex + ", " + rtd.m_markers.get(i).type);
+            writer.println(rtd.GetDataMarkers().get(i).dataIndex + ", " + rtd.GetDataMarkers().get(i).type);
         }
 
 
@@ -318,7 +344,7 @@ public class PatientInfo
         writer.println("Time (sec.), PPG, Pressure (mmHg)");
         for (int i = 0; i < rtd.GetFilteredData().size(); i++)
         {
-            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " +  FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
             t += 0.02;
         }
 
