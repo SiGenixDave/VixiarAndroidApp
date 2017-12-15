@@ -20,20 +20,10 @@ public class RealtimeData
 {
     private ArrayList<PPG_PressureSample> m_rawData = new ArrayList<PPG_PressureSample>();
     private ArrayList<PPG_PressureSample> m_filteredData = new ArrayList<PPG_PressureSample>();
-    public ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
+    private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
     private PPG_FIRFilterData PPGFIRFilterData = new PPG_FIRFilterData();
     private FIRFilter firFilter = new FIRFilter();
     private Boolean enableHeartRateValidation = false;
-
-    // filtering constants
-    private final double SAMPLE_RATE = 50.0;
-    private final double CUTOFF_FREQ = 5.0;
-
-    private final double RC = 1.0 / (CUTOFF_FREQ * 2 * 3.14159);
-    private final double dt = 1.0 / SAMPLE_RATE;
-    private final double alpha = dt / (RC + dt);
-
-    private double m_lastFilterOutput = 0.0;
 
     public RealtimeData()
     {
@@ -158,19 +148,16 @@ public class RealtimeData
         return m_filteredData;
     }
 
-    public void ClearAllSamples()
+    public void ClearAllData()
     {
         m_rawData.clear();
+        m_filteredData.clear();
+        m_markers.clear();
         PeakValleyDetect.getInstance().ResetAlgorithm();
     }
 
-    private double FilterSample(int newSample)
+    public ArrayList<RealtimeDataMarker> GetMarkers()
     {
-        double currentFilterOutput;
-
-        currentFilterOutput = m_lastFilterOutput + (alpha * (newSample - m_lastFilterOutput));
-        m_lastFilterOutput = currentFilterOutput;
-
-        return currentFilterOutput;
+        return m_markers;
     }
 }
