@@ -736,6 +736,7 @@ public class PatInfoActivity extends Activity
             @Override
             public void onClick(View view)
             {
+                PatientInfo.getInstance().getRealtimeData().ClearAllData();
                 Intent intent = new Intent(PatInfoActivity.this, TestingActivity.class);
                 startActivity(intent);
             }
