@@ -210,6 +210,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
 
     public void onStartClick(View view)
     {
+        PatientInfo.getInstance().ClearAllPatientData();
         Intent intent = new Intent(this, PatInfoActivity.class);
         startActivity(intent);
     }
