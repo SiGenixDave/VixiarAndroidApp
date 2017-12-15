@@ -561,6 +561,7 @@ public class PatInfoActivity extends Activity
             {
                 if (hasFocus)
                 {
+                    showKeyBoard(v);
                     txtNotes.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                 }
                 else
@@ -744,6 +745,8 @@ public class PatInfoActivity extends Activity
             @Override
             public void onClick(View view)
             {
+                // clear all of the realtime data
+                PatientInfo.getInstance().getRealtimeData().ClearAllData();
                 Intent intent = new Intent(PatInfoActivity.this, PracticeActivity.class);
                 startActivity(intent);
             }
