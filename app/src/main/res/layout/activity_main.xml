@@ -59,6 +59,7 @@
                 android:layout_width="@dimen/main_screen_icon_size"
                 android:layout_height="@dimen/main_screen_icon_size"
                 android:background="@null"
+                android:onClick="onStartClick"
                 android:scaleType="fitXY"
                 android:src="@drawable/start_button"
                 android:visibility="visible" />
@@ -68,6 +69,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/roboto_light"
+                android:onClick="onStartClick"
                 android:paddingStart="50dp"
                 android:text="@string/starttest"
                 android:textSize="@dimen/main_screen_label_size" />
