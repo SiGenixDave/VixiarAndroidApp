@@ -11,6 +11,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -171,6 +172,7 @@ public class PatInfoActivity extends Activity
             {
                 if (hasFocus)
                 {
+                    showKeyBoard(v);
                     txtPatientID.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                 }
                 else
@@ -204,6 +206,7 @@ public class PatInfoActivity extends Activity
             {
                 if (hasFocus)
                 {
+                    hideKeyBoard(v);
                     txtAge.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                     npAge.setVisibility(View.VISIBLE);
                     txtAge.setText(String.valueOf(npAge.getValue()));
@@ -256,6 +259,8 @@ public class PatInfoActivity extends Activity
             {
                 if (hasFocus)
                 {
+
+                    hideKeyBoard(v);
                     txtHeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                     npHeightFeet.setVisibility(View.VISIBLE);
                     npHeightInches.setVisibility(View.VISIBLE);
@@ -319,6 +324,7 @@ public class PatInfoActivity extends Activity
             {
                 if (hasFocus)
                 {
+                    hideKeyBoard(v);
                     txtWeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                     npWeight.setVisibility(View.VISIBLE);
                     int nWeight = npWeight.getValue();
@@ -375,10 +381,12 @@ public class PatInfoActivity extends Activity
             {
                 if (hasFocus)
                 {
+                    showKeyBoard(v);
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                 }
                 else
                 {
+                    hideKeyBoard(v);
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     try
                     {
@@ -424,10 +432,12 @@ public class PatInfoActivity extends Activity
             {
                 if (hasFocus)
                 {
+                    showKeyBoard(v);
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
                 }
                 else
                 {
+                    hideKeyBoard(v);
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     try
                     {
@@ -476,6 +486,7 @@ public class PatInfoActivity extends Activity
                 }
                 else
                 {
+                    hideKeyBoard(v);
                     txtGender.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     npGender.setVisibility(View.GONE);
                 }
@@ -555,6 +566,7 @@ public class PatInfoActivity extends Activity
                 }
                 else
                 {
+                    hideKeyBoard(v);
                     txtNotes.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     hideKeyBoard(v);
                 }
@@ -580,6 +592,15 @@ public class PatInfoActivity extends Activity
         {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        }
+    }
+
+    public void showKeyBoard(View v)
+    {
+        if (v != null)
+        {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
         }
     }
 
