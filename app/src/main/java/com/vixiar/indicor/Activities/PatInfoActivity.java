@@ -50,7 +50,6 @@ public class PatInfoActivity extends Activity
     private String[] genderString;
 
 
-    //TODO: go through the controls on the patient info screen and make sure the focus is being handled properly. Also make sure the keyboard is being hidden when it needs to.
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
