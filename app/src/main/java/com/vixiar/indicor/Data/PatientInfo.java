@@ -349,19 +349,19 @@ public class PatientInfo
         }
 
         // print all of the detected peaks
-        writer.println("Peak positions (sec)");
+        writer.println("Peak positions (sec), PPG");
         for (int i = 0; i < PeakValleyDetect.getInstance().getPeaksIndexes().size(); i++)
         {
             double pos = PeakValleyDetect.getInstance().getPeaksIndexes().get(i) * 0.02;
-            writer.println(FormatDoubleForPrint(pos));
+            writer.println(FormatDoubleForPrint(pos) + ", " + rtd.GetFilteredData().get(PeakValleyDetect.getInstance().getPeaksIndexes().get(i)).m_PPG);
         }
 
         // print all of the detected valleys
-        writer.println("Valley positions (sec)");
+        writer.println("Valley positions (sec), PPG");
         for (int i = 0; i < PeakValleyDetect.getInstance().getValleysIndexes().size(); i++)
         {
             double pos = PeakValleyDetect.getInstance().getValleysIndexes().get(i) * 0.02;
-            writer.println(FormatDoubleForPrint(pos));
+            writer.println(FormatDoubleForPrint(pos) + ", " + rtd.GetFilteredData().get(PeakValleyDetect.getInstance().getValleysIndexes().get(i)).m_PPG);
         }
 
         return true;
