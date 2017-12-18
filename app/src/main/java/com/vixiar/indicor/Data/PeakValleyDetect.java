@@ -95,6 +95,16 @@ public class PeakValleyDetect {
         this.m_DetectFirst = detectFirst;
     }
 
+    public List<Integer> getPeaksIndexes()
+    {
+        return m_PeaksIndexes;
+    }
+
+    public List<Integer> getValleysIndexes()
+    {
+        return m_ValleysIndexes;
+    }
+
     // //////////////////////////////////////////////////////////////////////////
     // / Getters
     // //////////////////////////////////////////////////////////////////////////

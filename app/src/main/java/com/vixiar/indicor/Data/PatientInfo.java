@@ -332,20 +332,36 @@ public class PatientInfo
                 FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
 
         // print all of markers
-        writer.println("Marker index, Type start=0 end=1 error=2");
+        writer.println("Marker index, Type");
         for (int i = 0; i < rtd.GetDataMarkers().size(); i++)
         {
             writer.println(rtd.GetDataMarkers().get(i).dataIndex + ", " + rtd.GetDataMarkers().get(i).type);
         }
-
 
         // print all of the realtime data
         double t = 0.0;
         writer.println("Time (sec.), PPG, Pressure (mmHg)");
         for (int i = 0; i < rtd.GetFilteredData().size(); i++)
         {
-            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " +
+                    FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
             t += 0.02;
+        }
+
+        // print all of the detected peaks
+        writer.println("Peak positions (sec)");
+        for (int i = 0; i < PeakValleyDetect.getInstance().getPeaksIndexes().size(); i++)
+        {
+            double pos = PeakValleyDetect.getInstance().getPeaksIndexes().get(i) * 0.02;
+            writer.println(FormatDoubleForPrint(pos));
+        }
+
+        // print all of the detected valleys
+        writer.println("Valley positions (sec)");
+        for (int i = 0; i < PeakValleyDetect.getInstance().getValleysIndexes().size(); i++)
+        {
+            double pos = PeakValleyDetect.getInstance().getValleysIndexes().get(i) * 0.02;
+            writer.println(FormatDoubleForPrint(pos));
         }
 
         return true;
