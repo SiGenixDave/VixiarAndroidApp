@@ -118,7 +118,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     // Timing constants
     private final int PPGCAL_TIME_MS = 5000;
     private final int STABILIZING_TIMEOUT_MS = 20000;
-    private final int STABILIZING_TIMEOUT_MS = 20000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
