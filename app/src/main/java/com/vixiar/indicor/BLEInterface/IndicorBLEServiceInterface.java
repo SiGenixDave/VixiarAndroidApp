@@ -18,6 +18,7 @@ import android.view.View;
 
 import com.vixiar.indicor.Activities.GenericTimer;
 import com.vixiar.indicor.Activities.TimerCallback;
+import com.vixiar.indicor.Application.NavigatorApplication;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
@@ -49,12 +50,11 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private MyBLEMessageReceiver m_BLEMessageReceiver;
 
     // Variables to manage BLE connection
-    private static boolean m_ConnectState;
-    private static boolean m_ServiceConnected;
+    private static boolean m_bServiceConnected;
     private static IndicorBLEService m_VixiarHHBLEService;
 
     private AlertDialog m_connectionDialog;
-    private Context m_Context;
+    private Context m_ActivityContext;
     private Handler m_handler = new Handler();
     private final Runnable m_ScanTimeoutRunnable = new Runnable()
     {
@@ -73,10 +73,13 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
     // be careful this ID doesn't overlap others
     private final static int BATTERY_READ_TIMER_ID = 3;
+    private final static int CONNECTION_TIMEOUT_TIMER_ID = 10;
     private final static int BATTERY_READ_TIME_MS = 30000;
     private GenericTimer m_updateBatteryTimer = new GenericTimer(BATTERY_READ_TIMER_ID);
+    private GenericTimer m_timeoutTimer = new GenericTimer(CONNECTION_TIMEOUT_TIMER_ID);
 
     private final int SCAN_TIME_MS = 5000;
+    private final int CCONNECTION_TIMEOUT_MS = SCAN_TIME_MS + 3000;
 
     // dialog ids handled here
     private final int DLG_ID_AUTHENTICATION_ERROR = 0;
@@ -84,7 +87,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private final int DLG_ID_NO_HANDHELDS = 2;
     private final int DLG_ID_CONNECTION_ERROR = 3;
 
-    private enum Connection_State
+    private enum IndicorConnection_State
     {
         STATE_NOT_CONNECTED,
         STATE_SCANNING,
@@ -97,7 +100,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         STATE_OPERATIONAL
     }
 
-    private Connection_State m_ConnectionState;
+    private IndicorConnection_State m_IndicorConnectionState;
 
     private enum Connection_Event
     {
@@ -140,7 +143,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         {
             Log.i(TAG, "onServiceConnected");
             m_VixiarHHBLEService = ((IndicorBLEService.LocalBinder) service).getService();
-            m_ServiceConnected = true;
+            m_bServiceConnected = true;
             m_VixiarHHBLEService.Initialize();
             ConnectionStateMachine(Connection_Event.EVT_SERVICE_CONNECTED);
         }
@@ -150,43 +153,74 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         {
             Log.i(TAG, "onServiceDisconnected");
             m_VixiarHHBLEService = null;
+            m_bServiceConnected = false;
         }
     };
 
     public void initialize(Context c, IndicorBLEServiceInterfaceCallbacks dataInterface)
     {
-        m_Context = c;
+        m_ActivityContext = c;
         m_CallbackInterface = dataInterface;
     }
 
     public void ConnectToIndicor()
     {
-        // Start the BLE Service
-        Log.i(TAG, "Starting BLE Service");
-        Intent gattServiceIntent = new Intent(m_Context, IndicorBLEService.class);
-        m_Context.bindService(gattServiceIntent, m_ServiceConnection, BIND_AUTO_CREATE);
-        Log.i(TAG, "BLE Service Started");
+        if (m_bServiceConnected)
+        {
+            Log.i(TAG, "Service already connected");
 
-        // create a receiver to receive messages from the service
-        m_BLEMessageReceiver = new MyBLEMessageReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(IndicorBLEService.MESSAGE_ID);
-        m_Context.registerReceiver(m_BLEMessageReceiver, intentFilter);
+            // if the service is still connected to the handheld, everything is fine
+            if (m_VixiarHHBLEService.AmConnectedToIndicor())
+            {
+                Log.i(TAG, "Service thinks indicor is conneted");
+                m_CallbackInterface.iFullyConnected();
+            }
+            // otherwise, start the connection process
+            else
+            {
+                Log.i(TAG, "Service thinks indicor is not connected");
+                m_IndicorConnectionState = IndicorConnection_State.STATE_NOT_CONNECTED;
+                ConnectionStateMachine(Connection_Event.EVT_SERVICE_CONNECTED);
+            }
+        }
+        else
+        {
+            Log.i(TAG, "Service is not connected");
 
-        m_ConnectionState = Connection_State.STATE_NOT_CONNECTED;
+            // Start the BLE Service
+            Intent gattServiceIntent = new Intent(NavigatorApplication.getAppContext(), IndicorBLEService.class);
+            NavigatorApplication.getAppContext().bindService(gattServiceIntent, m_ServiceConnection, BIND_AUTO_CREATE);
+
+            // create a receiver to receive messages from the service
+            m_BLEMessageReceiver = new MyBLEMessageReceiver();
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(IndicorBLEService.MESSAGE_ID);
+            NavigatorApplication.getAppContext().registerReceiver(m_BLEMessageReceiver, intentFilter);
+
+            m_IndicorConnectionState = IndicorConnection_State.STATE_NOT_CONNECTED;
+        }
+    }
+
+    public void DisconnectFromService()
+    {
+        m_VixiarHHBLEService = null;
+        m_bServiceConnected = false;
+
+        // unbind the service, and unregister the intent receiver
+        NavigatorApplication.getAppContext().unbindService(m_ServiceConnection);
+        NavigatorApplication.getAppContext().unregisterReceiver(m_BLEMessageReceiver);
+        m_IndicorConnectionState = IndicorConnection_State.STATE_NOT_CONNECTED;
+
+        // stop the battery read timer if it's running
+        m_updateBatteryTimer.Cancel();
+        m_timeoutTimer.Cancel();
     }
 
     public void DisconnectFromIndicor()
     {
         m_VixiarHHBLEService.DisconnectFromIndicor();
 
-        // unbind the service, and unregister the intent receiver
-        m_Context.unbindService(m_ServiceConnection);
-        m_Context.unregisterReceiver(m_BLEMessageReceiver);
-        m_ConnectionState = Connection_State.STATE_NOT_CONNECTED;
-
-        // stop the battery read timer if it's running
-        m_updateBatteryTimer.Cancel();
+        DisconnectFromService();
     }
 
     public int GetLastReadBatteryLevel()
@@ -196,10 +230,10 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
     private void DisplayConnectingDialog()
     {
-        LayoutInflater inflater = (LayoutInflater) m_Context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) m_ActivityContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View alertLayout = inflater.inflate(R.layout.connection_dialog, null);
 
-        AlertDialog.Builder alert = new AlertDialog.Builder(m_Context);
+        AlertDialog.Builder alert = new AlertDialog.Builder(m_ActivityContext);
         alert.setTitle("Connecting");
         // this is set the view from XML inside AlertDialog
         alert.setView(alertLayout);
@@ -211,7 +245,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
     private void ConnectionStateMachine(Connection_Event event)
     {
-        switch (m_ConnectionState)
+        switch (m_IndicorConnectionState)
         {
             case STATE_NOT_CONNECTED:
                 if (event == Connection_Event.EVT_SERVICE_CONNECTED)
@@ -229,7 +263,10 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
                     Log.i(TAG, "STATE_SCANNING");
 
-                    m_ConnectionState = Connection_State.STATE_SCANNING;
+                    m_IndicorConnectionState = IndicorConnection_State.STATE_SCANNING;
+
+                    // start the connection timeout timer
+                    m_timeoutTimer.Start(this, CCONNECTION_TIMEOUT_MS, true );
                 }
                 break;
 
@@ -245,11 +282,11 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     if (device == null)
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
-                                m_Context.getString(R.string.dlg_title_no_handhelds),
-                                m_Context.getString(R.string.dlg_msg_no_handhelds),
+                                m_ActivityContext.getString(R.string.dlg_title_no_handhelds),
+                                m_ActivityContext.getString(R.string.dlg_msg_no_handhelds),
                                 "Ok",
                                 null,
-                                m_Context, DLG_ID_NO_HANDHELDS, IndicorBLEServiceInterface.this);
+                                m_ActivityContext, DLG_ID_NO_HANDHELDS, IndicorBLEServiceInterface.this);
                     }
                     else
                     {
@@ -258,18 +295,18 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                         {
                             // if it's bonded, try to connect to it
                             m_VixiarHHBLEService.ConnectToSpecificIndicor(device);
-                            m_ConnectionState = Connection_State.STATE_WAITING_TO_CONNECT;
+                            m_IndicorConnectionState = IndicorConnection_State.STATE_WAITING_TO_CONNECT;
 
                             Log.i(TAG, "STATE_WAITING_TO_CONNECT");
                         }
                         else
                         {
                             CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
-                                    m_Context.getString(R.string.dlg_title_no_paired_devices),
-                                    m_Context.getString(R.string.dlg_msg_no_paired_devices),
+                                    m_ActivityContext.getString(R.string.dlg_title_no_paired_devices),
+                                    m_ActivityContext.getString(R.string.dlg_msg_no_paired_devices),
                                     "Ok",
                                     null,
-                                    m_Context, DLG_ID_NO_PAIRED_DEVICE, this);
+                                    m_ActivityContext, DLG_ID_NO_PAIRED_DEVICE, this);
                         }
                     }
                 }
@@ -279,7 +316,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 if (event == Connection_Event.EVT_BLE_CONNECTED)
                 {
                     m_VixiarHHBLEService.DiscoverIndicorServices();
-                    m_ConnectionState = Connection_State.STATE_SERVICES_READ;
+                    m_IndicorConnectionState = IndicorConnection_State.STATE_SERVICES_READ;
 
                     Log.i(TAG, "STATE_SERVICES_READ");
                 }
@@ -290,7 +327,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 {
                     // get the battery level
                     m_VixiarHHBLEService.ReadRevisionInformation();
-                    m_ConnectionState = Connection_State.STATE_REQUESTED_REVISION;
+                    m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_REVISION;
                     Log.i(TAG, "STATE_REQUESTED_REVISION");
                 }
                 break;
@@ -301,7 +338,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     m_VixiarHHBLEService.ReadBatteryLevel();
                     // start the timer to update the battery level
                     m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
-                    m_ConnectionState = Connection_State.STATE_REQUESTED_BATTERY;
+                    m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_BATTERY;
                     Log.i(TAG, "STATE_REQUESTED_BATTERY");
                 }
                 break;
@@ -310,7 +347,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 if (event == Connection_Event.EVT_BATTERY_READ)
                 {
                     m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
-                    m_ConnectionState = Connection_State.STATE_REQUESTED_RT_NOTIFICATION;
+                    m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
                     Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
                 }
                 break;
@@ -319,7 +356,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
                 {
                     m_VixiarHHBLEService.SubscribeToConnectionNotification(true);
-                    m_ConnectionState = Connection_State.STATE_REQUESTED_CONNECTION_NOTIFICATION;
+                    m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_CONNECTION_NOTIFICATION;
                     Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
                 }
                 break;
@@ -327,13 +364,16 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case STATE_REQUESTED_CONNECTION_NOTIFICATION:
                 if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
                 {
-                    m_ConnectionState = Connection_State.STATE_OPERATIONAL;
+                    m_IndicorConnectionState = IndicorConnection_State.STATE_OPERATIONAL;
 
                     // remove the dialog showing the connection progress bar
                     if (m_connectionDialog != null)
                     {
                         m_connectionDialog.cancel();
                     }
+
+                    // stop the connection timeout timer
+                    m_timeoutTimer.Cancel();
 
                     // tell the activity the everything is good to go
                     m_CallbackInterface.iFullyConnected();
@@ -352,7 +392,23 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     {
         if (id == BATTERY_READ_TIMER_ID)
         {
-            m_VixiarHHBLEService.ReadBatteryLevel();
+            if (m_VixiarHHBLEService != null)
+            {
+                m_VixiarHHBLEService.ReadBatteryLevel();
+            }
+        }
+        if (id == CONNECTION_TIMEOUT_TIMER_ID)
+        {
+            CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                    m_ActivityContext.getString(R.string.dlg_title_connection_problem),
+                    m_ActivityContext.getString(R.string.dlg_msg_connection_problem),
+                    "Ok",
+                    null,
+                    m_ActivityContext, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+
+            m_VixiarHHBLEService.DisconnectFromIndicor();
+
+            m_CallbackInterface.iError(ERROR_CONNECTION_ERROR);
         }
     }
 
@@ -437,21 +493,30 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             {
                 ConnectionStateMachine(Connection_Event.EVT_AUTHENTICATION_ERROR);
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
-                        m_Context.getString(R.string.dlg_title_authentication_error),
-                        m_Context.getString(R.string.dlg_msg_authentication_error),
+                        m_ActivityContext.getString(R.string.dlg_title_authentication_error),
+                        m_ActivityContext.getString(R.string.dlg_msg_authentication_error),
                         "Ok",
                         null,
-                        m_Context, DLG_ID_AUTHENTICATION_ERROR, IndicorBLEServiceInterface.this);
+                        m_ActivityContext, DLG_ID_AUTHENTICATION_ERROR, IndicorBLEServiceInterface.this);
             }
             else if (arg1.hasExtra(IndicorBLEService.CONNECTION_ERROR))
             {
                 ConnectionStateMachine(Connection_Event.EVT_CONNECTiON_ERROR);
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
-                        m_Context.getString(R.string.dlg_title_connection_problem),
-                        m_Context.getString(R.string.dlg_msg_connection_problem),
+                        m_ActivityContext.getString(R.string.dlg_title_connection_problem),
+                        m_ActivityContext.getString(R.string.dlg_msg_connection_problem),
                         "Ok",
                         null,
-                        m_Context, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+                        m_ActivityContext, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+            }
+            else if (arg1.hasExtra(IndicorBLEService.TIMEOUT_MSG))
+            {
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                        m_ActivityContext.getString(R.string.dlg_title_handheld_timeout),
+                        m_ActivityContext.getString(R.string.dlg_msg_handheld_timeout),
+                        "Ok",
+                        null,
+                        m_ActivityContext, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
             }
             else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
             {
