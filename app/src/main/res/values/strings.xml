@@ -149,4 +149,9 @@
     <string name="dlg_msg_storage_access_no">Since storage access has not been granted, this app
         will not be able to communicate with handheld devices.</string>
 
+    <string name="dlg_title_handheld_timeout">LOST CONNECTION</string>
+    <string name="dlg_msg_handheld_timeout">It appears that the connection to the handheld device
+        has been lost.  Make sure the power remains on and the device stays within range of the
+        tablet.</string>
+
 </resources>
