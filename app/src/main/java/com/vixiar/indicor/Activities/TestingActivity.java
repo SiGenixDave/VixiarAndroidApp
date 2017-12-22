@@ -34,6 +34,8 @@ import java.util.Locale;
 public class TestingActivity extends Activity implements IndicorBLEServiceInterfaceCallbacks, TimerCallback, CustomDialogInterface
 {
     //TODO: Pressing back button when this activity started from practice causes practice activity to start, should go directly to pat info or main
+    //TODO: need to allow a bit of tolerance in the pressure checks in the first part of tha Valsalva maneuver
+    //TODO: End of rest and start of valsalva are not the same point...end of rest is when pressure starts up
 
     private final String TAG = this.getClass().getSimpleName();
 
