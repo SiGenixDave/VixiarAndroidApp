@@ -24,6 +24,9 @@ import android.os.IBinder;
 import android.os.ParcelUuid;
 import android.util.Log;
 
+import com.vixiar.indicor.Activities.GenericTimer;
+import com.vixiar.indicor.Activities.TimerCallback;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +39,7 @@ import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 // This is required to allow us to use the lollipop and later APIs
-public class IndicorBLEService extends Service
+public class IndicorBLEService extends Service implements TimerCallback
 {
     private final static String TAG = IndicorBLEService.class.getSimpleName();
 
@@ -53,6 +56,7 @@ public class IndicorBLEService extends Service
     final static String BATTERY_LEVEL_RECEIVED = "batt_level";
     final static String REVISION_INFO_RECEIVED = "revision_info";
     final static String EXTERNAL_CONNECTION_INFO_RECEIVED = "external_connection_info";
+    final static String TIMEOUT_MSG = "ble_timeout";
 
     // UUIDs for the service and characteristics that the Vixiar service uses
     private final static String RT_DATA_CHARACTERISTIC_UUID = "7991CF92-D18B-40EB-AFBE-4EECB596C677";
@@ -82,6 +86,11 @@ public class IndicorBLEService extends Service
 
     private final IBinder m_Binder = new LocalBinder();
 
+    private static GenericTimer m_timeoutTimer;
+    private final int TIMEOUT_TIMER_ID = 0;
+    private final int RT_DATA_TIMEOUT_MS = 2000;
+
+    private boolean m_bConnectedToIndicor = false;
 
     // ----------------------------- BLE Callbacks -----------------------------------------------
     // this is the callback used for older devices
@@ -133,11 +142,13 @@ public class IndicorBLEService extends Service
             if (newState == BluetoothProfile.STATE_CONNECTED)
             {
                 Log.i(TAG, "onConnectionStateChange CONNECTED");
+                m_bConnectedToIndicor = true;
                 SendDataToConnectionClass(CONNECTED, null);
             }
             else if (newState == BluetoothProfile.STATE_DISCONNECTED)
             {
                 Log.i(TAG, "onConnectionStateChange DISCONNECTED");
+                m_bConnectedToIndicor = false;
                 SendDataToConnectionClass(DISCONNECTED, null);
             }
         }
@@ -222,6 +233,7 @@ public class IndicorBLEService extends Service
             if (uuid.toUpperCase().equals(RT_DATA_CHARACTERISTIC_UUID))
             {
                 SendDataToConnectionClass(RT_DATA_RECEIVED, characteristic.getValue());
+                m_timeoutTimer.Reset();
             }
             else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID))
             {
@@ -242,10 +254,23 @@ public class IndicorBLEService extends Service
     @Override
     public boolean onUnbind(Intent intent)
     {
-        // The BLE Close method is called when we unbind the service to free up the resources.
         Log.i(TAG, "onUnbind");
-        Close();
         return super.onUnbind(intent);
+    }
+
+    @Override
+    public void TimerExpired(int id)
+    {
+        if (id == TIMEOUT_TIMER_ID)
+        {
+            m_bConnectedToIndicor = false;
+            if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
+            {
+                m_BluetoothGatt.disconnect();
+                m_BluetoothGatt = null;
+            }
+            SendDataToConnectionClass(TIMEOUT_MSG, null);
+        }
     }
 
     public class LocalBinder extends Binder
@@ -261,8 +286,6 @@ public class IndicorBLEService extends Service
 
     public boolean Initialize()
     {
-        // For API level 18 and above, get a reference to BluetoothAdapter through
-        // BluetoothManager.
         if (m_BluetoothManager == null)
         {
             m_BluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -277,6 +300,10 @@ public class IndicorBLEService extends Service
         {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
+        }
+        if (m_timeoutTimer == null)
+        {
+            m_timeoutTimer = new GenericTimer(TIMEOUT_TIMER_ID);
         }
         return true;
     }
@@ -375,6 +402,10 @@ public class IndicorBLEService extends Service
             // Write Notification value to the device
             m_RTNotificationCCCD.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             m_BluetoothGatt.writeDescriptor(m_RTNotificationCCCD);
+
+
+            // start the timeout timer
+            m_timeoutTimer.Start(this, RT_DATA_TIMEOUT_MS, true);
         }
     }
 
@@ -431,6 +462,11 @@ public class IndicorBLEService extends Service
         {
             m_LEScanner.stopScan(m_ScanCallback);
         }
+    }
+
+    public boolean AmConnectedToIndicor()
+    {
+        return m_bConnectedToIndicor;
     }
 
     // ------------------ Utility functions -----------------------------------------------------
