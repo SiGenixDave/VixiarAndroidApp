@@ -288,7 +288,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onBackPressed()
     {
-        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+        IndicorBLEServiceInterface.getInstance().DisconnectFromService();
 
         // stop any running timers
         m_periodicTimer.Cancel();
