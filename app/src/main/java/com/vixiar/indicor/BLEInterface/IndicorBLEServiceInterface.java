@@ -79,7 +79,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private GenericTimer m_timeoutTimer = new GenericTimer(CONNECTION_TIMEOUT_TIMER_ID);
 
     private final int SCAN_TIME_MS = 5000;
-    private final int CCONNECTION_TIMEOUT_MS = SCAN_TIME_MS + 3000;
+    private final int CCONNECTION_TIMEOUT_MS = SCAN_TIME_MS + 10000;
 
     // dialog ids handled here
     private final int DLG_ID_AUTHENTICATION_ERROR = 0;
@@ -218,9 +218,10 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
     public void DisconnectFromIndicor()
     {
-        m_VixiarHHBLEService.DisconnectFromIndicor();
-
-        DisconnectFromService();
+        if (m_VixiarHHBLEService != null)
+        {
+            m_VixiarHHBLEService.DisconnectFromIndicor();
+        }
     }
 
     public int GetLastReadBatteryLevel()
@@ -281,6 +282,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     // see if there are any devices
                     if (device == null)
                     {
+                        m_timeoutTimer.Cancel();
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                                 m_ActivityContext.getString(R.string.dlg_title_no_handhelds),
                                 m_ActivityContext.getString(R.string.dlg_msg_no_handhelds),
@@ -405,10 +407,6 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     "Ok",
                     null,
                     m_ActivityContext, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
-
-            m_VixiarHHBLEService.DisconnectFromIndicor();
-
-            m_CallbackInterface.iError(ERROR_CONNECTION_ERROR);
         }
     }
 
@@ -435,6 +433,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case DLG_ID_CONNECTION_ERROR:
                 m_connectionDialog.cancel();
                 m_CallbackInterface.iError(ERROR_CONNECTION_ERROR);
+                m_VixiarHHBLEService.DisconnectFromIndicor();
                 break;
         }
     }

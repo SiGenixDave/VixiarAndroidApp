@@ -263,6 +263,7 @@ public class IndicorBLEService extends Service implements TimerCallback
     {
         if (id == TIMEOUT_TIMER_ID)
         {
+            Log.i(TAG, "Timeout expired");
             m_bConnectedToIndicor = false;
             if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
             {
@@ -377,17 +378,17 @@ public class IndicorBLEService extends Service implements TimerCallback
         if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
         {
             m_BluetoothGatt.disconnect();
-        }
-    }
+            m_BluetoothGatt.close();
+            m_BluetoothGatt = null;
 
-    public void Close()
-    {
-        if (m_BluetoothGatt == null)
-        {
-            return;
+            m_bConnectedToIndicor = false;
+
+            if (m_timeoutTimer != null)
+            {
+                m_timeoutTimer.Cancel();
+                Log.i(TAG, "Timeout timer cancelled");
+            }
         }
-        m_BluetoothGatt.close();
-        m_BluetoothGatt = null;
     }
 
     public void SubscribeToRealtimeDataNotification(boolean value)
