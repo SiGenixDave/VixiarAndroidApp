@@ -131,7 +131,8 @@
         range until the test is complete.</string>
 
     <string name="dlg_title_cancel_test">CANCEL TEST?</string>
-    <string name="dlg_msg_cancel_test">Patient information will not be saved.</string>
+    <string name="dlg_msg_cancel_test">Do you want to cancel this test.  If you do, patient
+        information will not be saved.</string>
 
     <string name="dlg_title_hr_not_stable">HEART RATE NOT STABLE</string>
     <string name="dlg_msg_hr_not_stable">The heart rate did not become stable within the allotted
