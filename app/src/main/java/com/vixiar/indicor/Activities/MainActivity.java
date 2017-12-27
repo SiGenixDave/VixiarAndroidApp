@@ -107,7 +107,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
         UploadServiceInterface.getInstance().ConnectToIndicor();
 
         // wait a couple seconds then check the device for the proper configuration and settings
-        //m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);
+        m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);
     }
 
     //This method required for Android 6.0 (Marshmallow)

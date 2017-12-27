@@ -56,7 +56,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
             public void onClick(View view)
             {
                 PatientInfo.getInstance().getRealtimeData().ClearAllData();
-                IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+                IndicorBLEServiceInterface.getInstance().DisconnectFromService();
                 Intent intent = new Intent(PracticeActivity.this, TestingActivity.class);
                 startActivity(intent);
             }
