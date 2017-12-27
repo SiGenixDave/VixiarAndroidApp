@@ -17,6 +17,7 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+import com.vixiar.indicor.Application.NavigatorApplication;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
@@ -26,6 +27,7 @@ import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.Data.RealtimeDataMarker;
 import com.vixiar.indicor.Graphics.TestPressureGraph;
 import com.vixiar.indicor.R;
+import com.vixiar.indicor.Upload_Interface.UploadServiceInterface;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -866,7 +868,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
+                        // save the csv file
+
+                        // pause the upload service so it doesn't try to send a partial file
+                        UploadServiceInterface.getInstance().PauseUpload();
                         PatientInfo.getInstance().SaveCSVFile(this);
+                        UploadServiceInterface.getInstance().ResumeUpload();
                         SwitchToResultsView();
                         SetResultsViewComplete();
                         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
