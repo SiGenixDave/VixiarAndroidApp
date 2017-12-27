@@ -41,18 +41,19 @@ public class UploadService extends Service
 {
     private final static String TAG = UploadService.class.getSimpleName();
     private DbxClientV2 client;
-    private String uploadDirectory;
+    private String m_DropboxUploadDirectory;
+    private boolean m_Paused = false;
 
     // the ID used to filter messages from the service to the handler class
     final static String MESSAGE_ID = "vixiarUploadService";
     private static final String ACCESS_TOKEN = "mVQKNQQQJKIAAAAAAAAAt6b3VKaHqzX2sJc7eoay-g0ThGikD5vx6_U-7MfAjs_h";
 
-    private final IBinder mBinder = new LocalBinder();
+    private final IBinder m_Binder = new LocalBinder();
 
     @Override
     public IBinder onBind(Intent intent)
     {
-        return mBinder;
+        return m_Binder;
     }
 
     @Override
@@ -83,7 +84,8 @@ public class UploadService extends Service
                 try
                 {
                     startDropbox();
-                } catch (DbxException | IOException e)
+                }
+                catch (DbxException | IOException e)
                 {
                     Log.e("Dropbox exception: ", e.getMessage());
                 }
@@ -105,7 +107,7 @@ public class UploadService extends Service
             client = new DbxClientV2(config, ACCESS_TOKEN);
             Log.i(TAG, "Connected to dropbox:" + client.users().getCurrentAccount().getName().getDisplayName());
 
-            uploadDirectory = getDropboxDirectory();
+            m_DropboxUploadDirectory = getDropboxDirectory();
         }
         else
         {
@@ -121,8 +123,12 @@ public class UploadService extends Service
             {
                 try
                 {
-                    checkFileUploads();
-                } catch (DbxException | IOException e)
+                    if (!m_Paused)
+                    {
+                        checkForFilesToUpload();
+                    }
+                }
+                catch (DbxException | IOException e)
                 {
                     Log.e(TAG, "Error uploading files");
                 }
@@ -133,7 +139,7 @@ public class UploadService extends Service
     /*
         Check if there are files to upload, if so, call uploadFilesToDropbox
      */
-    public void checkFileUploads() throws DbxException, IOException
+    public void checkForFilesToUpload() throws DbxException, IOException
     {
         if (isNetworkAvailable())
         {
@@ -146,7 +152,7 @@ public class UploadService extends Service
                 for (String filePath : filePaths)
                 {
                     Log.i(TAG, "uploading file " + filePath);
-                    uploadFileToDropbox(filePath, uploadDirectory);
+                    uploadFileToDropbox(filePath, m_DropboxUploadDirectory);
                 }
             }
             else
@@ -192,11 +198,14 @@ public class UploadService extends Service
         ArrayList<String> inFiles = new ArrayList<String>();
         File[] fileNames = path.listFiles();
 
-        for (File file : fileNames)
+        if (fileNames != null)
         {
-            if (file.getName().toLowerCase().endsWith(".csv"))
+            for (File file : fileNames)
             {
-                inFiles.add(file.getAbsolutePath());
+                if (file.getName().toLowerCase().endsWith(".csv"))
+                {
+                    inFiles.add(file.getAbsolutePath());
+                }
             }
         }
         return inFiles;
@@ -217,7 +226,8 @@ public class UploadService extends Service
             outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
             outputStream.write(string.getBytes());
             outputStream.close();
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             e.printStackTrace();
         }
@@ -245,10 +255,8 @@ public class UploadService extends Service
         if (isNetworkAvailable())
         {
             Log.i(TAG, "Have internet connection.");
-            Log.i(TAG, uploadPath);
             File file = new File(filePath);
             Log.i(TAG, "Path: " + file.getCanonicalPath());
-            Log.i(TAG, "Name: " + file.getName());
             try (InputStream in = new FileInputStream(filePath))
             {
                 FileMetadata metadata = client.files().uploadBuilder(uploadPath + "/" + file.getName())
@@ -257,7 +265,8 @@ public class UploadService extends Service
                 //TODO add content hash check here with metadata.getContentHash(), if successful then delete file
                 boolean deleted = file.delete();
 
-            } catch (DbxException | IOException | InterruptedException e)
+            }
+            catch (DbxException | IOException | InterruptedException e)
             {
                 Log.e(TAG, "Error uploading file");
             }
@@ -269,4 +278,16 @@ public class UploadService extends Service
             Log.i(TAG, "No internet connection.");
         }
     }
+
+    public void Pause()
+    {
+        m_Paused = true;
+    }
+
+    public void Resume()
+    {
+        m_Paused = false;
+    }
+
+
 }

@@ -42,7 +42,7 @@ public class UploadServiceInterface
     }
 
     private final static String TAG = "IND";
-   // private MyBLEMessageReceiver myBLEMessageReceiver;
+    // private MyBLEMessageReceiver myBLEMessageReceiver;
 
     // Variables to manage BLE connection
     private static boolean mServiceConnected;
@@ -63,6 +63,18 @@ public class UploadServiceInterface
     public void initialize(Context c)
     {
         mContext = c;
+
+        // Start the Upload Service
+        Log.i(TAG, "Starting Upload Service");
+        Intent gattServiceIntent = new Intent(mContext, UploadService.class);
+        mContext.bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        Log.i(TAG, "Upload Started");
+
+        // create a receiver to receive messages from the service
+        //myBLEMessageReceiver = new MyBLEMessageReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(UploadService.MESSAGE_ID);
+        //mContext.registerReceiver(myBLEMessageReceiver, intentFilter);
     }
 
     /**
@@ -77,9 +89,11 @@ public class UploadServiceInterface
             Log.i(TAG, "Starting Upload Service");
             mVixiarUploadService = ((UploadService.LocalBinder) service).getService();
             mServiceConnected = true;
-            try {
+            try
+            {
                 mVixiarUploadService.Initialize();
-            } catch(DbxException e) {
+            } catch (DbxException e)
+            {
                 System.out.println(e.getMessage());
             }
             Log.i(TAG, "Upload Service Started");
@@ -93,19 +107,13 @@ public class UploadServiceInterface
         }
     };
 
-    public void ConnectToIndicor()
+    public void PauseUpload()
     {
-        // Start the BLE Service
-        Log.i(TAG, "Starting Upload Service");
-        Intent gattServiceIntent = new Intent(mContext, UploadService.class);
-        mContext.bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-        Log.i(TAG, "Upload Started");
-
-        // create a receiver to receive messages from the service
-        //myBLEMessageReceiver = new MyBLEMessageReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(UploadService.MESSAGE_ID);
-        //mContext.registerReceiver(myBLEMessageReceiver, intentFilter);
+        mVixiarUploadService.Pause();
     }
 
+    public void ResumeUpload()
+    {
+        mVixiarUploadService.Resume();
+    }
 }
