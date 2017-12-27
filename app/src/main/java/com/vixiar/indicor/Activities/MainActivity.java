@@ -20,6 +20,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.vixiar.indicor.BLEInterface.IndicorBLEService;
+import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BuildConfig;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
@@ -105,6 +107,9 @@ public class MainActivity extends Activity implements CustomDialogInterface
 
         // wait a couple seconds then check the device for the proper configuration and settings
         m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);
+
+        // make sure we're disconnected from the device
+        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
     }
 
     //This method required for Android 6.0 (Marshmallow)
