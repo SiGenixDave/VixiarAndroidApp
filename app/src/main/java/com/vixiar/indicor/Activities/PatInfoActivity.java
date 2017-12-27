@@ -2,6 +2,7 @@ package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -19,13 +20,16 @@ import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
+import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
+import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
+import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class PatInfoActivity extends Activity
+public class PatInfoActivity extends Activity implements CustomDialogInterface
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
@@ -46,9 +50,9 @@ public class PatInfoActivity extends Activity
     private NumberPicker npWeight;
     private NumberPicker npGender;
 
-    private String[] monthString;
     private String[] genderString;
 
+    private final int DLG_ID_CANCEL = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -157,6 +161,12 @@ public class PatInfoActivity extends Activity
         et.requestFocus();
     }
 
+    @Override
+    public void onBackPressed()
+    {
+        HandleRequestToCancel();
+    }
+
     private void initializeControls()
     {
         // TODO: theres some kind of divide by 0 when this runs
@@ -217,8 +227,6 @@ public class PatInfoActivity extends Activity
                 }
             }
         });
-
-        monthString = getResources().getStringArray(R.array.months_array);
 
         NumberPicker.OnValueChangeListener ageChangeListener = new NumberPicker.OnValueChangeListener()
         {
@@ -727,8 +735,7 @@ public class PatInfoActivity extends Activity
             @Override
             public void onClick(View view)
             {
-                Intent main = new Intent(PatInfoActivity.this, MainActivity.class);
-                navigateUpTo(main);
+                HandleRequestToCancel();
             }
         });
         HeaderFooterControl.getInstance().SetNextButtonListner(this, new View.OnClickListener()
@@ -753,5 +760,36 @@ public class PatInfoActivity extends Activity
             }
         });
     }
+
+    public void HandleRequestToCancel()
+    {
+        // display the test cancel dialog
+        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                getString(R.string.dlg_title_cancel_test),
+                getString(R.string.dlg_msg_cancel_test),
+                "Yes",
+                "No", PatInfoActivity.this , DLG_ID_CANCEL, PatInfoActivity.this);
+    }
+
+    @Override
+    public void onClickPositiveButton(DialogInterface dialog, int dialogID)
+    {
+        switch (dialogID)
+        {
+            case DLG_ID_CANCEL:
+                Intent main = new Intent(PatInfoActivity.this, MainActivity.class);
+                navigateUpTo(main);
+                break;
+        }
+    }
+
+    @Override
+    public void onClickNegativeButton(DialogInterface dialog, int dialogID)
+    {
+        switch (dialogID)
+        {
+        }
+    }
+
 }
 
