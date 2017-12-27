@@ -483,8 +483,6 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             }
             if (arg1.hasExtra(IndicorBLEService.RT_DATA_RECEIVED))
             {
-                // TODO: Need to implement some sort of timeout here that would be able to detect the loss of connection to the handheld faster than the BLE timeout of 20 seconds
-
                 PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
                 m_CallbackInterface.iRealtimeDataNotification();
             }

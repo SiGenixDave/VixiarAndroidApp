@@ -270,7 +270,6 @@ public class UploadService extends Service
             {
                 Log.e(TAG, "Error uploading file");
             }
-
         }
         else
         {

@@ -292,7 +292,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onBackPressed()
     {
-        if (m_testingState != Testing_State.VALSALVA && m_testingState != Testing_State.VALSALVA_WAIT_FOR_PRESSURE)
+        if (m_testingState != Testing_State.VALSALVA &&
+                m_testingState != Testing_State.VALSALVA_WAIT_FOR_PRESSURE &&
+                m_testingState != Testing_State.LOADING_RESULTS)
         {
             // stop any running timers
             m_periodicTimer.Cancel();
@@ -814,7 +816,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case VALSALVA:
-                // TODO: disable the Android back button during valsalva
                 //Log.i(TAG, "In state: VALSALVA");
                 if (event == Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE)
                 {

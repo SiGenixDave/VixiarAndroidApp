@@ -56,7 +56,6 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
             public void onClick(View view)
             {
                 PatientInfo.getInstance().getRealtimeData().ClearAllData();
-                IndicorBLEServiceInterface.getInstance().DisconnectFromService();
                 Intent intent = new Intent(PracticeActivity.this, TestingActivity.class);
                 startActivity(intent);
             }
@@ -73,7 +72,6 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
     public void onBackPressed()
     {
         super.onBackPressed();
-        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
     }
 
     public void iBatteryLevelRead(int level)
