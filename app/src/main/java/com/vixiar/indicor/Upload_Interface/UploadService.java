@@ -261,7 +261,7 @@ public class UploadService extends Service
             {
                 FileMetadata metadata = client.files().uploadBuilder(uploadPath + "/" + file.getName())
                         .uploadAndFinish(in);
-                Thread.sleep(1000);
+                Thread.sleep(10000);
                 //TODO add content hash check here with metadata.getContentHash(), if successful then delete file
                 boolean deleted = file.delete();
 
