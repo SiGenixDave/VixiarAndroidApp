@@ -292,15 +292,16 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onBackPressed()
     {
-        IndicorBLEServiceInterface.getInstance().DisconnectFromService();
+        if (m_testingState != Testing_State.VALSALVA && m_testingState != Testing_State.VALSALVA_WAIT_FOR_PRESSURE)
+        {
+            // stop any running timers
+            m_periodicTimer.Cancel();
+            m_oneShotTimer.Cancel();
+            m_ppgcalTimer.Cancel();
 
-        // stop any running timers
-        m_periodicTimer.Cancel();
-        m_oneShotTimer.Cancel();
-        m_ppgcalTimer.Cancel();
-
-        Log.i(TAG, "OnBackPressed");
-        super.onBackPressed();
+            Log.i(TAG, "OnBackPressed");
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -324,6 +325,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
 
                 break;
+
+            case DLG_ID_CANCEL_TEST:
+                PatientInfo.getInstance().ClearAllPatientData();
+                Intent intent = new Intent(TestingActivity.this, MainActivity.class);
+                startActivity(intent);
+                break;
         }
     }
 
@@ -340,7 +347,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
                 break;
-
         }
     }
 
@@ -382,7 +388,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_chartPPG.getGridLabelRenderer().setVerticalLabelsAlign(Paint.Align.LEFT);
         m_chartPPG.getGridLabelRenderer().setLabelVerticalWidth(100);
         m_chartPPG.getGridLabelRenderer().setTextSize(20);
-        m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.HORIZONTAL);
+        m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
         m_chartPPG.getGridLabelRenderer().setHorizontalLabelsAngle(90);
         m_chartPPG.getGridLabelRenderer().reloadStyles();
 
@@ -390,41 +396,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitle(getResources().getString(R.string.time));
         m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
         m_chartPPG.getGridLabelRenderer().setVerticalAxisTitleTextSize(30f);
+        m_chartPPG.getGridLabelRenderer().setVerticalLabelsVisible(false);
 
         m_chartPPG.getViewport().setXAxisBoundsManual(true);
         m_chartPPG.getViewport().setMinX(0);
         m_chartPPG.getViewport().setMaxX(5);
-
-        if (false)
-        {
-            m_chartPPG.getViewport().setXAxisBoundsManual(true);
-            m_chartPPG.getViewport().setMinX(0);
-            m_chartPPG.getViewport().setMaxX(5);
-
-            m_chartPPG.getViewport().setYAxisBoundsManual(true);
-            m_chartPPG.getViewport().setMinY(40000);
-            m_chartPPG.getViewport().setMaxY(30000);
-
-            m_chartPPG.getGridLabelRenderer().setVerticalAxisTitle(getResources().getString(R.string.pulse_amplitude));
-            m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitle(getResources().getString(R.string.time));
-            m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
-            m_chartPPG.getGridLabelRenderer().setVerticalAxisTitleTextSize(30f);
-
-            m_chartPPG.getGridLabelRenderer().setHighlightZeroLines(false);
-            m_chartPPG.getGridLabelRenderer().setVerticalLabelsAlign(Paint.Align.LEFT);
-            m_chartPPG.getGridLabelRenderer().setLabelVerticalWidth(100);
-            m_chartPPG.getGridLabelRenderer().setTextSize(20);
-            m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.HORIZONTAL);
-            m_chartPPG.getGridLabelRenderer().setHorizontalLabelsAngle(120);
-            m_chartPPG.getGridLabelRenderer().reloadStyles();
-
-            //DAS m_chartPPG.getGridLabelRenderer().setHorizontalLabelsVisible(false);
-            //DAS m_chartPPG.getGridLabelRenderer().setVerticalLabelsVisible(false);
-            m_chartPPG.getGridLabelRenderer().setNumVerticalLabels(0);
-            m_chartPPG.getGridLabelRenderer().setNumHorizontalLabels(0);
-            m_chartPPG.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
-            m_chartPPG.getViewport().setDrawBorder(true);
-        }
 
         CreateChartSeriesAddToChart();
     }
@@ -574,16 +550,37 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_imgHomeButton.setVisibility(View.INVISIBLE);
 
         HeaderFooterControl.getInstance().SetTypefaces(this);
-        HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.end_test));
         HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.results));
-        HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
+
+        if (m_nTestNumber < 3)
         {
-            @Override
-            public void onClick(View view)
+            HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.end_test));
+            HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
             {
-                // TODO: Handle end test button from results screen
-            }
-        });
+                @Override
+                public void onClick(View view)
+                {
+                    // display the test cancel dialog
+                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                            getString(R.string.dlg_title_cancel_test),
+                            getString(R.string.dlg_msg_cancel_test),
+                            "Yes",
+                            "No", TestingActivity.this , DLG_ID_CANCEL_TEST, TestingActivity.this);
+                }
+            });
+        }
+        else
+        {
+            // there's no button once all three tests are completed
+            HeaderFooterControl.getInstance().SetNavButtonTitle(this, "");
+            HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View view)
+                {
+                }
+            });
+        }
 
         // if the battery level was read at least once since the connection, display it, otherwise
         // it will be updated when it comes back from the handheld
@@ -658,6 +655,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             @Override
             public void onClick(View view)
             {
+                PatientInfo.getInstance().ClearAllPatientData();
                 Intent intent = new Intent(TestingActivity.this, MainActivity.class);
                 startActivity(intent);
             }
@@ -868,11 +866,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
-                        // save the csv file
-
                         // pause the upload service so it doesn't try to send a partial file
                         UploadServiceInterface.getInstance().PauseUpload();
+
+                        // save the csv file
                         PatientInfo.getInstance().SaveCSVFile(this);
+
                         UploadServiceInterface.getInstance().ResumeUpload();
                         SwitchToResultsView();
                         SetResultsViewComplete();
