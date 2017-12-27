@@ -103,8 +103,8 @@ public class MainActivity extends Activity implements CustomDialogInterface
         v = (TextView) findViewById(R.id.tagLineLbl);
         v.setTypeface(robotoTypeface);
 
-        //UploadServiceInterface.getInstance().initialize(this);
-        //UploadServiceInterface.getInstance().ConnectToIndicor();
+        UploadServiceInterface.getInstance().initialize(this);
+        UploadServiceInterface.getInstance().ConnectToIndicor();
 
         // wait a couple seconds then check the device for the proper configuration and settings
         //m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);

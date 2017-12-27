@@ -42,8 +42,6 @@ public class UploadService extends Service
     private final static String TAG = UploadService.class.getSimpleName();
     private DbxClientV2 client;
     private String uploadDirectory;
-    private boolean haveOfflineFiles = false;
-    private boolean haveFilesToUpload = false;
 
     // the ID used to filter messages from the service to the handler class
     final static String MESSAGE_ID = "vixiarUploadService";
@@ -95,11 +93,6 @@ public class UploadService extends Service
         return true;
     }
 
-    public void setHaveFilesToUpload()
-    {
-        haveFilesToUpload = true;
-    }
-
     /*
         Method to start dropbox api. Right now creates a test file and uploads to dropbox
      */
@@ -144,12 +137,12 @@ public class UploadService extends Service
     {
         if (isNetworkAvailable())
         {
-            if (haveFilesToUpload || haveOfflineFiles)
+            String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+            File baseDirFile = new File(baseDir);
+            List<String> filePaths = getFilesInPath(baseDirFile);
+            if (filePaths.size() != 0)
             {
                 Log.i(TAG, "Have files to upload.");
-                // Do a test upload
-                Log.i(TAG, "parent dir: " + android.os.Environment.getExternalStorageDirectory().getAbsolutePath());
-                List<String> filePaths = getFilePaths(getApplicationContext().getFilesDir(), getApplicationContext().getFilesDir().getParent());
                 for (String filePath : filePaths)
                 {
                     Log.i(TAG, "uploading file " + filePath);
@@ -194,10 +187,10 @@ public class UploadService extends Service
     /*
         Get list of file paths to upload
      */
-    public List<String> getFilePaths(File parentDir, String pathToParentDir)
+    public List<String> getFilesInPath(File path)
     {
         ArrayList<String> inFiles = new ArrayList<String>();
-        File[] fileNames = parentDir.listFiles();
+        File[] fileNames = path.listFiles();
 
         for (File file : fileNames)
         {
@@ -206,7 +199,6 @@ public class UploadService extends Service
                 inFiles.add(file.getAbsolutePath());
             }
         }
-
         return inFiles;
     }
 
@@ -264,13 +256,10 @@ public class UploadService extends Service
                 Thread.sleep(1000);
                 //TODO add content hash check here with metadata.getContentHash(), if successful then delete file
                 boolean deleted = file.delete();
-                haveFilesToUpload = false;
-                haveOfflineFiles = false;
 
             } catch (DbxException | IOException | InterruptedException e)
             {
                 Log.e(TAG, "Error uploading file");
-                haveOfflineFiles = true;
             }
 
         }
@@ -278,7 +267,6 @@ public class UploadService extends Service
         {
             //set a service flag to false
             Log.i(TAG, "No internet connection.");
-            haveOfflineFiles = true;
         }
     }
 }
