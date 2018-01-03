@@ -1,4 +1,3 @@
-
 package com.vixiar.indicor.Data;
 
 import java.util.*;
@@ -79,6 +78,10 @@ public class PeakValleyDetect {
     // Used to determine how much data to process during an execution cycle.
     // Compared against the size of the local data list
     private int m_LocalDataIndex;
+
+    private int m_thresholdAdjustPeakCount;
+    private long m_highestPeak;
+    private long m_lowestValley;
 
     // //////////////////////////////////////////////////////////////////////////
     // / Setters
@@ -267,6 +270,10 @@ public class PeakValleyDetect {
         m_ValleysIndexes.clear();
         m_Data.clear();
         m_LocalData.clear();
+
+        m_thresholdAdjustPeakCount = 0;
+        m_highestPeak = 0;
+        m_lowestValley = 65535;
     }
 
     // Called to copy all data from the list and then start processing it
@@ -322,6 +329,19 @@ public class PeakValleyDetect {
                         // preparation for detecting a valley
                         m_Valley = m_LocalData.get(m_PeakIndex);
                         m_ValleyIndex = m_PeakIndex;
+
+                        if (m_Peak > m_highestPeak)
+                        {
+                            m_highestPeak = m_Peak;
+                            //System.out.println("Max at " + m_Peak);
+                        }
+                        if (m_thresholdAdjustPeakCount++ > 4)
+                        {
+                            AdjustHysteresis();
+                            m_thresholdAdjustPeakCount = 0;
+                            m_highestPeak = 0;
+                            m_lowestValley = 65535;
+                        }
                     }
                     break;
 
@@ -343,6 +363,12 @@ public class PeakValleyDetect {
                         // preparation for detecting a valley
                         m_Peak = m_LocalData.get(m_ValleyIndex);
                         m_PeakIndex = m_ValleyIndex;
+
+                        if (m_Valley < m_lowestValley)
+                        {
+                            m_lowestValley = m_Valley;
+                            //System.out.println("Min at " + m_Valley);
+                        }
                     }
                     break;
 
@@ -351,6 +377,20 @@ public class PeakValleyDetect {
             m_LocalDataIndex++;
         }
 
+    }
+
+    int m_lastMaxPeakToPeak = 0;
+    double filterconst = 0.8;
+
+    private void AdjustHysteresis()
+    {
+        int maxPeakToPeak = (int)(m_highestPeak - m_lowestValley);
+        int filteredPToP = (int)((maxPeakToPeak * (1.0-filterconst)) + (m_lastMaxPeakToPeak * filterconst));
+        m_lastMaxPeakToPeak = maxPeakToPeak;
+
+        //System.out.println("Max p-p = " + maxPeakToPeak);
+        m_DeltaPeak = (int)(filteredPToP * 0.2);
+        m_DeltaValley = m_DeltaPeak;
     }
 
 }

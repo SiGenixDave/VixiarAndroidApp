@@ -121,7 +121,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     // Timing constants
     private final int PPGCAL_TIME_MS = 5000;
-    private final int STABILIZING_TIMEOUT_MS = 20000;
+    private final int STABILIZING_TIMEOUT_MS = 60000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
@@ -394,10 +394,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_chartPPG.getGridLabelRenderer().setHorizontalLabelsAngle(90);
         m_chartPPG.getGridLabelRenderer().reloadStyles();
 
-        m_chartPPG.getGridLabelRenderer().setVerticalAxisTitle(getResources().getString(R.string.pulse_amplitude));
-        m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitle(getResources().getString(R.string.time));
-        m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
-        m_chartPPG.getGridLabelRenderer().setVerticalAxisTitleTextSize(30f);
+        //m_chartPPG.getGridLabelRenderer().setVerticalAxisTitle(getResources().getString(R.string.pulse_amplitude));
+        //m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitle(getResources().getString(R.string.time));
+        //m_chartPPG.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
+        //m_chartPPG.getGridLabelRenderer().setVerticalAxisTitleTextSize(30f);
         m_chartPPG.getGridLabelRenderer().setVerticalLabelsVisible(false);
 
         m_chartPPG.getViewport().setXAxisBoundsManual(true);
@@ -762,12 +762,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    SwitchToTestingView();
-                    InactivateTestingView();
-                    m_testingState = Testing_State.STABLE_5SEC_COUNTDOWN;
-                    m_periodicTimer.Start(this, ONE_SEC, false);
-                    m_nCountdownSecLeft = AFTER_STABLE_DELAY_SECONDS;
-                    UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                            getString(R.string.dlg_title_hr_not_stable),
+                            getString(R.string.dlg_msg_hr_not_stable),
+                            "Try Again",
+                            "End Test",
+                            this, DLG_ID_HR_NOT_STABLE, this);
                 }
                 break;
 
