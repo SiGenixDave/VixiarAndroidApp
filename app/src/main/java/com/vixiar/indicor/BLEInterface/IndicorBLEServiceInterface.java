@@ -78,7 +78,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private final static int CONNECTION_TIMEOUT_TIMER_ID = 10;
     private final static int BATTERY_READ_TIME_MS = 30000;
     private GenericTimer m_updateBatteryTimer = new GenericTimer(BATTERY_READ_TIMER_ID);
-    private GenericTimer m_timeoutTimer = new GenericTimer(CONNECTION_TIMEOUT_TIMER_ID);
+    private GenericTimer m_connectionTimeoutTimer = new GenericTimer(CONNECTION_TIMEOUT_TIMER_ID);
 
     private final int SCAN_TIME_MS = 5000;
     private final int CCONNECTION_TIMEOUT_MS = SCAN_TIME_MS + 10000;
@@ -219,13 +219,15 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
         // stop the battery read timer if it's running
         m_updateBatteryTimer.Cancel();
-        m_timeoutTimer.Cancel();
+        m_connectionTimeoutTimer.Cancel();
     }
 
     public void DisconnectFromIndicor()
     {
         if (m_VixiarHHBLEService != null)
         {
+            m_updateBatteryTimer.Cancel();
+            m_connectionTimeoutTimer.Cancel();
             m_VixiarHHBLEService.DisconnectFromIndicor();
         }
     }
@@ -273,7 +275,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     m_IndicorConnectionState = IndicorConnection_State.STATE_SCANNING;
 
                     // start the connection timeout timer
-                    m_timeoutTimer.Start(this, CCONNECTION_TIMEOUT_MS, true );
+                    m_connectionTimeoutTimer.Start(this, CCONNECTION_TIMEOUT_MS, true);
                 }
                 break;
 
@@ -288,7 +290,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     // see if there are any devices
                     if (device == null)
                     {
-                        m_timeoutTimer.Cancel();
+                        m_connectionTimeoutTimer.Cancel();
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                                 m_ActivityContext.getString(R.string.dlg_title_no_handhelds),
                                 m_ActivityContext.getString(R.string.dlg_msg_no_handhelds),
@@ -373,7 +375,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 {
                     m_VixiarHHBLEService.SubscribeToConnectionNotification(true);
                     m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_CONNECTION_NOTIFICATION;
-                    Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
+                    Log.i(TAG, "STATE_REQUESTED_CONNECTION_NOTIFICATION");
                 }
                 break;
 
@@ -389,7 +391,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     }
 
                     // stop the connection timeout timer
-                    m_timeoutTimer.Cancel();
+                    m_connectionTimeoutTimer.Cancel();
 
                     // tell the activity the everything is good to go
                     m_CallbackInterface.iFullyConnected();
@@ -415,6 +417,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         }
         if (id == CONNECTION_TIMEOUT_TIMER_ID)
         {
+            m_VixiarHHBLEService.DisconnectFromIndicor();
+
             CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                     m_ActivityContext.getString(R.string.dlg_title_connection_problem),
                     m_ActivityContext.getString(R.string.dlg_msg_connection_problem),
@@ -447,7 +451,6 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case DLG_ID_CONNECTION_ERROR:
                 m_connectionDialog.cancel();
                 m_CallbackInterface.iError(ERROR_CONNECTION_ERROR);
-                m_VixiarHHBLEService.DisconnectFromIndicor();
 
             case DLG_ID_SEQUENCE_ERROR:
                 m_connectionDialog.cancel();
@@ -471,7 +474,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             //Log.i(TAG, "onReceive");
             if (arg1.hasExtra(IndicorBLEService.SCAN_RESULT))
             {
-                m_ScanList.add((ScanResult)arg1.getParcelableExtra(IndicorBLEService.SCAN_RESULT));
+                m_ScanList.add((ScanResult) arg1.getParcelableExtra(IndicorBLEService.SCAN_RESULT));
             }
             else if (arg1.hasExtra(IndicorBLEService.CONNECTED))
             {
@@ -504,16 +507,18 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             {
                 // make sure the sequence number is right
                 int receivedSequenceNumber = (arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED)[0] & 0xFF);
+                Log.i(TAG, "Received RT data, seq number= " + receivedSequenceNumber);
                 if (m_expectedRTDataSequnceNumber == 0)
                 {
                     // if the expected count is 0, then this is the first packet, just save the value
-                    m_expectedRTDataSequnceNumber = receivedSequenceNumber + 1;
+                    m_expectedRTDataSequnceNumber = (receivedSequenceNumber + 1) % 256;
                 }
                 else if (receivedSequenceNumber != m_expectedRTDataSequnceNumber)
                 {
+                    CleanupFromConnectionLoss();
                     // the sequence number is wrong
                     Log.e(TAG, "Sequence number in RT data is wrong, expected " + m_expectedRTDataSequnceNumber
-                    + " received " + receivedSequenceNumber);
+                            + " received " + receivedSequenceNumber);
 
                     m_VixiarHHBLEService.DisconnectFromIndicor();
 
@@ -534,11 +539,10 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
                     m_CallbackInterface.iRealtimeDataNotification();
                 }
-
-
             }
             else if (arg1.hasExtra(IndicorBLEService.AUTHENTICATION_ERROR))
             {
+                CleanupFromConnectionLoss();
                 ConnectionStateMachine(Connection_Event.EVT_AUTHENTICATION_ERROR);
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                         m_ActivityContext.getString(R.string.dlg_title_authentication_error),
@@ -549,6 +553,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             }
             else if (arg1.hasExtra(IndicorBLEService.CONNECTION_ERROR))
             {
+                CleanupFromConnectionLoss();
                 ConnectionStateMachine(Connection_Event.EVT_CONNECTiON_ERROR);
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                         m_ActivityContext.getString(R.string.dlg_title_connection_problem),
@@ -557,8 +562,9 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                         null,
                         m_ActivityContext, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
             }
-            else if (arg1.hasExtra(IndicorBLEService.TIMEOUT_MSG))
+            else if (arg1.hasExtra(IndicorBLEService.REALTIME_TIMEOUT_MSG))
             {
+                CleanupFromConnectionLoss();
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                         m_ActivityContext.getString(R.string.dlg_title_handheld_timeout),
                         m_ActivityContext.getString(R.string.dlg_msg_handheld_timeout),
@@ -574,6 +580,18 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 Log.i(TAG, "Battery = " + m_batteryLevel);
                 ConnectionStateMachine(Connection_Event.EVT_BATTERY_READ);
             }
+        }
+    }
+
+    private void CleanupFromConnectionLoss()
+    {
+        if (m_connectionTimeoutTimer != null)
+        {
+            m_connectionTimeoutTimer.Cancel();
+        }
+        if (m_updateBatteryTimer != null)
+        {
+            m_updateBatteryTimer.Cancel();
         }
     }
 

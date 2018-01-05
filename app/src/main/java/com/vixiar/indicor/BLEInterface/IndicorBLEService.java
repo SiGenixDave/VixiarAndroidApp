@@ -56,7 +56,7 @@ public class IndicorBLEService extends Service implements TimerCallback
     final static String BATTERY_LEVEL_RECEIVED = "batt_level";
     final static String REVISION_INFO_RECEIVED = "revision_info";
     final static String EXTERNAL_CONNECTION_INFO_RECEIVED = "external_connection_info";
-    final static String TIMEOUT_MSG = "ble_timeout";
+    final static String REALTIME_TIMEOUT_MSG = "ble_timeout";
 
     // UUIDs for the service and characteristics that the Vixiar service uses
     private final static String RT_DATA_CHARACTERISTIC_UUID = "7991CF92-D18B-40EB-AFBE-4EECB596C677";
@@ -86,7 +86,7 @@ public class IndicorBLEService extends Service implements TimerCallback
 
     private final IBinder m_Binder = new LocalBinder();
 
-    private static GenericTimer m_timeoutTimer;
+    private static GenericTimer m_realTimeDataTimeoutTimer;
     private final int TIMEOUT_TIMER_ID = 0;
     private final int RT_DATA_TIMEOUT_MS = 2000;
 
@@ -232,8 +232,8 @@ public class IndicorBLEService extends Service implements TimerCallback
 
             if (uuid.toUpperCase().equals(RT_DATA_CHARACTERISTIC_UUID))
             {
+                m_realTimeDataTimeoutTimer.Reset();
                 SendDataToConnectionClass(RT_DATA_RECEIVED, characteristic.getValue());
-                m_timeoutTimer.Reset();
             }
             else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID))
             {
@@ -263,19 +263,9 @@ public class IndicorBLEService extends Service implements TimerCallback
     {
         if (id == TIMEOUT_TIMER_ID)
         {
-            // make sure we're still connected, this could be a race condition between disconnecting
-            // and killing the timer
-            if (m_bConnectedToIndicor)
-            {
-                m_bConnectedToIndicor = false;
-                Log.i(TAG, "Timeout expired");
-                if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
-                {
-                    m_BluetoothGatt.disconnect();
-                    m_BluetoothGatt = null;
-                }
-                SendDataToConnectionClass(TIMEOUT_MSG, null);
-            }
+            Log.i(TAG, "Timeout expired");
+            DisconnectFromIndicor();
+            SendDataToConnectionClass(REALTIME_TIMEOUT_MSG, null);
         }
     }
 
@@ -307,9 +297,9 @@ public class IndicorBLEService extends Service implements TimerCallback
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
-        if (m_timeoutTimer == null)
+        if (m_realTimeDataTimeoutTimer == null)
         {
-            m_timeoutTimer = new GenericTimer(TIMEOUT_TIMER_ID);
+            m_realTimeDataTimeoutTimer = new GenericTimer(TIMEOUT_TIMER_ID);
         }
         return true;
     }
@@ -380,17 +370,28 @@ public class IndicorBLEService extends Service implements TimerCallback
 
     public void DisconnectFromIndicor()
     {
+        Log.i(TAG, "DisconnectFromIndicor m_bluetoothAdaptor = " + m_BluetoothAdapter + ", m_bluetoothGatt = " + m_BluetoothGatt);
+
         if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
         {
+            Log.i(TAG, "Killing m_BluetoothGat");
             m_BluetoothGatt.disconnect();
             m_BluetoothGatt.close();
             m_BluetoothGatt = null;
 
+            m_RTDataCharacteristic = null;
+            m_BatteryLevelCharacteristic = null;
+            m_RevisionInfoCharacteristic = null;
+            m_ExternalConnectionsCharacteristic = null;
+            m_PPGDriveCharacteristic = null;
+            m_RTNotificationCCCD = null;
+            m_ExternalConnectionNotificationCCCD = null;
+
             m_bConnectedToIndicor = false;
 
-            if (m_timeoutTimer != null)
+            if (m_realTimeDataTimeoutTimer != null)
             {
-                m_timeoutTimer.Cancel();
+                m_realTimeDataTimeoutTimer.Cancel();
                 Log.i(TAG, "Timeout timer cancelled");
             }
         }
@@ -409,9 +410,8 @@ public class IndicorBLEService extends Service implements TimerCallback
             m_RTNotificationCCCD.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             m_BluetoothGatt.writeDescriptor(m_RTNotificationCCCD);
 
-
             // start the timeout timer
-            m_timeoutTimer.Start(this, RT_DATA_TIMEOUT_MS, true);
+            m_realTimeDataTimeoutTimer.Start(this, RT_DATA_TIMEOUT_MS, true);
         }
     }
 
