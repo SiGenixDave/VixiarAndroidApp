@@ -30,6 +30,7 @@ public class PatientInfo
     private int m_weight_lbs;
     private int m_age_years;
     private String m_applicationVersion;
+    private String m_handheldSerialNumber;
     private String m_firmwareVersion;
     private String m_testDate;
     private String m_gender;
@@ -96,7 +97,7 @@ public class PatientInfo
         }
     }
 
-    public String getM_testDate()
+    public String get_testDate()
     {
         return m_testDate;
     }
@@ -104,6 +105,16 @@ public class PatientInfo
     public void set_testDate(String m_testDate)
     {
         this.m_testDate = m_testDate;
+    }
+
+    public String get_handheldSerialNumber()
+    {
+        return m_handheldSerialNumber;
+    }
+
+    public void set_handheldSerialNumber(String m_handheldSerialNumber)
+    {
+        this.m_handheldSerialNumber = m_handheldSerialNumber;
     }
 
     public static PatientInfo getInstance()
@@ -126,7 +137,7 @@ public class PatientInfo
         return rtd;
     }
 
-    public String getM_patientId()
+    public String get_patientId()
     {
         return m_patientId;
     }
@@ -266,6 +277,7 @@ public class PatientInfo
             FileOutputStream fos = new FileOutputStream(file);
             PrintWriter pw = new PrintWriter(fos);
             WriteCSVContents(pw);
+            file.setWritable(true);
             pw.flush();
             pw.close();
             fos.close();
@@ -290,6 +302,7 @@ public class PatientInfo
     {
         writer.println("Test date time:, " + m_testDate);
         writer.println("Application version:, " + BuildConfig.VERSION_NAME);
+        writer.println("Handheld serial number:," + m_handheldSerialNumber);
         writer.println("Firmware version:, " + m_firmwareVersion);
         writer.println("Subject ID:, " + m_patientId);
         writer.println("Age:, " + m_age_years);

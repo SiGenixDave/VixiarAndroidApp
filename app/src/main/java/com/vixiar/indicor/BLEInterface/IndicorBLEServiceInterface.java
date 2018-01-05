@@ -65,6 +65,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     };
     private int m_batteryLevel;
 
+    private int m_expectedRTDataSequnceNumber;
+
     private String m_handheldFirmwareRevision;
 
     private ArrayList<ScanResult> m_ScanList = new ArrayList<ScanResult>()
@@ -81,11 +83,14 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private final int SCAN_TIME_MS = 5000;
     private final int CCONNECTION_TIMEOUT_MS = SCAN_TIME_MS + 10000;
 
+    private BluetoothDevice m_connectedDevice;
+
     // dialog ids handled here
     private final int DLG_ID_AUTHENTICATION_ERROR = 0;
     private final int DLG_ID_NO_PAIRED_DEVICE = 1;
     private final int DLG_ID_NO_HANDHELDS = 2;
     private final int DLG_ID_CONNECTION_ERROR = 3;
+    private final int DLG_ID_SEQUENCE_ERROR = 4;
 
     private enum IndicorConnection_State
     {
@@ -121,6 +126,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     public static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
     public static final int ERROR_AUTHENTICATION = 3;
     public static final int ERROR_CONNECTION_ERROR = 4;
+    public static final int ERROR_SEQUENCE_ERROR = 4;
 
     // Offsets to data in characteristics
     private final static int BATTERY_LEVEL_PCT_INDEX = 0;
@@ -296,6 +302,10 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                         if (device.getBondState() == BluetoothDevice.BOND_BONDED)
                         {
                             // if it's bonded, try to connect to it
+
+                            // save the device we're trying to connect to
+                            m_connectedDevice = device;
+
                             m_VixiarHHBLEService.ConnectToSpecificIndicor(device);
                             m_IndicorConnectionState = IndicorConnection_State.STATE_WAITING_TO_CONNECT;
 
@@ -319,6 +329,9 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 {
                     m_VixiarHHBLEService.DiscoverIndicorServices();
                     m_IndicorConnectionState = IndicorConnection_State.STATE_SERVICES_READ;
+
+                    // save the device serial number in the patient info
+                    PatientInfo.getInstance().set_handheldSerialNumber(m_connectedDevice.getName());
 
                     Log.i(TAG, "STATE_SERVICES_READ");
                 }
@@ -350,6 +363,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 {
                     m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
                     m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
+                    m_expectedRTDataSequnceNumber = 0;
                     Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
                 }
                 break;
@@ -434,6 +448,11 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 m_connectionDialog.cancel();
                 m_CallbackInterface.iError(ERROR_CONNECTION_ERROR);
                 m_VixiarHHBLEService.DisconnectFromIndicor();
+
+            case DLG_ID_SEQUENCE_ERROR:
+                m_connectionDialog.cancel();
+                m_CallbackInterface.iError(ERROR_SEQUENCE_ERROR);
+                m_VixiarHHBLEService.DisconnectFromIndicor();
                 break;
         }
     }
@@ -483,8 +502,40 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             }
             if (arg1.hasExtra(IndicorBLEService.RT_DATA_RECEIVED))
             {
-                PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
-                m_CallbackInterface.iRealtimeDataNotification();
+                // make sure the sequence number is right
+                int receivedSequenceNumber = (arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED)[0] & 0xFF);
+                if (m_expectedRTDataSequnceNumber == 0)
+                {
+                    // if the expected count is 0, then this is the first packet, just save the value
+                    m_expectedRTDataSequnceNumber = receivedSequenceNumber + 1;
+                }
+                else if (receivedSequenceNumber != m_expectedRTDataSequnceNumber)
+                {
+                    // the sequence number is wrong
+                    Log.e(TAG, "Sequence number in RT data is wrong, expected " + m_expectedRTDataSequnceNumber
+                    + " received " + receivedSequenceNumber);
+
+                    m_VixiarHHBLEService.DisconnectFromIndicor();
+
+                    // show a dialog
+                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                            m_ActivityContext.getString(R.string.dlg_title_sequene_error),
+                            m_ActivityContext.getString(R.string.dlg_msg_sequence_error),
+                            "Ok",
+                            null,
+                            m_ActivityContext, DLG_ID_SEQUENCE_ERROR, IndicorBLEServiceInterface.this);
+
+                }
+                else
+                {
+                    // everything is ok
+
+                    m_expectedRTDataSequnceNumber = (m_expectedRTDataSequnceNumber + 1) % 256;
+                    PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
+                    m_CallbackInterface.iRealtimeDataNotification();
+                }
+
+
             }
             else if (arg1.hasExtra(IndicorBLEService.AUTHENTICATION_ERROR))
             {
