@@ -17,7 +17,6 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
-import com.vixiar.indicor.Application.NavigatorApplication;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
@@ -544,9 +543,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_txtResults3.setTypeface(m_robotoRegularTypeface);
         m_lblBottomMessageCentered.setTypeface(m_robotoRegularTypeface);
 
-        m_txtPatID.setText(PatientInfo.getInstance().getM_patientId());
+        m_txtPatID.setText(PatientInfo.getInstance().get_patientId());
 
-        m_txtDateTime.setText(PatientInfo.getInstance().getM_testDate());
+        m_txtDateTime.setText(PatientInfo.getInstance().get_testDate());
 
         m_lblBottomMessageCentered.setText("");
         m_imgHomeButton.setVisibility(View.INVISIBLE);
@@ -867,6 +866,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
+                        // disconect from the handheld
+                        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+
                         // pause the upload service so it doesn't try to send a partial file
                         UploadServiceInterface.getInstance().PauseUpload();
 
@@ -876,7 +878,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         UploadServiceInterface.getInstance().ResumeUpload();
                         SwitchToResultsView();
                         SetResultsViewComplete();
-                        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
                         m_testingState = Testing_State.COMPLETE;
                     }
                 }
