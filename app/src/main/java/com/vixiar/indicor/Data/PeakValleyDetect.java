@@ -1,25 +1,36 @@
 package com.vixiar.indicor.Data;
 
+import android.util.Log;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class PeakValleyDetect {
+import static android.content.ContentValues.TAG;
+
+public class PeakValleyDetect
+{
+    private final String TAG = this.getClass().getSimpleName();
 
     // //////////////////////////////////////////////////////////////////////////
     // / Constructors
     // //////////////////////////////////////////////////////////////////////////
-    public static PeakValleyDetect getInstance() {
+    public static PeakValleyDetect getInstance()
+    {
         return ourInstance;
     }
 
     // //////////////////////////////////////////////////////////////////////////
     // / Enumerations
     // //////////////////////////////////////////////////////////////////////////
-    public enum ePVDStates {
+    public enum ePVDStates
+    {
         DETECTING_PEAK, DETECTING_VALLEY
-    };
+    }
 
-    public enum eSlopeZero {
+    ;
+
+    public enum eSlopeZero
+    {
         PEAK, VALLEY
     }
 
@@ -55,6 +66,11 @@ public class PeakValleyDetect {
     // on the low part of the wave
     private int m_DeltaValley;
 
+    // Keep a copy of the original delta peak value in case the hysteresis
+    // algorithm needs to be reset
+    private int m_defaultDeltaPeak;
+    private int m_defaultDeltaValley;
+
     // Determines whether to begin looking for a peak or valley at the beginning
     // of the
     // processing cycle
@@ -82,19 +98,30 @@ public class PeakValleyDetect {
     private int m_thresholdAdjustPeakCount;
     private long m_highestPeak;
     private long m_lowestValley;
+    private int m_samplesWithNoPeaks;
+
+    // if this many samples go by and there are no peaks detected,
+    // reset the hysteresis delta numbers
+    // this is based on the lowest heart rate of 50BPM
+    // so, at 50BPM there should be about 42 samples so if we don't see
+    // a peak in 100 samples, to be safe, reset the hysteresis
+    private final int SAMPLE_COUNT_TO_RESET_HYSTERESIS = 100;
 
     // //////////////////////////////////////////////////////////////////////////
     // / Setters
     // //////////////////////////////////////////////////////////////////////////
-    public void setDeltaPeak(int deltaPeak) {
+    public void setDeltaPeak(int deltaPeak)
+    {
         this.m_DeltaPeak = deltaPeak;
     }
 
-    public void setDeltaValley(int deltaValley) {
+    public void setDeltaValley(int deltaValley)
+    {
         this.m_DeltaPeak = deltaValley;
     }
 
-    public void setDetectFirst(ePVDStates detectFirst) {
+    public void setDetectFirst(ePVDStates detectFirst)
+    {
         this.m_DetectFirst = detectFirst;
     }
 
@@ -111,61 +138,80 @@ public class PeakValleyDetect {
     // //////////////////////////////////////////////////////////////////////////
     // / Getters
     // //////////////////////////////////////////////////////////////////////////
-    public double getDeltaPeak() {
+    public double getDeltaPeak()
+    {
         return m_DeltaPeak;
     }
 
-    public double getDeltaValley() {
+    public double getDeltaValley()
+    {
         return m_DeltaValley;
     }
 
-    public ePVDStates getDetectFirst() {
+    public ePVDStates getDetectFirst()
+    {
         return m_DetectFirst;
     }
 
     // //////////////////////////////////////////////////////////////////////////
     // / Public Methods
     // //////////////////////////////////////////////////////////////////////////
-    public void Initialize(int deltaPeak, int deltaValley, Boolean detectPeakFirst) {
+    public void Initialize(int deltaPeak, int deltaValley, Boolean detectPeakFirst)
+    {
         this.m_DeltaPeak = deltaPeak;
         this.m_DeltaValley = deltaValley;
+        this.m_defaultDeltaPeak = deltaPeak;
+        this.m_defaultDeltaValley = deltaValley;
+        this.m_samplesWithNoPeaks = 0;
+
         // Default value of
         this.m_DetectFirst = ePVDStates.DETECTING_PEAK;
-        if (!detectPeakFirst) {
+        if (!detectPeakFirst)
+        {
             this.m_DetectFirst = ePVDStates.DETECTING_VALLEY;
         }
 
     }
 
     // returns the amount of data in the list currently being analyzed
-    public int AmountOfData() {
+    public int AmountOfData()
+    {
         return m_LocalData.size();
     }
 
     // returns the ADC value at the provided offset, -1 if boundary exceeded
-    public int GetData(int offset) {
-        if (offset >= AmountOfData()) {
+    public int GetData(int offset)
+    {
+        if (offset >= AmountOfData())
+        {
             return -1;
         }
         return m_LocalData.get(offset);
     }
 
     // returns the current number of peaks detected
-    public int NumberOfPeaks() {
+    public int NumberOfPeaks()
+    {
         return m_PeaksIndexes.size();
     }
 
     // Searches either the peak or valley array and returns the index of the peak or valley prior to
     // the dataIndex
-    public int GetPriorDetect(int dataIndex, eSlopeZero type) {
+    public int GetPriorDetect(int dataIndex, eSlopeZero type)
+    {
 
         List<Integer> transitionList;
 
-        if (type == eSlopeZero.PEAK) {
+        if (type == eSlopeZero.PEAK)
+        {
             transitionList = m_PeaksIndexes;
-        } else if (type == eSlopeZero.VALLEY) {
+        }
+        else if (type == eSlopeZero.VALLEY)
+        {
             transitionList = m_ValleysIndexes;
-        } else {
+        }
+        else
+        {
             return -1;
         }
 
@@ -176,10 +222,12 @@ public class PeakValleyDetect {
         int transitionIndex = transitionList.size() - 1;
 
 
-        while (transitionIndex >= 0) {
+        while (transitionIndex >= 0)
+        {
             dataTransitionIndex = transitionList.get(transitionIndex);
             // peak or valley "just to the left" of the dsiredIndex was found, break out of here
-            if (dataTransitionIndex < dataIndex) {
+            if (dataTransitionIndex < dataIndex)
+            {
                 break;
             }
             transitionIndex--;
@@ -187,7 +235,8 @@ public class PeakValleyDetect {
 
         // The beginning of the array was reached without finding a transition, inform the
         // calling function
-        if (transitionIndex == -1) {
+        if (transitionIndex == -1)
+        {
             dataTransitionIndex = Integer.MAX_VALUE;
         }
 
@@ -195,32 +244,42 @@ public class PeakValleyDetect {
     }
 
     // returns the current number of peaks detected between indices
-    public List<Integer> GetIndexesBetween(int startIndex, int endIndex, eSlopeZero type) {
+    public List<Integer> GetIndexesBetween(int startIndex, int endIndex, eSlopeZero type)
+    {
 
         List<Integer> transitionIndexList = new ArrayList<>();
         List<Integer> transitionList;
 
         int numTransitions;
-        if (type == eSlopeZero.PEAK) {
+        if (type == eSlopeZero.PEAK)
+        {
             transitionList = m_PeaksIndexes;
-        } else if (type == eSlopeZero.VALLEY) {
+        }
+        else if (type == eSlopeZero.VALLEY)
+        {
             transitionList = m_ValleysIndexes;
-        } else {
+        }
+        else
+        {
             return null;
         }
 
         numTransitions = transitionList.size();
 
-        if (numTransitions != 0) {
+        if (numTransitions != 0)
+        {
             // when endIndex = -1, the caller wants to find peaks all the way to
             // the end of the list
-            if (endIndex == -1) {
+            if (endIndex == -1)
+            {
                 endIndex = transitionList.get(numTransitions - 1);
             }
 
-            for (int index = 0; index < numTransitions; index++) {
+            for (int index = 0; index < numTransitions; index++)
+            {
                 int currentIndex = transitionList.get(index);
-                if ((currentIndex >= startIndex) && (currentIndex <= endIndex)) {
+                if ((currentIndex >= startIndex) && (currentIndex <= endIndex))
+                {
                     transitionIndexList.add(currentIndex);
                 }
             }
@@ -230,21 +289,26 @@ public class PeakValleyDetect {
     }
 
     // returns the current number of valleys detected
-    public int NumberOfValleys() {
+    public int NumberOfValleys()
+    {
         return m_ValleysIndexes.size();
     }
 
     // returns the index into localData where a peak was detected
-    public int GetPeakIndex(int index) {
-        if (index >= NumberOfPeaks()) {
+    public int GetPeakIndex(int index)
+    {
+        if (index >= NumberOfPeaks())
+        {
             return -1;
         }
         return m_PeaksIndexes.get(index);
     }
 
     // returns the index into localData where a valley was detected
-    public int GetValleyIndex(int index) {
-        if (index >= NumberOfValleys()) {
+    public int GetValleyIndex(int index)
+    {
+        if (index >= NumberOfValleys())
+        {
             return -1;
         }
         return m_ValleysIndexes.get(index);
@@ -252,12 +316,14 @@ public class PeakValleyDetect {
 
     // Used to add data to the list that is to be copied locally and then
     // processed
-    public void AddToDataArray(int data) {
+    public void AddToDataArray(int data)
+    {
         this.m_Data.add(data);
     }
 
     // Used to reset all parameters so the algorithm can start fresh.
-    public void ResetAlgorithm() {
+    public void ResetAlgorithm()
+    {
         m_Peak = Integer.MIN_VALUE;
         m_Valley = Integer.MAX_VALUE;
         m_ValleyIndex = 0;
@@ -278,17 +344,19 @@ public class PeakValleyDetect {
 
     // Called to copy all data from the list and then start processing it
     // locally
-    public void Execute() {
+    public void Execute()
+    {
 
         // Get all of the real time data and populate locally
-        while (m_Data.size() != 0) {
+        while (m_Data.size() != 0)
+        {
             m_LocalData.add(m_Data.poll());
             // remove each data item as its copied to the local list
             m_Data.remove(0);
         }
 
-        while (m_LocalDataIndex < m_LocalData.size()) {
-
+        while (m_LocalDataIndex < m_LocalData.size())
+        {
             // System.out.println(m_LocalDataIndex);
             // System.out.println(m_LocalData.size());
 
@@ -297,23 +365,27 @@ public class PeakValleyDetect {
             // Always keep running track of the max and min values no matter
             // whether or not
             // searching for a peak or valley
-            if (currData > m_Peak) {
+            if (currData > m_Peak)
+            {
                 // Store the peak index and data
                 m_PeakIndex = m_LocalDataIndex;
                 m_Peak = currData;
             }
-            if (currData < m_Valley) {
+            if (currData < m_Valley)
+            {
                 // Store the valley index and data
                 m_ValleyIndex = m_LocalDataIndex;
                 m_Valley = currData;
             }
 
-            switch (m_State) {
+            switch (m_State)
+            {
                 default:
                     break;
 
                 case DETECTING_PEAK:
-                    if (currData < (m_Peak - m_DeltaPeak)) {
+                    if (currData < (m_Peak - m_DeltaPeak))
+                    {
                         // getting here indicates that the peak has been detected
                         // and the data is declining to the point where the value
                         // is below the peak noise (hysteresis) threshold.
@@ -330,6 +402,9 @@ public class PeakValleyDetect {
                         m_Valley = m_LocalData.get(m_PeakIndex);
                         m_ValleyIndex = m_PeakIndex;
 
+                        // reset our peak detection counter
+                        m_samplesWithNoPeaks = 0;
+
                         if (m_Peak > m_highestPeak)
                         {
                             m_highestPeak = m_Peak;
@@ -343,10 +418,15 @@ public class PeakValleyDetect {
                             m_lowestValley = 65535;
                         }
                     }
+                    else
+                    {
+                        m_samplesWithNoPeaks++;
+                    }
                     break;
 
                 case DETECTING_VALLEY:
-                    if (currData > (m_Valley + m_DeltaValley)) {
+                    if (currData > (m_Valley + m_DeltaValley))
+                    {
                         // getting here indicates that the valley has been detected
                         // and the data is AScending in value to the point where the
                         // value
@@ -370,11 +450,22 @@ public class PeakValleyDetect {
                             //System.out.println("Min at " + m_Valley);
                         }
                     }
+                    else
+                    {
+                        m_samplesWithNoPeaks++;
+                    }
                     break;
 
             }
-
             m_LocalDataIndex++;
+
+            if (m_samplesWithNoPeaks >= SAMPLE_COUNT_TO_RESET_HYSTERESIS)
+            {
+                Log.i(TAG, "Resetting peak detection hysteresis");
+                m_DeltaPeak = m_defaultDeltaPeak;
+                m_DeltaValley = m_defaultDeltaValley;
+                m_samplesWithNoPeaks = 0;
+            }
         }
 
     }
@@ -384,13 +475,14 @@ public class PeakValleyDetect {
 
     private void AdjustHysteresis()
     {
-        int maxPeakToPeak = (int)(m_highestPeak - m_lowestValley);
-        int filteredPToP = (int)((maxPeakToPeak * (1.0-filterconst)) + (m_lastMaxPeakToPeak * filterconst));
+        int maxPeakToPeak = (int) (m_highestPeak - m_lowestValley);
+        int filteredPToP = (int) ((maxPeakToPeak * (1.0 - filterconst)) + (m_lastMaxPeakToPeak * filterconst));
         m_lastMaxPeakToPeak = maxPeakToPeak;
 
-        //System.out.println("Max p-p = " + maxPeakToPeak);
-        m_DeltaPeak = (int)(filteredPToP * 0.2);
+        m_DeltaPeak = (int) (filteredPToP * 0.2);
         m_DeltaValley = m_DeltaPeak;
+
+        Log.i(TAG, "Delta Peak = " + m_DeltaPeak);
     }
 
 }
