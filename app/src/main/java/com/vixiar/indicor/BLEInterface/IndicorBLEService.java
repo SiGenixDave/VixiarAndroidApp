@@ -263,14 +263,19 @@ public class IndicorBLEService extends Service implements TimerCallback
     {
         if (id == TIMEOUT_TIMER_ID)
         {
-            Log.i(TAG, "Timeout expired");
-            m_bConnectedToIndicor = false;
-            if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
+            // make sure we're still connected, this could be a race condition between disconnecting
+            // and killing the timer
+            if (m_bConnectedToIndicor)
             {
-                m_BluetoothGatt.disconnect();
-                m_BluetoothGatt = null;
+                m_bConnectedToIndicor = false;
+                Log.i(TAG, "Timeout expired");
+                if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
+                {
+                    m_BluetoothGatt.disconnect();
+                    m_BluetoothGatt = null;
+                }
+                SendDataToConnectionClass(TIMEOUT_MSG, null);
             }
-            SendDataToConnectionClass(TIMEOUT_MSG, null);
         }
     }
 
