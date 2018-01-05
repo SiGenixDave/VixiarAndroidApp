@@ -155,4 +155,8 @@
         has been lost.  Make sure the power remains on and the device stays within range of the
         tablet.</string>
 
+    <string name="dlg_title_sequene_error">COMMUNICATIONS ERROR</string>
+    <string name="dlg_msg_sequence_error">There was an error in the data received from the handheld.
+        The sequence numbers were not correct.</string>
+
 </resources>
