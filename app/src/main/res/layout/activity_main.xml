@@ -89,6 +89,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:onClick="onSettingsClick"
             android:orientation="horizontal"
             android:paddingStart="60dp">
 
@@ -96,6 +97,7 @@
                 android:id="@+id/imageButton2"
                 android:layout_width="@dimen/main_screen_icon_size"
                 android:layout_height="@dimen/main_screen_icon_size"
+                android:onClick="onSettingsClick"
                 android:background="@null"
                 android:scaleType="fitXY"
                 android:src="@drawable/settings_button"
@@ -105,6 +107,7 @@
                 android:id="@+id/settingsLbl"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:onClick="onSettingsClick"
                 android:fontFamily="@font/roboto_light"
                 android:paddingStart="50dp"
                 android:text="@string/settings"
