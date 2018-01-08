@@ -3,6 +3,7 @@ package com.vixiar.indicor.Activities;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -17,7 +18,9 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.vixiar.indicor.BLEInterface.IndicorBLEService;
@@ -123,7 +126,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
                     Log.d(TAG, "Coarse location permission granted");
-                    if(!doesAppHaveStoragePermission())
+                    if (!doesAppHaveStoragePermission())
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                                 getString(R.string.dlg_title_storage_access_pre),
@@ -217,6 +220,51 @@ public class MainActivity extends Activity implements CustomDialogInterface
         startActivity(intent);
     }
 
+    public void onSettingsClick(View view)
+    {
+        LayoutInflater li = LayoutInflater.from(this);
+        View passwordDialogView = li.inflate(R.layout.password_dialog, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                this);
+
+        alertDialogBuilder.setView(passwordDialogView);
+
+        final EditText passwordEntered = (EditText) passwordDialogView
+                .findViewById(R.id.txtPasswordDialogPassword);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener()
+                        {
+                            public void onClick(DialogInterface dialog, int id)
+                            {
+                                Log.d(TAG, passwordEntered.getText().toString());
+                                if (passwordEntered.getText().toString().equals("v1x1ar"))
+                                {
+                                    Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+                                    startActivity(settingsIntent);
+                                }
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener()
+                        {
+                            public void onClick(DialogInterface dialog, int id)
+                            {
+                                dialog.cancel();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
     private void checkDeviceSetup()
     {
         if (deviceSupportsBLE())
@@ -227,7 +275,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
                 {
                     if (doesAppHaveLocationPermission())
                     {
-                        if(!doesAppHaveStoragePermission())
+                        if (!doesAppHaveStoragePermission())
                         {
                             CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                                     getString(R.string.dlg_title_storage_access_pre),
