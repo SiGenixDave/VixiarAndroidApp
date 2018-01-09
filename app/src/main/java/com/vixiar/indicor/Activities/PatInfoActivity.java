@@ -21,6 +21,7 @@ import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
+import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
@@ -29,7 +30,7 @@ import com.vixiar.indicor.R;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class PatInfoActivity extends Activity implements CustomDialogInterface
+public class PatInfoActivity extends Activity implements CustomDialogInterface, IndicorBLEServiceInterfaceCallbacks
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
@@ -159,6 +160,8 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface
         Button et = findViewById(R.id.navButton);
         et.setFocusableInTouchMode(true);
         et.requestFocus();
+
+        IndicorBLEServiceInterface.getInstance().initialize(this, this );
     }
 
     @Override
@@ -791,5 +794,39 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface
         }
     }
 
+    @Override
+    public void iError(int e)
+    {
+        // Intentionally do nothing, needed to support connection errors when app is connected
+        // to hand held
+    }
+
+    @Override
+    public void iRealtimeDataNotification()
+    {
+        // Intentionally do nothing, needed to support connection errors when app is connected
+        // to hand held
+    }
+
+    @Override
+    public void iFullyConnected()
+    {
+        // Intentionally do nothing, needed to support connection errors when app is connected
+        // to hand held
+    }
+
+    @Override
+    public void iDisconnected()
+    {
+        // Intentionally do nothing, needed to support connection errors when app is connected
+        // to hand held
+    }
+
+    @Override
+    public void iBatteryLevelRead(int level)
+    {
+        // Intentionally do nothing, needed to support connection errors when app is connected
+        // to hand held
+    }
 }
 
