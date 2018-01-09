@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.content.*;
 import android.net.ConnectivityManager;
@@ -17,6 +18,7 @@ import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
+import com.vixiar.indicor.Application.NavigatorApplication;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -41,7 +43,6 @@ public class UploadService extends Service
 {
     private final static String TAG = UploadService.class.getSimpleName();
     private DbxClientV2 client;
-    private String m_DropboxUploadDirectory;
     private boolean m_Paused = false;
 
     // the ID used to filter messages from the service to the handler class
@@ -106,8 +107,6 @@ public class UploadService extends Service
             DbxRequestConfig config = DbxRequestConfig.newBuilder("Indicor/1.0").build();
             client = new DbxClientV2(config, ACCESS_TOKEN);
             Log.i(TAG, "Connected to dropbox:" + client.users().getCurrentAccount().getName().getDisplayName());
-
-            m_DropboxUploadDirectory = getDropboxDirectory();
         }
         else
         {
@@ -152,7 +151,7 @@ public class UploadService extends Service
                 for (String filePath : filePaths)
                 {
                     Log.i(TAG, "uploading file " + filePath);
-                    uploadFileToDropbox(filePath, m_DropboxUploadDirectory);
+                    uploadFileToDropbox(filePath, getDropboxDirectory());
                 }
             }
             else
@@ -174,7 +173,7 @@ public class UploadService extends Service
             for (Metadata metadata : result.getEntries())
             {
                 String pathLower = metadata.getPathLower();
-                if (pathLower.startsWith("/indicor_res"))
+                if (pathLower.startsWith("/vixiar-data"))
                 {
                     pathToUpload = pathLower;
                 }
@@ -187,6 +186,13 @@ public class UploadService extends Service
 
             result = client.files().listFolderContinue(result.getCursor());
         }
+
+        // get the subfolder from the settings
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
+        String subFolder = sp.getString ("study_location", "Vixiar_Internal-Testing");
+
+        pathToUpload += "/" + subFolder;
+
         return pathToUpload;
     }
 

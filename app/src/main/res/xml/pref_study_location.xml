@@ -1,0 +1,12 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="Vixiar_Internal-Testing"
+        android:entries="@array/pref_study_location_list_titles"
+        android:entryValues="@array/pref_study_location_list_values"
+        android:key="study_location"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_study_location" />
+
+</PreferenceScreen>
