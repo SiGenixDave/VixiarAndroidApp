@@ -136,7 +136,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
         {
             PatientInfo.getInstance().set_studyLocation("JHU Diuresis Study");
         }
-        else if (siteFolder.equals("JHU-Nephrologyg"))
+        else if (siteFolder.equals("JHU-Nephrology"))
         {
             PatientInfo.getInstance().set_studyLocation("JHU Nephrology Study");
         }
