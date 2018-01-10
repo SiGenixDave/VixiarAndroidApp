@@ -13,6 +13,7 @@
     <dimen name="main_screen_vertical_spacing">30dp</dimen>
 
     <dimen name="bottom_bar_font_size">24sp</dimen>
+    <dimen name="bottom_bar_smaller_font_size">18sp</dimen>
     <dimen name="bottom_bar_countdown_font_size">48sp</dimen>
     <dimen name="bottom_Bar_height">120dp</dimen>
     <dimen name="main_screen_bottom_Bar_font_size1">30sp</dimen>

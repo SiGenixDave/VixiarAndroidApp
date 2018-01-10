@@ -9,12 +9,14 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
@@ -23,14 +25,13 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.vixiar.indicor.BLEInterface.IndicorBLEService;
+import com.vixiar.indicor.Application.NavigatorApplication;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BuildConfig;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
-import com.vixiar.indicor.Upload_Interface.UploadServiceInterface;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
@@ -73,6 +74,8 @@ public class MainActivity extends Activity implements CustomDialogInterface
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        DisplaySiteName();
+
         // setup the top bar
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().HideBatteryIcon(this);
@@ -85,7 +88,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
 
         Typeface robotoTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
 
-        TextView versionText = (TextView) findViewById(R.id.textViewVersion);
+        TextView versionText = (TextView) findViewById(R.id.txtViewVersion);
         versionText.setText(nameAndVersion);
         versionText.setTypeface(robotoTypeface);
 
@@ -113,6 +116,36 @@ public class MainActivity extends Activity implements CustomDialogInterface
 
         // make sure we're disconnected from the device
         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+    }
+
+    private void DisplaySiteName()
+    {
+        // get the site name from the settings
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
+        String siteFolder = sp.getString ("study_location", "Vixiar_Internal-Testing");
+
+        if (siteFolder.equals("Stony_Brook-Training"))
+        {
+            PatientInfo.getInstance().set_studyLocation("Stony Brook Training Set");
+        }
+        else if (siteFolder.equals("Stony_Brook-Validation"))
+        {
+            PatientInfo.getInstance().set_studyLocation("Stony Brook Validation Study");
+        }
+        else if (siteFolder.equals("JHU-Diuresis"))
+        {
+            PatientInfo.getInstance().set_studyLocation("JHU Diuresis Study");
+        }
+        else if (siteFolder.equals("JHU-Nephrologyg"))
+        {
+            PatientInfo.getInstance().set_studyLocation("JHU Nephrology Study");
+        }
+        else
+        {
+            PatientInfo.getInstance().set_studyLocation("Vixiar Testing");
+        }
+        TextView tv = findViewById(R.id.txtStudyLocation);
+        tv.setText(PatientInfo.getInstance().get_studyLocation());
     }
 
     //This method required for Android 6.0 (Marshmallow)
