@@ -30,6 +30,7 @@ public class PatientInfo
     private int m_weight_lbs;
     private int m_age_years;
     private String m_applicationVersion;
+    private String m_studyLocation;
     private String m_handheldSerialNumber;
     private String m_firmwareVersion;
     private String m_testDate;
@@ -73,6 +74,16 @@ public class PatientInfo
         Arrays.fill(m_aCalcPAAvgRest, 0.0);
         Arrays.fill(m_aCalcPAAvgVM, 0.0);
         rtd.ClearAllData();
+    }
+
+    public void set_studyLocation(String location)
+    {
+        this.m_studyLocation = location;
+    }
+
+    public String get_studyLocation()
+    {
+        return m_studyLocation;
     }
 
     public void set_applicationVersion(String m_applicationVersion)
@@ -300,18 +311,19 @@ public class PatientInfo
 
     private boolean WriteCSVContents(PrintWriter writer)
     {
-        writer.println("Test date time:, " + m_testDate);
-        writer.println("Application version:, " + BuildConfig.VERSION_NAME);
-        writer.println("Handheld serial number:," + m_handheldSerialNumber);
-        writer.println("Firmware version:, " + m_firmwareVersion);
-        writer.println("Subject ID:, " + m_patientId);
-        writer.println("Age:, " + m_age_years);
-        writer.println("Gender:, " + m_gender);
-        writer.println("Systolic blood pressure:, " + m_systolicBloodPressure);
-        writer.println("Diastolic blood pressure:, " + m_diastolicBloodPressure);
-        writer.println("Mean blood pressure:, " + (2 * m_diastolicBloodPressure + m_systolicBloodPressure) / 3);
+        writer.println("Test date time, " + m_testDate);
+        writer.println("Application version, " + BuildConfig.VERSION_NAME);
+        writer.println("Handheld serial number," + m_handheldSerialNumber);
+        writer.println("Firmware version, " + m_firmwareVersion);
+        writer.println("Study location, " + m_firmwareVersion);
+        writer.println("Subject ID, " + m_patientId);
+        writer.println("Age, " + m_age_years);
+        writer.println("Gender, " + m_gender);
+        writer.println("Systolic blood pressure, " + m_systolicBloodPressure);
+        writer.println("Diastolic blood pressure, " + m_diastolicBloodPressure);
+        writer.println("Mean blood pressure, " + (2 * m_diastolicBloodPressure + m_systolicBloodPressure) / 3);
         writer.println("Height (in.), " + m_height_Inches);
-        writer.println("Weight (lbs.):, " + m_weight_lbs);
+        writer.println("Weight (lbs.), " + m_weight_lbs);
 
         // calculate some stuff for BMI
         double height_m = m_height_Inches * 0.0254;
@@ -322,26 +334,26 @@ public class PatientInfo
         writer.println("Notes:, " + m_notes);
 
         // print all of the calculated data
-        writer.println("Calculated values-Trial:, 1, 2, 3");
-        writer.println("PA avg rest:, " + FormatDoubleForPrint(m_aCalcPAAvgRest[0]) + ", " +
+        writer.println("Calculated values-Trial, 1, 2, 3");
+        writer.println("PA avg rest, " + FormatDoubleForPrint(m_aCalcPAAvgRest[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcPAAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgRest[2]));
-        writer.println("HR avg (BPM) rest:, " + FormatDoubleForPrint(m_aCalcHRAvgRest[0]) + ", " +
+        writer.println("HR avg (BPM) rest, " + FormatDoubleForPrint(m_aCalcHRAvgRest[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcHRAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgRest[2]));
-        writer.println("PA avg VM:, " + FormatDoubleForPrint(m_aCalcPAAvgVM[0]) + ", " +
+        writer.println("PA avg VM, " + FormatDoubleForPrint(m_aCalcPAAvgVM[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcPAAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgVM[2]));
-        writer.println("HR avg (BPM) VM:, " + FormatDoubleForPrint(m_aCalcHRAvgVM[0]) + ", " +
+        writer.println("HR avg (BPM) VM, " + FormatDoubleForPrint(m_aCalcHRAvgVM[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcHRAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgVM[2]));
-        writer.println("Min PA:, " + FormatDoubleForPrint(m_aCalcMinPA[0]) + ", " +
+        writer.println("Min PA, " + FormatDoubleForPrint(m_aCalcMinPA[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcMinPA[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPA[2]));
-        writer.println("End PA:, " + FormatDoubleForPrint(m_aCalcEndPA[0]) + ", " +
+        writer.println("End PA, " + FormatDoubleForPrint(m_aCalcEndPA[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcEndPA[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPA[2]));
-        writer.println("Min PAR:, " + FormatDoubleForPrint(m_aCalcMinPAR[0]) + ", " +
+        writer.println("Min PAR, " + FormatDoubleForPrint(m_aCalcMinPAR[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcMinPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPAR[2]));
-        writer.println("End PAR:, " + FormatDoubleForPrint(m_aCalcEndPAR[0]) + ", " +
+        writer.println("End PAR, " + FormatDoubleForPrint(m_aCalcEndPAR[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcEndPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPAR[2]));
-        writer.println("Min HR:, " + FormatDoubleForPrint(m_aCalcMinHR[0]) + ", " +
+        writer.println("Min HR, " + FormatDoubleForPrint(m_aCalcMinHR[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcMinHR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHR[2]));
-        writer.println("LVEDP:, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " +
+        writer.println("LVEDP, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
 
         // print all of markers
