@@ -79,6 +79,12 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, level);
     }
 
+    public void iRestart()
+    {
+
+    }
+
+
     public void iDisconnected()
     {
         // for now, just leave the activity

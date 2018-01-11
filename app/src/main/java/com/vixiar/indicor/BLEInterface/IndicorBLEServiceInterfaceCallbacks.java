@@ -11,4 +11,5 @@ public interface IndicorBLEServiceInterfaceCallbacks
     public void iFullyConnected();
     public void iDisconnected();
     public void iBatteryLevelRead(int level);
+    public void iRestart();
 }

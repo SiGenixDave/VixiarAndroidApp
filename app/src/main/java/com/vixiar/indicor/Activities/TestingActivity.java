@@ -45,6 +45,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private int m_nCountdownSecLeft;
     private int m_nTestNumber;
     private double m_nAvgPressure;
+    private boolean m_bIsConnected;
 
     // UI Components (Stability Screen)
     private ProgressBar m_spinnerProgress;
@@ -90,10 +91,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         LOADING_RESULTS,
         RESULTS,
         COMPLETE,
-        PRESSURE_ERROR
+        PRESSURE_ERROR,
     }
 
     private Testing_State m_testingState;
+    private Testing_State m_StateAtDisconnect;
 
     private enum Testing_Events
     {
@@ -159,6 +161,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         InitTest();
 
+        m_bIsConnected = false;
+
         IndicorBLEServiceInterface.getInstance().initialize(this, this);
         IndicorBLEServiceInterface.getInstance().ConnectToIndicor();
     }
@@ -178,18 +182,20 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case PPG_CAL_TIMER_ID:
                 // Update the y scaling on the chart
-                if (m_PPPGDataCalibrate.Complete(5, 5)) {
+                if (m_PPPGDataCalibrate.Complete(5, 5))
+                {
                     double yMaxScaling = m_PPPGDataCalibrate.getYMaxChartScale();
                     double yMinScaling = m_PPPGDataCalibrate.getYMinChartScale();
 
                     m_chartPPG.getViewport().setMaxY(yMaxScaling);
                     m_chartPPG.getViewport().setMinY(yMinScaling);
 
-                    Log.d ("ASCALE", "Max = " + yMaxScaling);
-                    Log.d ("ASCALE", "Min = " + yMinScaling);
+                    Log.d("ASCALE", "Max = " + yMaxScaling);
+                    Log.d("ASCALE", "Min = " + yMinScaling);
                     m_chartPPG.getViewport().setYAxisBoundsManual(true);
                 }
-                else {
+                else
+                {
                     PPGCalibrateSignal();
                 }
 
@@ -200,20 +206,71 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     public void iFullyConnected()
     {
         TestingStateMachine(Testing_Events.EVT_CONNECTED);
+        m_bIsConnected = true;
     }
 
     @Override
     public void iDisconnected()
     {
-        // TODO: bring up dialog about disconnecting, handle result
-        onBackPressed();
+        m_bIsConnected = false;
     }
 
     @Override
     public void iError(int e)
     {
-        // TODO: handle different errors, bring up dialog about error, handle result
-        onBackPressed();
+        //TODO Currently any error will take the user back to main screen
+        Intent intent = new Intent(TestingActivity.this, MainActivity.class);
+        startActivity(intent);
+    }
+
+    @Override
+    public void iRestart()
+    {
+        // Do specific stuff based on the current state
+
+        switch (m_testingState)
+        {
+            case STABILIZING:
+                RestartStability();
+                break;
+
+            case STABLE_5SEC_COUNTDOWN:
+            case VALSALVA_WAIT_FOR_PRESSURE:
+            case VALSALVA:
+                SwitchToStabilityView();
+                InactivateStabilityView();
+                RestartStability();
+                break;
+
+            case RESULTS:
+                break;
+
+        }
+
+        IndicorBLEServiceInterface.getInstance().ConnectToIndicor();
+    }
+
+    private void RestartStability()
+    {
+        if (m_oneShotTimer != null)
+        {
+            m_oneShotTimer.Cancel();
+        }
+        if (m_periodicTimer != null)
+        {
+            m_periodicTimer.Cancel();
+        }
+        if (m_ppgcalTimer != null)
+        {
+            m_ppgcalTimer.Cancel();
+        }
+
+        m_oneShotTimer = new GenericTimer(ONESHOT_TIMER_ID);
+        m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
+        m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
+        Log.d ("DAS", m_testingState.toString() );
+
+        m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
 
     @Override
@@ -234,7 +291,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
                 // update the heart rate on the screen
                 double BPM = PatientInfo.getInstance().getRealtimeData().GetCurrentBPM();
-                String sTemp = "HR = " + String.valueOf((int)BPM)+" BPM";
+                String sTemp = "HR = " + String.valueOf((int) BPM) + " BPM";
                 m_txtHeartRate.setText(sTemp);
 
                 // see if the HR is stable
@@ -308,6 +365,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onClickPositiveButton(DialogInterface dialog, int dialogID)
     {
+
+        Log.d("DAS", TAG + " onClickPositiveButton()" + dialogID);
+
         switch (dialogID)
         {
             case DLG_ID_HR_NOT_STABLE:
@@ -338,6 +398,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onClickNegativeButton(DialogInterface dialog, int dialogID)
     {
+
+        Log.d("DAS", TAG + " onClickNegativeButton()" + dialogID);
+
         switch (dialogID)
         {
             case DLG_ID_HR_NOT_STABLE:
@@ -351,7 +414,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         }
     }
 
-    private void PPGCalibrateSignal () {
+    private void PPGCalibrateSignal()
+    {
         m_PPPGDataCalibrate.Start();
         m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
     }
@@ -566,7 +630,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             getString(R.string.dlg_title_cancel_test),
                             getString(R.string.dlg_msg_cancel_test),
                             "Yes",
-                            "No", TestingActivity.this , DLG_ID_CANCEL_TEST, TestingActivity.this);
+                            "No", TestingActivity.this, DLG_ID_CANCEL_TEST, TestingActivity.this);
                 }
             });
         }
@@ -726,6 +790,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 "End Test", this, DLG_ID_PRESSURE_ERROR_RUNNING, this);
     }
 
+
     private void TestingStateMachine(Testing_Events event)
     {
         switch (m_testingState)
@@ -734,6 +799,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: STABILIZING_NOT_CONNECTED");
                 if (event == Testing_Events.EVT_CONNECTED)
                 {
+                    Log.d ("DAS", "Event Testing_Events.EVT_CONNECTED in STABILIZING_NOT_CONNECTED" );
+
                     ActivateStabilityView();
 
                     m_testingState = Testing_State.STABILIZING;
@@ -761,17 +828,19 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                            getString(R.string.dlg_title_hr_not_stable),
-                            getString(R.string.dlg_msg_hr_not_stable),
-                            "Try Again",
-                            "End Test",
-                            this, DLG_ID_HR_NOT_STABLE, this);
+                    if (m_bIsConnected)
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                                getString(R.string.dlg_title_hr_not_stable),
+                                getString(R.string.dlg_msg_hr_not_stable),
+                                "Try Again",
+                                "End Test",
+                                this, DLG_ID_HR_NOT_STABLE, this);
+                    }
                 }
                 break;
 
             case STABLE_5SEC_COUNTDOWN:
-                //Log.i(TAG, "In state: STABLE_5SEC_COUNTDOWN");
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
                     m_nCountdownSecLeft--;
@@ -781,11 +850,18 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
-                        m_periodicTimer.Cancel();
-                        ActivateTestingView();
-                        m_testingState = Testing_State.VALSALVA_WAIT_FOR_PRESSURE;
-                        m_oneShotTimer.Start(this, VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS, true);
-                        m_nAvgPressure = 0.0;
+                        if (m_bIsConnected)
+                        {
+                            m_periodicTimer.Cancel();
+                            ActivateTestingView();
+                            m_testingState = Testing_State.VALSALVA_WAIT_FOR_PRESSURE;
+                            m_oneShotTimer.Start(this, VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS, true);
+                            m_nAvgPressure = 0.0;
+                        }
+                        else
+                        {
+                            UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                        }
                     }
                 }
                 break;
@@ -807,7 +883,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         UpdateValsalvaCountdown(m_nCountdownSecLeft);
                     }
                 }
-                else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
+                else if ((event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT) && (m_bIsConnected))
                 {
                     DisplayPressureErrorOnStart();
                     m_testingState = Testing_State.PRESSURE_ERROR;
@@ -815,7 +891,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case VALSALVA:
-                //Log.i(TAG, "In state: VALSALVA");
                 if (event == Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE)
                 {
                     if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
@@ -838,14 +913,17 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
-                        // Valsalva is over
-                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_END_VALSALVA,
-                                PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+                        if (m_bIsConnected)
+                        {
+                            // Valsalva is over
+                            PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_END_VALSALVA,
+                                    PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
 
-                        m_periodicTimer.Cancel();
-                        SetupLoadingResultsView();
-                        m_testingState = Testing_State.LOADING_RESULTS;
-                        m_oneShotTimer.Start(this, VALSALVA_LOADING_RESULTS_DELAY_MS, true);
+                            m_periodicTimer.Cancel();
+                            SetupLoadingResultsView();
+                            m_testingState = Testing_State.LOADING_RESULTS;
+                            m_oneShotTimer.Start(this, VALSALVA_LOADING_RESULTS_DELAY_MS, true);
+                        }
                     }
                 }
                 break;
@@ -894,19 +972,27 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
-                        // starting next test
-                        m_periodicTimer.Cancel();
-                        m_nTestNumber++;
-                        SwitchToStabilityView();
-                        ActivateStabilityView();
-                        m_testingState = Testing_State.STABILIZING;
-                        m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
+                        if (m_bIsConnected)
+                        {
+                            // starting next test
+                            m_periodicTimer.Cancel();
+                            m_nTestNumber++;
+                            SwitchToStabilityView();
+                            ActivateStabilityView();
+                            m_testingState = Testing_State.STABILIZING;
+                            m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
 
-                        // start checking for stability
-                        PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
+                            // start checking for stability
+                            PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
+                        }
+                        else
+                        {
+                            UpdateBottomCountdownNumber(0);
+                        }
                     }
                 }
                 break;
+
 
             case COMPLETE:
                 // sit here and wait for the user to click the home button

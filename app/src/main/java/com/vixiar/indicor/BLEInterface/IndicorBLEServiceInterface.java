@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import com.vixiar.indicor.Activities.GenericTimer;
+import com.vixiar.indicor.Activities.TestingActivity;
 import com.vixiar.indicor.Activities.TimerCallback;
 import com.vixiar.indicor.Application.NavigatorApplication;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
@@ -425,12 +426,23 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     "Ok",
                     null,
                     m_ActivityContext, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+
+            /* DAS
+            CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                    m_ActivityContext.getString(R.string.dlg_title_connection_problem),
+                    m_ActivityContext.getString(R.string.dlg_msg_connection_problem),
+                    "Try Again",
+                    "End Test", m_ActivityContext,
+                    DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+                    */
         }
     }
 
     @Override
     public void onClickPositiveButton(DialogInterface dialog, int dialogID)
     {
+        Log.d ("DAS", TAG + " onClickPositiveButton " + dialogID);
+
         switch (dialogID)
         {
             case DLG_ID_AUTHENTICATION_ERROR:
@@ -450,7 +462,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
             case DLG_ID_CONNECTION_ERROR:
                 m_connectionDialog.cancel();
-                m_CallbackInterface.iError(ERROR_CONNECTION_ERROR);
+                m_CallbackInterface.iRestart();
+                break;
 
             case DLG_ID_SEQUENCE_ERROR:
                 m_connectionDialog.cancel();
@@ -463,7 +476,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     @Override
     public void onClickNegativeButton(DialogInterface dialog, int dialogID)
     {
-
+        m_CallbackInterface.iError(dialogID);
     }
 
     private class MyBLEMessageReceiver extends BroadcastReceiver
@@ -555,22 +568,44 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             {
                 CleanupFromConnectionLoss();
                 ConnectionStateMachine(Connection_Event.EVT_CONNECTiON_ERROR);
+
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                        m_ActivityContext.getString(R.string.dlg_title_connection_problem),
+                        m_ActivityContext.getString(R.string.dlg_msg_connection_problem),
+                        "Try Again",
+                        "End Test", m_ActivityContext,
+                        DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+
+                /* DAS
+
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                         m_ActivityContext.getString(R.string.dlg_title_connection_problem),
                         m_ActivityContext.getString(R.string.dlg_msg_connection_problem),
                         "Ok",
                         null,
                         m_ActivityContext, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+
+                 */
             }
             else if (arg1.hasExtra(IndicorBLEService.REALTIME_TIMEOUT_MSG))
             {
                 CleanupFromConnectionLoss();
+
+                CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                        m_ActivityContext.getString(R.string.dlg_title_handheld_timeout),
+                        m_ActivityContext.getString(R.string.dlg_msg_handheld_timeout),
+                        "Try Again",
+                        "End Test", m_ActivityContext,
+                        DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+
+                /* DAS
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
                         m_ActivityContext.getString(R.string.dlg_title_handheld_timeout),
                         m_ActivityContext.getString(R.string.dlg_msg_handheld_timeout),
                         "Ok",
                         null,
                         m_ActivityContext, DLG_ID_CONNECTION_ERROR, IndicorBLEServiceInterface.this);
+                        */
             }
             else if (arg1.hasExtra(IndicorBLEService.BATTERY_LEVEL_RECEIVED))
             {
@@ -593,6 +628,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         {
             m_updateBatteryTimer.Cancel();
         }
+        m_CallbackInterface.iDisconnected();
+
     }
 
     private class VixiarDeviceParams

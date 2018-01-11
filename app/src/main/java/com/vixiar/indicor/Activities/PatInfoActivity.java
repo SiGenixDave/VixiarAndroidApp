@@ -34,7 +34,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true; /* DAS */
 
     private EditText txtPatientID;
     private EditText txtAge;
@@ -792,6 +792,13 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         switch (dialogID)
         {
         }
+    }
+
+    @Override
+    public void iRestart()
+    {
+        // Intentionally do nothing, needed to support connection errors when app is connected
+        // to hand held
     }
 
     @Override
