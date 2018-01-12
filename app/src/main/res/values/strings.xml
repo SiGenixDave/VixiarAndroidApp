@@ -140,7 +140,7 @@
         time period.</string>
 
     <string name="dlg_title_connection_problem">PROBLEM CONNECTING</string>
-    <string name="dlg_msg_connection_problem">Theere was a problem connecting to the handheld device.
+    <string name="dlg_msg_connection_problem">There was a problem connecting to the handheld device.
         Try restarting it and connecting again.</string>
 
     <string name="dlg_title_storage_access_pre">STORAGE ACCESS REQUIRED</string>

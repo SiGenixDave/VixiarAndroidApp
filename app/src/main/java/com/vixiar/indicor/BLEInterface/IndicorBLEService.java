@@ -352,14 +352,6 @@ public class IndicorBLEService extends Service implements TimerCallback
 
         }
 
-        /* DAS
-        if (m_BluetoothGatt != null)
-        {
-            Log.d(TAG, "Trying to use an existing m_BluetoothGatt for connection.");
-            return m_BluetoothGatt.connect();
-        }
-        */
-
         // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
         m_BluetoothGatt = device.connectGatt(this, false, mGattCallback);
@@ -387,9 +379,6 @@ public class IndicorBLEService extends Service implements TimerCallback
         {
             Log.i(TAG, "Killing m_BluetoothGat");
             m_BluetoothGatt.disconnect();
-            //m_BluetoothGatt.close();
-            //DAS m_BluetoothGatt = null;
-
             m_RTDataCharacteristic = null;
             m_BatteryLevelCharacteristic = null;
             m_RevisionInfoCharacteristic = null;

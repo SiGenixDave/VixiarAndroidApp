@@ -213,6 +213,22 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     public void iDisconnected()
     {
         m_bIsConnected = false;
+        switch (m_testingState)
+        {
+            case STABILIZING:
+                InactivateStabilityView();
+                break;
+
+            case STABLE_5SEC_COUNTDOWN:
+            case VALSALVA_WAIT_FOR_PRESSURE:
+            case VALSALVA:
+                InactivateTestingView();
+                break;
+
+            case RESULTS:
+                break;
+
+        }
     }
 
     @Override
@@ -268,7 +284,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_oneShotTimer = new GenericTimer(ONESHOT_TIMER_ID);
         m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
         m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
-        Log.d ("DAS", m_testingState.toString() );
 
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
@@ -365,9 +380,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onClickPositiveButton(DialogInterface dialog, int dialogID)
     {
-
-        Log.d("DAS", TAG + " onClickPositiveButton()" + dialogID);
-
         switch (dialogID)
         {
             case DLG_ID_HR_NOT_STABLE:
@@ -398,8 +410,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onClickNegativeButton(DialogInterface dialog, int dialogID)
     {
-
-        Log.d("DAS", TAG + " onClickNegativeButton()" + dialogID);
 
         switch (dialogID)
         {
@@ -485,6 +495,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private void InactivateStabilityView()
     {
+        m_txtHeartRate.setVisibility(View.INVISIBLE);
         m_lblAcquiring.setVisibility(View.INVISIBLE);
         m_chartPPG.setVisibility(View.INVISIBLE);
         m_spinnerProgress.setVisibility(View.INVISIBLE);
@@ -507,6 +518,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         m_chartPPG.setVisibility(View.VISIBLE);
         m_spinnerProgress.setVisibility(View.VISIBLE);
+        m_txtHeartRate.setVisibility(View.VISIBLE);
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
     }
 
@@ -799,8 +811,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: STABILIZING_NOT_CONNECTED");
                 if (event == Testing_Events.EVT_CONNECTED)
                 {
-                    Log.d ("DAS", "Event Testing_Events.EVT_CONNECTED in STABILIZING_NOT_CONNECTED" );
-
                     ActivateStabilityView();
 
                     m_testingState = Testing_State.STABILIZING;
