@@ -298,6 +298,12 @@ public class MainActivity extends Activity implements CustomDialogInterface
         alertDialog.show();
     }
 
+    public void onManualClick(View view)
+    {
+        Intent intent = new Intent(this, PDFViewActivity.class);
+        startActivity(intent);
+    }
+
     private void checkDeviceSetup()
     {
         if (deviceSupportsBLE())

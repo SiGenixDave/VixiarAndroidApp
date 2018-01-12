@@ -19,6 +19,9 @@ android {
     }
     productFlavors {
     }
+    aaptOptions {
+        noCompress "pdf"
+    }
 }
 
 dependencies {

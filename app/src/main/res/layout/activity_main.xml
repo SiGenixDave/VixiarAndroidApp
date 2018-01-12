@@ -129,6 +129,7 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
+            android:onClick="onManualClick"
             android:paddingStart="60dp">
 
             <ImageButton
@@ -136,6 +137,7 @@
                 android:layout_width="@dimen/main_screen_icon_size"
                 android:layout_height="@dimen/main_screen_icon_size"
                 android:background="@null"
+                android:onClick="onManualClick"
                 android:scaleType="fitXY"
                 android:src="@drawable/manual_button"
                 android:visibility="visible" />
@@ -144,6 +146,7 @@
                 android:id="@+id/manualLbl"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:onClick="onManualClick"
                 android:fontFamily="@font/roboto_light"
                 android:paddingStart="50dp"
                 android:text="@string/manual"

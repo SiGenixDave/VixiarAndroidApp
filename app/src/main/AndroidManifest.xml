@@ -49,7 +49,10 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activities.SettingsActivity"
-            android:label="@string/title_activity_settings"></activity>
+            android:label="@string/title_activity_settings" />
+        <activity
+            android:name=".Activities.PDFViewActivity"
+            android:label="@string/title_activity_pdfview"></activity>
     </application>
 
 </manifest>
