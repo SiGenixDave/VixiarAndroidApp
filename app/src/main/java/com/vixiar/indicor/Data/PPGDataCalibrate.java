@@ -4,6 +4,9 @@ package com.vixiar.indicor.Data;
  * Created by Dave on 12/13/2017.
  */
 
+import android.content.Intent;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,10 +53,6 @@ public class PPGDataCalibrate {
 
     public boolean Complete(int minPeaks, int minValleys) {
 
-        if (m_StartIndex < 0) {
-            return false;
-        }
-
         // Get all of the peaks and valleys from start until now
         List<Integer> peaks = PeakValleyDetect.getInstance().GetIndexesBetween(m_StartIndex, -1,
                 PeakValleyDetect.eSlopeZero.PEAK);
@@ -72,8 +71,8 @@ public class PPGDataCalibrate {
         }
 
         // Determine the max and min amplitude
-        int maxValue = CalculateMaxValue(peaks);
-        int minValue = CalculateMinValue(valleys);
+        int maxValue = CalculateMaxValue(peaks, 3);
+        int minValue = CalculateMinValue(valleys, 3);
 
         // Allow the chart scaling to slightly exceed the min and max values. The special algorithm for the
         // min is to make the scaling symmetric (if max is 40000 and min is 30000, then the scaling will be
@@ -87,6 +86,10 @@ public class PPGDataCalibrate {
             m_YMinChartScale = 0.0;
         }
 
+        Log.d ("DAS", "m_YMaxChartScale = " + m_YMaxChartScale);
+        Log.d ("DAS", "m_YMinChartScale = " + m_YMinChartScale);
+        Log.d ("DAS", "m_StartIndex = " + m_StartIndex);
+
         return true;
 
     }
@@ -94,27 +97,50 @@ public class PPGDataCalibrate {
     // //////////////////////////////////////////////////////////////////////////
     // / Private Methods
     // //////////////////////////////////////////////////////////////////////////
-    private int CalculateMaxValue(List<Integer> list) {
+    private int CalculateMaxValue(List<Integer> list, int recentSamplesToUse) {
         int maxValue = Integer.MIN_VALUE;
 
-        for (Integer i : list) {
-            int data = PeakValleyDetect.getInstance().GetData(i);
+        int samples = 0;
+        int index = list.size() - 1;
+
+        for (Integer i: list) {
+            Log.d ("DAS", "Peak: " + PeakValleyDetect.getInstance().GetData(i));
+        }
+
+
+        while (samples < recentSamplesToUse) {
+            int data = PeakValleyDetect.getInstance().GetData(list.get(index));
+            Log.d ("DAS", "Peak of Interest: " + data);
             if (data > maxValue) {
                 maxValue = data;
             }
+            samples++;
+            index--;
         }
+
 
         return maxValue;
     }
 
-    private int CalculateMinValue(List<Integer> list) {
+    private int CalculateMinValue(List<Integer> list, int recentSamplesToUse) {
         int minValue = Integer.MAX_VALUE;
 
-        for (Integer i : list) {
-            int data = PeakValleyDetect.getInstance().GetData(i);
+        int samples = 0;
+        int index = list.size() - 1;
+
+        for (Integer i: list) {
+            Log.d ("DAS", "Valley: " + PeakValleyDetect.getInstance().GetData(i));
+        }
+
+
+        while (samples < recentSamplesToUse) {
+            int data = PeakValleyDetect.getInstance().GetData(list.get(index));
+            Log.d ("DAS", "Valley of Interest: " + data);
             if (data < minValue) {
                 minValue = data;
             }
+            samples++;
+            index--;
         }
 
         return minValue;

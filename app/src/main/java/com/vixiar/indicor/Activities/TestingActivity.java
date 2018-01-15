@@ -121,7 +121,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int DLG_ID_HR_NOT_STABLE = 4;
 
     // Timing constants
-    private final int PPGCAL_TIME_MS = 5000;
+    private final int PPGCAL_TIME_MS = 2000;
     private final int STABILIZING_TIMEOUT_MS = 60000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
@@ -181,8 +181,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case PPG_CAL_TIMER_ID:
-                // Update the y scaling on the chart
-                if (m_PPPGDataCalibrate.Complete(5, 5))
+
+                Log.d ("DAS", "PPG_CAL_TIMER_ID expired");
+                // Update the y scaling on the chart ony for first stability check, use the
+                // saved y axis scaled values for the remaining 2 tests
+                if (m_PPPGDataCalibrate.Complete(7, 7) && (m_nTestNumber == 1))
                 {
                     double yMaxScaling = m_PPPGDataCalibrate.getYMaxChartScale();
                     double yMinScaling = m_PPPGDataCalibrate.getYMinChartScale();
@@ -190,13 +193,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_chartPPG.getViewport().setMaxY(yMaxScaling);
                     m_chartPPG.getViewport().setMinY(yMinScaling);
 
-                    Log.d("ASCALE", "Max = " + yMaxScaling);
-                    Log.d("ASCALE", "Min = " + yMinScaling);
+                    Log.d("DAS", "Max = " + yMaxScaling);
+                    Log.d("DAS", "Min = " + yMinScaling);
                     m_chartPPG.getViewport().setYAxisBoundsManual(true);
                 }
                 else
                 {
-                    PPGCalibrateSignal();
+                    // Restart the timer because the cal hasn't occurred yet
+                    m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
                 }
 
         }
@@ -391,7 +395,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
                 m_testingState = Testing_State.STABILIZING;
 
-                PPGCalibrateSignal();
                 PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
 
                 // start the stability timer
@@ -424,11 +427,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         }
     }
 
-    private void PPGCalibrateSignal()
-    {
-        m_PPPGDataCalibrate.Start();
-        m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
-    }
 
 
     // GUI functions
@@ -774,6 +772,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
         m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
 
+        m_PPPGDataCalibrate.Start();
+        m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
+
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
 
@@ -814,8 +815,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     ActivateStabilityView();
 
                     m_testingState = Testing_State.STABILIZING;
-
-                    PPGCalibrateSignal();
 
                     // start the stability timer
                     m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
