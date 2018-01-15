@@ -706,6 +706,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(2)) +
                         " mmHg";
                 m_txtResults3.setText(result);
+
+                float avg = (float) ((PatientInfo.getInstance().get_LVEDP(0) +
+                                        PatientInfo.getInstance().get_LVEDP(1) +
+                                        PatientInfo.getInstance().get_LVEDP(2)) / 3.0);
+                TextView avgText = findViewById(R.id.lblTestAverage);
+                avgText.setText(String.format("%1$,.2f", avg) + " mmHg");
+
                 break;
 
             default:

@@ -193,6 +193,40 @@
             android:paddingTop="@dimen/main_screen_vertical_spacing"
             android:src="@drawable/divider_line"/>
 
+        <LinearLayout
+            android:id="@+id/average"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/results_measurement_bar_height"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imgAverageCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:visibility="invisible"
+                android:src="@drawable/measurement_unchecked"/>
+
+            <TextView
+                android:id="@+id/lblAvg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/roboto_light"
+                android:text="@string/average"
+                android:textSize="@dimen/results_measurement_font_size"/>
+
+            <TextView
+                android:id="@+id/lblTestAverage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/roboto_light"
+                android:text="---"
+                android:textSize="@dimen/results_measurement_font_size" />
+        </LinearLayout>
+
     </LinearLayout>
 
     <RelativeLayout
