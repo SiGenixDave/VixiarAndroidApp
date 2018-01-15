@@ -326,7 +326,10 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         // Weight
         txtWeight = (EditText) findViewById(R.id.txtWeight);
         txtWeight.addTextChangedListener(fieldChangeWatcher);
-        txtWeight.setShowSoftInputOnFocus(false);
+        txtWeight.setShowSoftInputOnFocus(true);
+        final int minWeight = 50;
+        final int maxWeight = 500;
+        txtWeight.setFilters(new InputFilter[]{new InputFilterMinMax(minWeight >= 10 ? "0" : String.valueOf(minWeight), maxWeight > -10 ? String.valueOf(maxWeight) : "0")});
         txtWeight.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
             @Override
@@ -334,36 +337,30 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
             {
                 if (hasFocus)
                 {
-                    hideKeyBoard(v);
+                    showKeyBoard(v);
                     txtWeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryHighlightedValue));
-                    npWeight.setVisibility(View.VISIBLE);
-                    int nWeight = npWeight.getValue();
-                    txtWeight.setText(String.valueOf(nWeight));
                 }
                 else
                 {
+                    hideKeyBoard(v);
                     txtWeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
-                    npWeight.setVisibility(View.GONE);
+                    try
+                    {
+                        if (Integer.parseInt(txtWeight.getText().toString()) > maxWeight)
+                        {
+                            txtWeight.setText(String.valueOf(maxWeight));
+                        }
+                        if (Integer.parseInt(txtWeight.getText().toString()) < minWeight)
+                        {
+                            txtWeight.setText(String.valueOf(minWeight));
+                        }
+                    } catch (NumberFormatException e)
+                    {
+
+                    }
                 }
             }
         });
-
-        NumberPicker.OnValueChangeListener weightChangeListener = new NumberPicker.OnValueChangeListener()
-        {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal)
-            {
-                int nWeight = npWeight.getValue();
-                txtWeight.setText(String.valueOf(nWeight));
-            }
-        };
-
-        npWeight = (NumberPicker) findViewById(R.id.npWeight);
-        npWeight.setVisibility(View.GONE);
-        npWeight.setMinValue(88);
-        npWeight.setMaxValue(250);
-        npWeight.setOnValueChangedListener(weightChangeListener);
-        npWeight.setValue(150);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout weightGroup = (LinearLayout) findViewById(R.id.weightGroup);
