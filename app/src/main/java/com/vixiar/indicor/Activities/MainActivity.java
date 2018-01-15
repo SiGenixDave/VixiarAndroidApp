@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.location.LocationManager;
+import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,6 +24,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.vixiar.indicor.Application.NavigatorApplication;
@@ -110,6 +112,12 @@ public class MainActivity extends Activity implements CustomDialogInterface
 
         v = (TextView) findViewById(R.id.tagLineLbl);
         v.setTypeface(robotoTypeface);
+
+        // dim the video button
+        ImageView iv = findViewById(R.id.trainingVideoButton);
+        iv.setAlpha((float) 0.3);
+        TextView tv = findViewById(R.id.trainingLbl);
+        tv.setAlpha((float) 0.3);
 
         // wait a couple seconds then check the device for the proper configuration and settings
         m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);
