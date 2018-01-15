@@ -634,9 +634,9 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         {
             if (!DEBUG)
             {
-                if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
+                 if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
                         txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
-                        txtDiastolic.toString().trim().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
+                        txtDiastolic.getText().toString().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
                         txtGender.getText().toString().length() != 0)
                 {
                     HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
