@@ -381,8 +381,8 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         txtSystolic = (EditText) findViewById(R.id.txtSystolic);
         txtSystolic.addTextChangedListener(fieldChangeWatcher);
         txtSystolic.setShowSoftInputOnFocus(true);
-        final int minSystolic = 100;
-        final int maxSystolic = 190;
+        final int minSystolic = 90;
+        final int maxSystolic = 160;
         txtSystolic.setFilters(new InputFilter[]{new InputFilterMinMax(minSystolic >= 10 ? "0" : String.valueOf(minSystolic), maxSystolic > -10 ? String.valueOf(maxSystolic) : "0")});
         txtSystolic.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
@@ -431,9 +431,9 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         txtDiastolic = (EditText) findViewById(R.id.txtDiast);
         txtDiastolic.addTextChangedListener(fieldChangeWatcher);
         txtDiastolic.setShowSoftInputOnFocus(true);
-        final int minDiastolic = 40;
-        final int maxDiastolic = 120;
-        txtDiastolic.setFilters(new InputFilter[]{new InputFilterMinMax(minDiastolic >= 10 ? "0" : String.valueOf(minSystolic), maxDiastolic > -10 ? String.valueOf(maxDiastolic) : "0")});
+        final int minDiastolic = 1;
+        final int maxDiastolic = 100;
+        txtDiastolic.setFilters(new InputFilter[]{new InputFilterMinMax(minDiastolic >= 0 ? "0" : String.valueOf(minSystolic), maxDiastolic > -10 ? String.valueOf(maxDiastolic) : "0")});
 
         txtDiastolic.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
