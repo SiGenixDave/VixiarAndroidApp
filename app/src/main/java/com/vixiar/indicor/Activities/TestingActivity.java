@@ -110,10 +110,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private GenericTimer m_oneShotTimer;
     private GenericTimer m_periodicTimer;
     private GenericTimer m_ppgcalTimer;
+    private GenericTimer m_pressureOutTimer;
 
     private final int ONESHOT_TIMER_ID = 1;
     private final int PERIODIC_TIMER_ID = 2;
     private final int PPG_CAL_TIMER_ID = 3;
+    private final int PRESSURE_OUT_TIMER_ID = 4;
 
     private final int DLG_ID_PRESSURE_ERROR_START = 0;
     private final int DLG_ID_PRESSURE_ERROR_RUNNING = 1;
@@ -129,6 +131,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int ONE_SEC = 1000;
     private final int NEXT_TEST_DELAY_SECONDS = 60;
     private final int VALSALVA_DURATION_SECONDS = 10;
+    private final int PRESSURE_OUT_MAX_TIME_MS = 1000;
 
     private final double VALSALVA_MIN_PRESSURE = 16.0;
     private final double VALSALVA_MAX_PRESSURE = 30.0;
@@ -198,7 +201,17 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 {
                     PPGCalibrateSignal();
                 }
+                break;
 
+            case PRESSURE_OUT_TIMER_ID:
+                // the user couldn't keep the pressure in range
+                m_periodicTimer.Cancel();
+                DisplayPressureErrorRunning();
+                m_testingState = Testing_State.PRESSURE_ERROR;
+                // mark the error
+                PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR,
+                        PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+                break;
         }
     }
 
@@ -280,10 +293,15 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         {
             m_ppgcalTimer.Cancel();
         }
+        if (m_pressureOutTimer != null)
+        {
+            m_pressureOutTimer.Cancel();
+        }
 
         m_oneShotTimer = new GenericTimer(ONESHOT_TIMER_ID);
         m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
         m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
+        m_pressureOutTimer = new GenericTimer(PRESSURE_OUT_TIMER_ID);
 
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
@@ -371,6 +389,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             m_periodicTimer.Cancel();
             m_oneShotTimer.Cancel();
             m_ppgcalTimer.Cancel();
+            m_pressureOutTimer.Cancel();
 
             Log.i(TAG, "OnBackPressed");
             super.onBackPressed();
@@ -780,6 +799,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_oneShotTimer = new GenericTimer(ONESHOT_TIMER_ID);
         m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
         m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
+        m_pressureOutTimer = new GenericTimer(PRESSURE_OUT_TIMER_ID);
 
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
@@ -912,13 +932,15 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 {
                     if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
                     {
-                        m_periodicTimer.Cancel();
-                        DisplayPressureErrorRunning();
-                        m_testingState = Testing_State.PRESSURE_ERROR;
-                        // mark the error
-                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR,
-                                PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
-
+                        // start the timer if it isn't already running
+                        if (!m_pressureOutTimer.IsRunning())
+                        {
+                            m_pressureOutTimer.Start(this, PRESSURE_OUT_MAX_TIME_MS, true);
+                        }
+                    }
+                    else
+                    {
+                        m_pressureOutTimer.Cancel();
                     }
                 }
                 else if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
@@ -937,6 +959,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                                     PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
 
                             m_periodicTimer.Cancel();
+                            m_pressureOutTimer.Cancel();
                             SetupLoadingResultsView();
                             m_testingState = Testing_State.LOADING_RESULTS;
                             m_oneShotTimer.Start(this, VALSALVA_LOADING_RESULTS_DELAY_MS, true);
