@@ -28,6 +28,7 @@ import java.io.FileOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.List;
@@ -154,7 +155,15 @@ public class UploadService extends Service
                 for (String filePath : filePaths)
                 {
                     Log.i(TAG, "uploading file " + filePath);
-                    uploadFileToDropbox(filePath, getDropboxDirectory());
+
+                    // get the patient id for this file
+                    String patientID = GetPatientIDFromCSVFile(filePath);
+
+                    if (patientID != null)
+                    {
+                        uploadFileToDropbox(filePath, getDropboxDirectory(patientID));
+                        DeleteFile(filePath);
+                    }
                 }
             }
             else
@@ -167,11 +176,10 @@ public class UploadService extends Service
     /*
         Gets the current directory for indicor application within the OS
      */
-    public String getDropboxDirectory() throws DbxException
+    public String getDropboxDirectory(String patientID) throws DbxException
     {
         ListFolderResult result = client.files().listFolder("");
         String pathToUpload = "";
-        String pid = PatientInfo.getInstance().get_patientId();
         boolean patientFolderExists = false;
         while (true)
         {
@@ -182,8 +190,9 @@ public class UploadService extends Service
                 {
                     pathToUpload = pathLower;
                 }
-                if(pid != null) {
-                    if(pathLower.endsWith(pid))
+                if (patientID != null)
+                {
+                    if (pathLower.endsWith(patientID))
                     {
                         patientFolderExists = true;
                     }
@@ -199,10 +208,11 @@ public class UploadService extends Service
         }
 
         // get the subfolder from the settings
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
-        String subFolder = sp.getString ("study_location", "Vixiar_Internal-Testing");
-        pathToUpload += "/" + subFolder + "/" + pid;
-        if(!patientFolderExists) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(NavigatorApplication.getAppContext());
+        String subFolder = sp.getString("study_location", "Vixiar_Internal-Testing");
+        pathToUpload += "/" + subFolder + "/" + patientID;
+        if (!patientFolderExists)
+        {
             createFolder(pathToUpload);
         }
         return pathToUpload;
@@ -227,6 +237,13 @@ public class UploadService extends Service
             }
         }
         return inFiles;
+    }
+
+    private void DeleteFile(String filePath)
+    {
+        File file = new File(filePath);
+
+        boolean deleted = file.delete();
     }
 
     /*
@@ -281,7 +298,6 @@ public class UploadService extends Service
                         .uploadAndFinish(in);
                 Thread.sleep(10000);
                 //TODO add content hash check here with metadata.getContentHash(), if successful then delete file
-                boolean deleted = file.delete();
 
             }
             catch (DbxException | IOException | InterruptedException e)
@@ -306,18 +322,80 @@ public class UploadService extends Service
         m_Paused = false;
     }
 
-    public void createFolder(String folderName) throws DbxException {
-        try {
+    public void createFolder(String folderName) throws DbxException
+    {
+        try
+        {
             FolderMetadata folder = client.files().createFolder(folderName);
-        } catch (CreateFolderErrorException err) {
-            if (err.errorValue.isPath() && err.errorValue.getPathValue().isConflict()) {
-                Log.e(TAG,"Something already exists at the path.");
-            } else {
-                Log.e(TAG,"Some other CreateFolderErrorException occurred..." + err.toString());
+        }
+        catch (CreateFolderErrorException err)
+        {
+            if (err.errorValue.isPath() && err.errorValue.getPathValue().isConflict())
+            {
+                Log.e(TAG, "Something already exists at the path.");
             }
-        } catch (Exception err) {
-            Log.e(TAG,"Some other Exception occurred..." +  err.toString());
+            else
+            {
+                Log.e(TAG, "Some other CreateFolderErrorException occurred..." + err.toString());
+            }
+        }
+        catch (Exception err)
+        {
+            Log.e(TAG, "Some other Exception occurred..." + err.toString());
         }
     }
 
+    private static String GetPatientIDFromCSVFile(String file)
+    {
+        String patID = null;
+
+        FileInputStream inputStream = null;
+        Scanner fileScanner = null;
+        try
+        {
+            inputStream = new FileInputStream(file);
+            fileScanner = new Scanner(inputStream, "UTF-8");
+
+            while (fileScanner.hasNextLine())
+            {
+                String line = fileScanner.nextLine();
+
+                // find the line that's the header for the PPG samples
+                if (line.contains("Subject ID"))
+                {
+                    {
+                        String[] splitLine = line.split(",");
+                        patID = splitLine[1].replaceAll(" ", "").toUpperCase();
+                    }
+                }
+                // note that Scanner suppresses exceptions
+                if (fileScanner.ioException() != null)
+                {
+                    throw fileScanner.ioException();
+                }
+            }
+        }
+        catch (IOException e)
+        {
+
+        }
+        finally
+        {
+            if (inputStream != null)
+            {
+                try
+                {
+                    inputStream.close();
+                }
+                catch (IOException e)
+                {
+                }
+            }
+            if (fileScanner != null)
+            {
+                fileScanner.close();
+            }
+        }
+        return patID;
+    }
 }
