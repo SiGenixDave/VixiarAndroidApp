@@ -693,7 +693,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_unchecked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
-                String result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(0)) +
+                String result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) +
                         " mmHg";
                 m_txtResults1.setText(result);
                 break;
@@ -702,10 +702,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
-                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(0)) +
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) +
                         " mmHg";
                 m_txtResults1.setText(result);
-                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(1)) +
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(1)) +
                         " mmHg";
                 m_txtResults2.setText(result);
                 break;
@@ -714,13 +714,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_checked);
-                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(0)) +
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) +
                         " mmHg";
                 m_txtResults1.setText(result);
-                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(1)) +
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(1)) +
                         " mmHg";
                 m_txtResults2.setText(result);
-                result = String.format("%1$,.2f", PatientInfo.getInstance().get_LVEDP(2)) +
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(2)) +
                         " mmHg";
                 m_txtResults3.setText(result);
 
@@ -728,7 +728,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                                         PatientInfo.getInstance().get_LVEDP(1) +
                                         PatientInfo.getInstance().get_LVEDP(2)) / 3.0);
                 TextView avgText = findViewById(R.id.lblTestAverage);
-                avgText.setText(String.format("%1$,.2f", avg) + " mmHg");
+                avgText.setText(RoundAndTruncateDouble(avg) + " mmHg");
 
                 break;
 
@@ -739,6 +739,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
         }
+    }
+
+    private String RoundAndTruncateDouble(double value)
+    {
+        String s = String.format("%d", (int)(value + 0.5));
+        return s;
     }
 
     private void SetResultsViewComplete()
