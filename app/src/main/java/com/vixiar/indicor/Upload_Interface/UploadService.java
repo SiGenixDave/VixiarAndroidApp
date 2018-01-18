@@ -16,9 +16,12 @@ import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
+import com.dropbox.core.v2.files.FolderMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
+import com.dropbox.core.v2.files.CreateFolderErrorException;
 import com.vixiar.indicor.Application.NavigatorApplication;
+import com.vixiar.indicor.Data.PatientInfo;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -168,6 +171,8 @@ public class UploadService extends Service
     {
         ListFolderResult result = client.files().listFolder("");
         String pathToUpload = "";
+        String pid = PatientInfo.getInstance().get_patientId();
+        boolean patientFolderExists = false;
         while (true)
         {
             for (Metadata metadata : result.getEntries())
@@ -176,6 +181,12 @@ public class UploadService extends Service
                 if (pathLower.startsWith("/vixiar-data"))
                 {
                     pathToUpload = pathLower;
+                }
+                if(pid != null) {
+                    if(pathLower.endsWith(pid))
+                    {
+                        patientFolderExists = true;
+                    }
                 }
             }
 
@@ -190,9 +201,10 @@ public class UploadService extends Service
         // get the subfolder from the settings
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
         String subFolder = sp.getString ("study_location", "Vixiar_Internal-Testing");
-
-        pathToUpload += "/" + subFolder;
-
+        pathToUpload += "/" + subFolder + "/" + pid;
+        if(!patientFolderExists) {
+            createFolder(pathToUpload);
+        }
         return pathToUpload;
     }
 
@@ -294,5 +306,18 @@ public class UploadService extends Service
         m_Paused = false;
     }
 
+    public void createFolder(String folderName) throws DbxException {
+        try {
+            FolderMetadata folder = client.files().createFolder(folderName);
+        } catch (CreateFolderErrorException err) {
+            if (err.errorValue.isPath() && err.errorValue.getPathValue().isConflict()) {
+                Log.e(TAG,"Something already exists at the path.");
+            } else {
+                Log.e(TAG,"Some other CreateFolderErrorException occurred..." + err.toString());
+            }
+        } catch (Exception err) {
+            Log.e(TAG,"Some other Exception occurred..." +  err.toString());
+        }
+    }
 
 }
