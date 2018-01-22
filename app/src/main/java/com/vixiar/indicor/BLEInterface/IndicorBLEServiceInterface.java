@@ -513,7 +513,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             {
                 // make sure the sequence number is right
                 int receivedSequenceNumber = (arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED)[0] & 0xFF);
-                Log.i(TAG, "Received RT data, seq number= " + receivedSequenceNumber);
+                //Log.i(TAG, "Received RT data, seq number= " + receivedSequenceNumber);
                 if (m_expectedRTDataSequnceNumber == 0)
                 {
                     // if the expected count is 0, then this is the first packet, just save the value
