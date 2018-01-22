@@ -2,37 +2,36 @@ package com.vixiar.indicor.Upload_Interface;
 
 import android.annotation.TargetApi;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.content.*;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.CreateFolderErrorException;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.FolderMetadata;
-import com.dropbox.core.v2.files.ListFolderResult;
-import com.dropbox.core.v2.files.Metadata;
-import com.dropbox.core.v2.files.CreateFolderErrorException;
+import com.dropbox.core.v2.files.GetMetadataErrorException;
 import com.vixiar.indicor.Application.NavigatorApplication;
-import com.vixiar.indicor.Data.PatientInfo;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.File;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Created by gsevinc on 11/28/2017.
@@ -46,8 +45,9 @@ import java.util.ArrayList;
 public class UploadService extends Service
 {
     private final static String TAG = UploadService.class.getSimpleName();
-    private DbxClientV2 client;
+    private DbxClientV2 m_dbxClient;
     private boolean m_Paused = false;
+    private boolean m_connected = false;
 
     // the ID used to filter messages from the service to the handler class
     final static String MESSAGE_ID = "vixiarUploadService";
@@ -88,7 +88,7 @@ public class UploadService extends Service
             {
                 try
                 {
-                    startDropbox();
+                    StartDropbox();
                 }
                 catch (DbxException | IOException e)
                 {
@@ -103,18 +103,15 @@ public class UploadService extends Service
     /*
         Method to start dropbox api. Right now creates a test file and uploads to dropbox
      */
-    public void startDropbox() throws DbxException, IOException
+    private void StartDropbox() throws DbxException, IOException
     {
-        if (isNetworkAvailable())
+        if (IsNetworkAvailable())
         {
-            Log.i(TAG, "Connecting to dropbox");
-            DbxRequestConfig config = DbxRequestConfig.newBuilder("Indicor/1.0").build();
-            client = new DbxClientV2(config, ACCESS_TOKEN);
-            Log.i(TAG, "Connected to dropbox:" + client.users().getCurrentAccount().getName().getDisplayName());
+            m_connected = ConnectToDropbox();
         }
         else
         {
-            // set a service flag to false
+            m_connected = false;
         }
 
         // Run upload check every 10 seconds
@@ -124,104 +121,111 @@ public class UploadService extends Service
             @Override
             public void run()
             {
-                try
+                if (!m_Paused)
                 {
-                    if (!m_Paused)
+                    if (m_connected)
                     {
-                        checkForFilesToUpload();
+                        CheckForFilesToUpload();
                     }
-                }
-                catch (DbxException | IOException e)
-                {
-                    Log.e(TAG, "Error uploading files");
+                    else
+                    {
+                        if (IsNetworkAvailable())
+                        {
+                            Log.i(TAG, "Network available");
+                            m_connected = ConnectToDropbox();
+                        }
+                        else
+                        {
+                            Log.i(TAG, "Network not available");
+                            m_connected = false;
+                        }
+                    }
                 }
             }
         }, 0, 10000);
     }
 
+    private boolean ConnectToDropbox()
+    {
+        try
+        {
+            Log.i(TAG, "Connecting to dropbox");
+            DbxRequestConfig config = DbxRequestConfig.newBuilder("Indicor/1.0").build();
+            m_dbxClient = new DbxClientV2(config, ACCESS_TOKEN);
+            Log.i(TAG, "Connected to dropbox:" + m_dbxClient.users().getCurrentAccount().getName().getDisplayName());
+            return (m_dbxClient != null);
+        }
+        catch (DbxException e)
+        {
+            Log.e(TAG, "Error connecting");
+        }
+        return false;
+    }
+
     /*
         Check if there are files to upload, if so, call uploadFilesToDropbox
      */
-    public void checkForFilesToUpload() throws DbxException, IOException
+    private void CheckForFilesToUpload()
     {
-        if (isNetworkAvailable())
+        try
         {
-            String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-            File baseDirFile = new File(baseDir);
-            List<String> filePaths = getFilesInPath(baseDirFile);
-            if (filePaths.size() != 0)
+            if (IsNetworkAvailable())
             {
-                Log.i(TAG, "Have files to upload.");
-                for (String filePath : filePaths)
+                String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+                File baseDirFile = new File(baseDir);
+                List<String> filePaths = GetFilesInPath(baseDirFile);
+                if (filePaths.size() != 0)
                 {
-                    Log.i(TAG, "uploading file " + filePath);
-
-                    // get the patient id for this file
-                    String patientID = GetPatientIDFromCSVFile(filePath);
-
-                    if (patientID != null)
+                    Log.i(TAG, "Have files to upload.");
+                    for (String filePath : filePaths)
                     {
-                        uploadFileToDropbox(filePath, getDropboxDirectory(patientID));
-                        DeleteFile(filePath);
+                        Log.i(TAG, "uploading file " + filePath);
+
+                        // get the patient id for this file
+                        String patientID = GetPatientIDFromCSVFile(filePath);
+
+                        if (patientID != null)
+                        {
+                            if (UploadFileToDropbox(filePath, GetDropboxDirectory(patientID)) == true)
+                            {
+                                // delete the file if the copy worked
+                                Log.i(TAG, "deleting file - " + filePath);
+                                DeleteFile(filePath);
+                            }
+                        }
                     }
                 }
+                else
+                {
+                    Log.i(TAG, "No files to upload.");
+                }
             }
-            else
-            {
-                Log.i(TAG, "No files to upload.");
-            }
+        }
+        catch (DbxException | IOException e)
+        {
+            Log.e(TAG, "Dropbox exception");
         }
     }
 
     /*
         Gets the current directory for indicor application within the OS
      */
-    public String getDropboxDirectory(String patientID) throws DbxException
+    private String GetDropboxDirectory(String patientID) throws DbxException
     {
-        ListFolderResult result = client.files().listFolder("");
-        String pathToUpload = "";
-        boolean patientFolderExists = false;
-        while (true)
-        {
-            for (Metadata metadata : result.getEntries())
-            {
-                String pathLower = metadata.getPathLower();
-                if (pathLower.startsWith("/vixiar-data"))
-                {
-                    pathToUpload = pathLower;
-                }
-                if (patientID != null)
-                {
-                    if (pathLower.endsWith(patientID))
-                    {
-                        patientFolderExists = true;
-                    }
-                }
-            }
-
-            if (!result.getHasMore())
-            {
-                break;
-            }
-
-            result = client.files().listFolderContinue(result.getCursor());
-        }
-
         // get the subfolder from the settings
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(NavigatorApplication.getAppContext());
         String subFolder = sp.getString("study_location", "Vixiar_Internal-Testing");
-        pathToUpload += "/" + subFolder + "/" + patientID;
-        if (!patientFolderExists)
-        {
-            createFolder(pathToUpload);
-        }
+
+        String pathToUpload = "/vixiar-data/" + subFolder + "/" + patientID.toUpperCase();
+        Log.i(TAG, "Path to upload = " + pathToUpload);
+        CreateFolder(pathToUpload);
         return pathToUpload;
     }
 
     /*
         Get list of file paths to upload
      */
-    public List<String> getFilesInPath(File path)
+    private List<String> GetFilesInPath(File path)
     {
         ArrayList<String> inFiles = new ArrayList<String>();
         File[] fileNames = path.listFiles();
@@ -249,7 +253,7 @@ public class UploadService extends Service
     /*
         Creates a test file to test with dropbox
      */
-    public String createTestFile() throws IOException
+    private String createTestFile() throws IOException
     {
         String filename = "tester.csv";
         File file = new File(getApplicationContext().getFilesDir(), filename);
@@ -273,43 +277,55 @@ public class UploadService extends Service
     /*
         Check internet connectivity
      */
-    private boolean isNetworkAvailable()
+    private boolean IsNetworkAvailable()
     {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+
+        boolean available = (activeNetworkInfo != null && activeNetworkInfo.isConnected());
+
+        if (!available)
+        {
+            m_connected = false;
+        }
+        return available;
     }
 
 
     /*
         Uploads file to Dropbox, given a file path and an upload path.
      */
-    public void uploadFileToDropbox(String filePath, String uploadPath) throws DbxException, IOException
+    private boolean UploadFileToDropbox(String filePath, String uploadPath) throws DbxException, IOException
     {
-        if (isNetworkAvailable())
+        boolean status = false;
+
+        if (IsNetworkAvailable())
         {
             Log.i(TAG, "Have internet connection.");
             File file = new File(filePath);
             Log.i(TAG, "Path: " + file.getCanonicalPath());
             try (InputStream in = new FileInputStream(filePath))
             {
-                FileMetadata metadata = client.files().uploadBuilder(uploadPath + "/" + file.getName())
-                        .uploadAndFinish(in);
+                String fileName = uploadPath + "/" + file.getName();
+                FileMetadata metadata = m_dbxClient.files().uploadBuilder(fileName).uploadAndFinish(in);
                 Thread.sleep(10000);
                 //TODO add content hash check here with metadata.getContentHash(), if successful then delete file
-
+                status = CheckIfFileWasTransferred(fileName);
             }
             catch (DbxException | IOException | InterruptedException e)
             {
                 Log.e(TAG, "Error uploading file");
+                status = false;
             }
         }
         else
         {
             //set a service flag to false
             Log.i(TAG, "No internet connection.");
+            status = false;
         }
+        return status;
     }
 
     public void Pause()
@@ -322,11 +338,11 @@ public class UploadService extends Service
         m_Paused = false;
     }
 
-    public void createFolder(String folderName) throws DbxException
+    private void CreateFolder(String folderName) throws DbxException
     {
         try
         {
-            FolderMetadata folder = client.files().createFolder(folderName);
+            FolderMetadata folder = m_dbxClient.files().createFolder(folderName);
         }
         catch (CreateFolderErrorException err)
         {
@@ -345,7 +361,28 @@ public class UploadService extends Service
         }
     }
 
-    private static String GetPatientIDFromCSVFile(String file)
+    private boolean CheckIfFileWasTransferred(String file)
+    {
+        try
+        {
+            m_dbxClient.files().getMetadata(file);
+            return true;
+        }
+        catch (GetMetadataErrorException e)
+        {
+            if (e.getMessage().contains("{\".tag\":\"path\",\"path\":\"not_found\"}"))
+            {
+                return false;
+            }
+        }
+        catch (DbxException e)
+        {
+            System.out.println("DbxException");
+        }
+        return false;
+    }
+
+    private String GetPatientIDFromCSVFile(String file)
     {
         String patID = null;
 
