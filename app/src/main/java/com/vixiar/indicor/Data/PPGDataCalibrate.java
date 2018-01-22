@@ -66,7 +66,6 @@ public class PPGDataCalibrate {
 
         // Verify that we have the required number of peaks and valleys
         if ((peaks.size() < minPeaks) || (valleys.size() < minValleys)) {
-            m_StartIndex = -1;
             return false;
         }
 

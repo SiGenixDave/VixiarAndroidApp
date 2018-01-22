@@ -185,10 +185,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case PPG_CAL_TIMER_ID:
 
-                Log.d ("DAS", "PPG_CAL_TIMER_ID expired");
                 // Update the y scaling on the chart ony for first stability check, use the
                 // saved y axis scaled values for the remaining 2 tests
-                if (m_PPPGDataCalibrate.Complete(7, 7) && (m_nTestNumber == 1))
+                if (m_PPPGDataCalibrate.Complete(7, 7))
                 {
                     double yMaxScaling = m_PPPGDataCalibrate.getYMaxChartScale();
                     double yMinScaling = m_PPPGDataCalibrate.getYMinChartScale();
@@ -196,9 +195,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_chartPPG.getViewport().setMaxY(yMaxScaling);
                     m_chartPPG.getViewport().setMinY(yMinScaling);
 
-                    Log.d("DAS", "Max = " + yMaxScaling);
-                    Log.d("DAS", "Min = " + yMinScaling);
                     m_chartPPG.getViewport().setYAxisBoundsManual(true);
+
                 }
                 else
                 {
@@ -302,12 +300,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             m_pressureOutTimer.Cancel();
         }
 
-        m_oneShotTimer = new GenericTimer(ONESHOT_TIMER_ID);
-        m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
-        m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
-        m_pressureOutTimer = new GenericTimer(PRESSURE_OUT_TIMER_ID);
-
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
+
     }
 
     @Override
@@ -537,6 +531,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_spinnerProgress.setVisibility(View.VISIBLE);
         m_txtHeartRate.setVisibility(View.VISIBLE);
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
+
+        m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
+
+
+        m_PPPGDataCalibrate.Start();
+        m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
+
     }
 
     private void SwitchToTestingView()
@@ -799,9 +800,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
         m_pressureOutTimer = new GenericTimer(PRESSURE_OUT_TIMER_ID);
 
-        m_PPPGDataCalibrate.Start();
-        m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
-
         m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
     }
 
@@ -861,6 +859,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_periodicTimer.Start(this, ONE_SEC, false);
                     m_nCountdownSecLeft = AFTER_STABLE_DELAY_SECONDS;
                     UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                    m_oneShotTimer.Cancel();
                 }
                 else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
@@ -923,6 +922,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 {
                     DisplayPressureErrorOnStart();
                     m_testingState = Testing_State.PRESSURE_ERROR;
+                    m_oneShotTimer.Cancel();
                 }
                 break;
 
