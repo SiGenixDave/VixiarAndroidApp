@@ -87,12 +87,16 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
     private BluetoothDevice m_connectedDevice;
 
+    // the low battery level msg will popup if battery is at or below this percentage
+    private final int BATTERY_LEVEL_LOW_FOR_TEST = 20;
+
     // dialog ids handled here
     private final int DLG_ID_AUTHENTICATION_ERROR = 0;
     private final int DLG_ID_NO_PAIRED_DEVICE = 1;
     private final int DLG_ID_NO_HANDHELDS = 2;
     private final int DLG_ID_CONNECTION_ERROR = 3;
     private final int DLG_ID_SEQUENCE_ERROR = 4;
+    private final int DLG_ID_LOW_BATTERY = 5;
 
     private enum IndicorConnection_State
     {
@@ -357,8 +361,6 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 if (event == Connection_Event.EVT_REVISION_READ)
                 {
                     m_VixiarHHBLEService.ReadBatteryLevel();
-                    // start the timer to update the battery level
-                    m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
                     m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_BATTERY;
                     Log.i(TAG, "STATE_REQUESTED_BATTERY");
                 }
@@ -367,10 +369,29 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case STATE_REQUESTED_BATTERY:
                 if (event == Connection_Event.EVT_BATTERY_READ)
                 {
-                    m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
-                    m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
-                    m_expectedRTDataSequnceNumber = 0;
-                    Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
+                    // make sure the battery level is enough to start a test
+                    if (GetLastReadBatteryLevel() <= BATTERY_LEVEL_LOW_FOR_TEST)
+                    {
+                        // stop the connection timeout timer
+                        m_connectionTimeoutTimer.Cancel();
+
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
+                                m_ActivityContext.getString(R.string.dlg_title_low_battery),
+                                m_ActivityContext.getString(R.string.dlg_msg_low_battery),
+                                "Ok",
+                                null,
+                                m_ActivityContext, DLG_ID_LOW_BATTERY, this);
+                    }
+                    else
+                    {
+                        // start the timer to update the battery level
+                        m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
+
+                        m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
+                        m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
+                        m_expectedRTDataSequnceNumber = 0;
+                        Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
+                    }
                 }
                 break;
 
@@ -463,6 +484,19 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 m_CallbackInterface.iError(ERROR_SEQUENCE_ERROR);
                 m_VixiarHHBLEService.DisconnectFromIndicor();
                 break;
+
+            case DLG_ID_LOW_BATTERY:
+                // re start the connection timeout timer
+                m_connectionTimeoutTimer.Start(this, CCONNECTION_TIMEOUT_MS, true);
+
+                // start the timer to update the battery level
+                m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
+
+                m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
+                m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
+                m_expectedRTDataSequnceNumber = 0;
+                Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
+                break;
         }
     }
 
@@ -530,7 +564,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
                     // show a dialog
                     CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1,
-                            m_ActivityContext.getString(R.string.dlg_title_sequene_error),
+                            m_ActivityContext.getString(R.string.dlg_title_sequence_error),
                             m_ActivityContext.getString(R.string.dlg_msg_sequence_error),
                             "Ok",
                             null,

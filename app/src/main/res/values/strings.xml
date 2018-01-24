@@ -165,10 +165,14 @@
         has been lost.  Make sure the power remains on and the device stays within range of the
         tablet. &end_test_warning; </string>
 
-    <string name="dlg_title_sequene_error">COMMUNICATIONS ERROR</string>
+    <string name="dlg_title_sequence_error">COMMUNICATIONS ERROR</string>
     <string name="dlg_msg_sequence_error">There was an error in the data received from the handheld.
         The sequence numbers were not correct.</string>
     <string name="title_activity_settings">Settings</string>
+
+    <string name="dlg_title_low_battery">LOW BATTERY</string>
+    <string name="dlg_msg_low_battery">The battery level is very low on the handheld device.  Consider charging the
+        handheld before beginning a test to prevent loss of data.</string>
 
     <!-- Strings related to Settings -->
     <string name="pref_title_study_location">Study location</string>
