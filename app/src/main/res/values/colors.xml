@@ -16,6 +16,7 @@
     <color name="colorGraphTopAndBottomInactive">#D1D3D4</color>
     <color name="colorGraphCenterInactive">#69747D</color>
     <color name="colorChartLine">#808080</color>
+    <color name="colorTargetLine">#dedede</color>
     <color name="colorDialogTitleGreen">#8AC640</color>
     <color name="colorDialogTitleBlue">#33A6D4</color>
     <color name="colorDialogTitleOrange">#F26431</color>

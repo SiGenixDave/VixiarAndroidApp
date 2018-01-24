@@ -161,6 +161,11 @@ public class PracticePressureGraph extends View
         centerPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorGraphCenterActive));
         centerPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
 
+        Paint targetLinePaint = new Paint(0);
+        targetLinePaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorTargetLine));
+        targetLinePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        targetLinePaint.setStrokeWidth(2);
+
         // draw the top rect
         canvas.drawRect(barLeftPosition, topSegmentTop, barWidth + barLeftPosition, topSegmentBottom, topAndBottomPaint);
 
@@ -182,6 +187,10 @@ public class PracticePressureGraph extends View
         blackPaint.setStrokeWidth(txZoneLineStroke);
         canvas.drawLine(barWidth + barLeftPosition, middleSegmentTop - (gapBetweenBars / 2), contentWidth - paddingRight, middleSegmentTop - (gapBetweenBars / 2), blackPaint);
         canvas.drawLine(barWidth + barLeftPosition, bottomSegmentTop - (gapBetweenBars / 2), contentWidth - paddingRight, bottomSegmentTop - (gapBetweenBars / 2), blackPaint);
+
+        // draw a line across the center so you know the target pressure
+        canvas.drawLine(barLeftPosition, middleSegmentTop + ((middleSegmentBottom - middleSegmentTop) / 2 ), barLeftPosition + barWidth,
+                middleSegmentTop + ((middleSegmentBottom - middleSegmentTop) / 2 ), targetLinePaint);
     }
 
     public void DrawLabels(Canvas canvas)

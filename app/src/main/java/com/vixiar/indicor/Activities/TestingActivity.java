@@ -411,10 +411,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_testingState = Testing_State.STABILIZING;
 
                 PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
-
-                // start the stability timer
-                m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
-
                 break;
 
             case DLG_ID_CANCEL_TEST:

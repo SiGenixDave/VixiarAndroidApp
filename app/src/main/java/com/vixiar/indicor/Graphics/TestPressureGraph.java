@@ -167,6 +167,11 @@ public class TestPressureGraph extends View
         }
         centerPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
 
+        Paint targetLinePaint = new Paint(0);
+        targetLinePaint.setColor(ContextCompat.getColor(this.getContext(), R.color.colorTargetLine));
+        targetLinePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        targetLinePaint.setStrokeWidth(2);
+
         // draw the top rect
         canvas.drawRect(barLeftPosition, topSegmentTop, barWidth+barLeftPosition, topSegmentBottom, topAndBottomPaint);
 
@@ -181,6 +186,10 @@ public class TestPressureGraph extends View
 
         // draw the bottom circle
         canvas.drawCircle(barLeftPosition + (barWidth / 2), bottomSegmentBottom, barWidth / 2, topAndBottomPaint);
+
+        // draw a line across the center so you know the target pressure
+        canvas.drawLine(barLeftPosition, middleSegmentTop + ((middleSegmentBottom - middleSegmentTop) / 2 ),
+                barLeftPosition + barWidth, middleSegmentTop + ((middleSegmentBottom - middleSegmentTop) / 2 ), targetLinePaint);
     }
 
     public void DrawLabels(Canvas canvas)
