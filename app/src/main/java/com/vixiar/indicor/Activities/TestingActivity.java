@@ -532,6 +532,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
 
+        HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
 
         m_PPPGDataCalibrate.Start();
         m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
