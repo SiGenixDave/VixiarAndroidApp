@@ -389,11 +389,11 @@ public class IndicorBLEService extends Service implements TimerCallback
 
             m_bConnectedToIndicor = false;
 
-            if (m_realTimeDataTimeoutTimer != null)
-            {
-                m_realTimeDataTimeoutTimer.Cancel();
-                Log.i(TAG, "Timeout timer cancelled");
-            }
+        }
+        if (m_realTimeDataTimeoutTimer != null)
+        {
+            m_realTimeDataTimeoutTimer.Cancel();
+            Log.i(TAG, "Timeout timer cancelled");
         }
     }
 
