@@ -128,6 +128,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
+    private final int VALSALVA_LOADING_FINAL_RESULTS_DELAY_MS = 15000;
     private final int ONE_SEC = 1000;
     private final int NEXT_TEST_DELAY_SECONDS = 60;
     private final int VALSALVA_DURATION_SECONDS = 10;
@@ -602,7 +603,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_graphPressure.SetGraphActiveMode(m_graphPressure.INACTIVE);
         m_lblTimeRemaining.setVisibility(View.INVISIBLE);
         m_lblBottomCountdownNumber.setVisibility(View.INVISIBLE);
-        m_lblBottomMessage.setText(R.string.loading_results);
+        if (m_nTestNumber < 3)
+        {
+            m_lblBottomMessage.setText(R.string.loading_results);
+        }
+        else
+        {
+            m_lblBottomMessage.setText(R.string.processing);
+        }
     }
 
     private void SwitchToResultsView()
@@ -973,7 +981,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             m_pressureOutTimer.Cancel();
                             SetupLoadingResultsView();
                             m_testingState = Testing_State.LOADING_RESULTS;
-                            m_oneShotTimer.Start(this, VALSALVA_LOADING_RESULTS_DELAY_MS, true);
+                            if (m_nTestNumber < 3)
+                            {
+                                m_oneShotTimer.Start(this, VALSALVA_LOADING_RESULTS_DELAY_MS, true);
+                            }
+                            else
+                            {
+                                m_oneShotTimer.Start(this, VALSALVA_LOADING_FINAL_RESULTS_DELAY_MS, true);
+                            }
                         }
                     }
                 }

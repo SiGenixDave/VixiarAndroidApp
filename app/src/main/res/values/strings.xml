@@ -74,6 +74,7 @@
     <string name="test_will_begin">Test will begin in </string>
 
     <string name="loading_results">Loading Results...</string>
+    <string name="processing">Processing...please remain still until complete</string>
     <string name="exhale">Exhale. Hold constant pressure.</string>
     <string name="measurement1">Measurement 1</string>
     <string name="measurement2">Measurement 2</string>
