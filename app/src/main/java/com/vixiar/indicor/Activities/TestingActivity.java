@@ -251,8 +251,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     public void iError(int e)
     {
         //TODO Currently any error will take the user back to main screen
-        Intent intent = new Intent(TestingActivity.this, MainActivity.class);
-        startActivity(intent);
+        ExitToMainActivity();
     }
 
     @Override
