@@ -90,7 +90,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         VALSALVA,
         LOADING_RESULTS,
         RESULTS,
-        LAST_TEST_DONE_WAIT_FOR_15_SEC,
         COMPLETE,
         PRESSURE_ERROR,
     }
@@ -129,7 +128,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
-    private final int DELAY_AFTER_LAST_TEST_BEFORE_DISCONNECT_MS = 15000;
     private final int ONE_SEC = 1000;
     private final int NEXT_TEST_DELAY_SECONDS = 60;
     private final int VALSALVA_DURATION_SECONDS = 10;
@@ -997,11 +995,19 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
+                        // disconect from the handheld
+                        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+
+                        // pause the upload service so it doesn't try to send a partial file
+                        UploadServiceInterface.getInstance().PauseUpload();
+
+                        // save the csv file
+                        PatientInfo.getInstance().SaveCSVFile(this);
+
+                        UploadServiceInterface.getInstance().ResumeUpload();
                         SwitchToResultsView();
                         SetResultsViewComplete();
-                        DisableHomeButton();
-                        m_testingState = Testing_State.LAST_TEST_DONE_WAIT_FOR_15_SEC;
-                        m_oneShotTimer.Start(this, DELAY_AFTER_LAST_TEST_BEFORE_DISCONNECT_MS, true);
+                        m_testingState = Testing_State.COMPLETE;
                     }
                 }
                 break;
@@ -1037,24 +1043,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 break;
 
-            case LAST_TEST_DONE_WAIT_FOR_15_SEC:
-                if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
-                {
-                    // pause the upload service so it doesn't try to send a partial file
-                    UploadServiceInterface.getInstance().PauseUpload();
-
-                    // save the csv file
-                    PatientInfo.getInstance().SaveCSVFile(this);
-
-                    UploadServiceInterface.getInstance().ResumeUpload();
-
-                    // disconnect from the handheld
-                    IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
-
-                    EnableHomeButton();
-                    m_testingState = Testing_State.COMPLETE;
-                }
-                break;
 
             case COMPLETE:
                 // sit here and wait for the user to click the home button
