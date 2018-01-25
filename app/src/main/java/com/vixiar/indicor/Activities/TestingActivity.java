@@ -380,19 +380,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     @Override
     public void onBackPressed()
     {
-        if (m_testingState != Testing_State.VALSALVA &&
-                m_testingState != Testing_State.VALSALVA_WAIT_FOR_PRESSURE &&
-                m_testingState != Testing_State.LOADING_RESULTS)
-        {
-            // stop any running timers
-            m_periodicTimer.Cancel();
-            m_oneShotTimer.Cancel();
-            m_ppgcalTimer.Cancel();
-            m_pressureOutTimer.Cancel();
-
-            Log.i(TAG, "OnBackPressed");
-            super.onBackPressed();
-        }
     }
 
     @Override
@@ -413,9 +400,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case DLG_ID_CANCEL_TEST:
-                PatientInfo.getInstance().ClearAllPatientData();
-                Intent intent = new Intent(TestingActivity.this, MainActivity.class);
-                startActivity(intent);
+                ExitToMainActivity();
                 break;
         }
     }
@@ -429,15 +414,28 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case DLG_ID_HR_NOT_STABLE:
             case DLG_ID_PRESSURE_ERROR_START:
             case DLG_ID_PRESSURE_ERROR_RUNNING:
-                // this is the "End test" button, we need to go back to the main screen
-                IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
+                ExitToMainActivity();
                 break;
         }
     }
 
 
+    private void ExitToMainActivity()
+    {
+        // stop any running timers
+        m_periodicTimer.Cancel();
+        m_oneShotTimer.Cancel();
+        m_ppgcalTimer.Cancel();
+        m_pressureOutTimer.Cancel();
+
+        // disconnect from the handheld
+        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+
+        // clear any data and return to the main activity
+        PatientInfo.getInstance().ClearAllPatientData();
+        Intent intent = new Intent(TestingActivity.this, MainActivity.class);
+        startActivity(intent);
+    }
 
     // GUI functions
 
@@ -463,7 +461,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             @Override
             public void onClick(View view)
             {
-                onBackPressed();
+                UserRequestingToCancel();
             }
         });
 
@@ -499,6 +497,16 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private String GetMeasurementScreenTitle()
     {
         return getString(R.string.measurement) + " " + String.valueOf(m_nTestNumber) + "/3";
+    }
+
+    private void UserRequestingToCancel()
+    {
+        // display the test cancel dialog
+        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                getString(R.string.dlg_title_cancel_test),
+                getString(R.string.dlg_msg_cancel_test),
+                "Yes",
+                "No", TestingActivity.this, DLG_ID_CANCEL_TEST, TestingActivity.this);
     }
 
     private void InactivateStabilityView()
@@ -560,7 +568,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             @Override
             public void onClick(View view)
             {
-                onBackPressed();
+                UserRequestingToCancel();
             }
         });
 
@@ -654,18 +662,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         if (m_nTestNumber < 3)
         {
-            HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.end_test));
+            HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
             HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
             {
                 @Override
                 public void onClick(View view)
                 {
-                    // display the test cancel dialog
-                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                            getString(R.string.dlg_title_cancel_test),
-                            getString(R.string.dlg_msg_cancel_test),
-                            "Yes",
-                            "No", TestingActivity.this, DLG_ID_CANCEL_TEST, TestingActivity.this);
+                    UserRequestingToCancel();
                 }
             });
         }

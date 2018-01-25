@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE resources [
-    <!ENTITY end_test_warning "\nIf you select &lt;End Test&gt;, all data collected from this test and Patient Information
-    will be lost.">
+    <!ENTITY end_test_warning1 "\n\nIF YOU SELECT \u0022END TEST\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
+    WILL BE LOST.">
+    <!ENTITY end_test_warning2 "\n\nIF YOU SELECT \u0022YES\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
+    WILL BE LOST.">
     ]>
 
 <resources>
@@ -131,7 +133,7 @@
 
     <string name="dlg_title_no_handhelds">NO HANDHELD FOUND</string>
     <string name="dlg_msg_no_handhelds">No Indicor handhelds were detected.  Please make sure
-        the Indicor handheld is powered on and the blue LED is flashing. &end_test_warning; </string>
+        the Indicor handheld is powered on and the blue LED is flashing. &end_test_warning1; </string>
 
     <string name="dlg_title_pressure_error_start">ERROR</string>
     <string name="dlg_msg_pressure_error_start">You have 10 seconds from when the test starts
@@ -142,12 +144,11 @@
         range until the test is complete.</string>
 
     <string name="dlg_title_cancel_test">CANCEL TEST?</string>
-    <string name="dlg_msg_cancel_test">Do you want to cancel this test.  If you do, patient
-        information will not be saved.</string>
+    <string name="dlg_msg_cancel_test">Do you want to cancel this test? &end_test_warning2;</string>
 
     <string name="dlg_title_hr_not_stable">HEART RATE NOT STABLE</string>
     <string name="dlg_msg_hr_not_stable">The heart rate did not become stable within the allotted
-        time period. &end_test_warning;</string>
+        time period. &end_test_warning1;</string>
 
     <string name="dlg_title_connection_problem">PROBLEM CONNECTING</string>
     <string name="dlg_msg_connection_problem">There was a problem connecting to the handheld device.
@@ -164,7 +165,7 @@
     <string name="dlg_title_handheld_timeout">LOST CONNECTION</string>
     <string name="dlg_msg_handheld_timeout">It appears that the connection to the handheld device
         has been lost.  Make sure the power remains on and the device stays within range of the
-        tablet. &end_test_warning; </string>
+        tablet. &end_test_warning1; </string>
 
     <string name="dlg_title_sequence_error">COMMUNICATIONS ERROR</string>
     <string name="dlg_msg_sequence_error">There was an error in the data received from the handheld.
