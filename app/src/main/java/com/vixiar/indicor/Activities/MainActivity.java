@@ -126,6 +126,11 @@ public class MainActivity extends Activity implements CustomDialogInterface
         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
     }
 
+    @Override
+    public void onBackPressed()
+    {
+    }
+
     private void DisplaySiteName()
     {
         // get the site name from the settings
