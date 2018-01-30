@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import com.vixiar.indicor.BLEInterface.IndicorBLEService;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.Data.PatientInfo;
@@ -81,20 +82,17 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
 
     public void iRestart()
     {
-
+        IndicorBLEServiceInterface.getInstance().ConnectToIndicor();
     }
 
 
     public void iDisconnected()
     {
-        // for now, just leave the activity
-        onBackPressed();
     }
 
     public void iError(int e)
     {
-        // for now, just leave the activity
-        onBackPressed();
+        ExitToMainActivity();
     }
 
     public void iRealtimeDataNotification()
@@ -102,4 +100,16 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         int currentIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
         pvg.setBallPressure((float) PatientInfo.getInstance().getRealtimeData().GetRawData().get(currentIndex - 1).m_pressure);
     }
+
+    private void ExitToMainActivity()
+    {
+        // disconnect from the handheld
+        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+
+        // clear any data and return to the main activity
+        PatientInfo.getInstance().ClearAllPatientData();
+        Intent intent = new Intent(PracticeActivity.this, MainActivity.class);
+        startActivity(intent);
+    }
+
 }
