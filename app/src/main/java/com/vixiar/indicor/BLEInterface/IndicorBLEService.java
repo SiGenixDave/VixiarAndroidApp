@@ -217,10 +217,12 @@ public class IndicorBLEService extends Service implements TimerCallback
             else if (status == GATT_INSUFFICIENT_AUTHENTICATION)
             {
                 SendDataToConnectionClass(AUTHENTICATION_ERROR, null);
+                DisconnectFromIndicor();
             }
             else
             {
                 SendDataToConnectionClass(CONNECTION_ERROR, null);
+                DisconnectFromIndicor();
             }
         }
 
@@ -375,18 +377,18 @@ public class IndicorBLEService extends Service implements TimerCallback
     {
         Log.i(TAG, "DisconnectFromIndicor m_bluetoothAdaptor = " + m_BluetoothAdapter + ", m_bluetoothGatt = " + m_BluetoothGatt);
 
-        if (m_BluetoothAdapter != null && m_BluetoothGatt != null)
+        if (m_BluetoothGatt != null)
         {
             Log.i(TAG, "Killing m_BluetoothGat");
             m_BluetoothGatt.disconnect();
-            m_RTDataCharacteristic = null;
-            m_BatteryLevelCharacteristic = null;
-            m_RevisionInfoCharacteristic = null;
-            m_ExternalConnectionsCharacteristic = null;
-            m_PPGDriveCharacteristic = null;
-            m_RTNotificationCCCD = null;
-            m_ExternalConnectionNotificationCCCD = null;
         }
+        m_RTDataCharacteristic = null;
+        m_BatteryLevelCharacteristic = null;
+        m_RevisionInfoCharacteristic = null;
+        m_ExternalConnectionsCharacteristic = null;
+        m_PPGDriveCharacteristic = null;
+        m_RTNotificationCCCD = null;
+        m_ExternalConnectionNotificationCCCD = null;
         m_bConnectedToIndicor = false;
         if (m_realTimeDataTimeoutTimer != null)
         {
