@@ -386,10 +386,8 @@ public class IndicorBLEService extends Service implements TimerCallback
             m_PPGDriveCharacteristic = null;
             m_RTNotificationCCCD = null;
             m_ExternalConnectionNotificationCCCD = null;
-
-            m_bConnectedToIndicor = false;
-
         }
+        m_bConnectedToIndicor = false;
         if (m_realTimeDataTimeoutTimer != null)
         {
             m_realTimeDataTimeoutTimer.Cancel();
