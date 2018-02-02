@@ -12,7 +12,6 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -50,6 +49,24 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
     private NumberPicker npHeightInches;
     private NumberPicker npWeight;
     private NumberPicker npGender;
+
+    // limits for input fields
+    final int AGE_MIN = 18;
+    final int AGE_MAX = 110;
+    final int AGE_START = 50;
+    final int HEIGHT_FT_MIN = 3;
+    final int HEIGHT_FT_MAX = 7;
+    final int HEIGHT_FT_START = 5;
+    final int HEIGHT_IN_MIN = 0;
+    final int HEIGHT_IN_MAX = 11;
+    final int HEIGHT_IN_START = 8;
+    final int WEIGHT_MIN = 50;
+    final int WEIGHT_MAX = 500;
+    final int SYSTOLIC_MIN = 90;
+    final int SYSTOLIC_MAX = 160;
+    final int MIN_DIASTOLIC = 30;
+    final int MAX_DIASTOLIC = 100;
+
 
     private String[] genderString;
 
@@ -242,9 +259,9 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
 
         npAge = (NumberPicker) findViewById(R.id.npAge);
         npAge.setVisibility(View.GONE);
-        npAge.setMinValue(18);
-        npAge.setMaxValue(110);
-        npAge.setValue(50);
+        npAge.setMinValue(AGE_MIN);
+        npAge.setMaxValue(AGE_MAX);
+        npAge.setValue(AGE_START);
         npAge.setOnValueChangedListener(ageChangeListener);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
@@ -300,17 +317,17 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
 
         npHeightFeet = (NumberPicker) findViewById(R.id.npFeet);
         npHeightFeet.setVisibility(View.GONE);
-        npHeightFeet.setMinValue(3);
-        npHeightFeet.setMaxValue(7);
+        npHeightFeet.setMinValue(HEIGHT_FT_MIN);
+        npHeightFeet.setMaxValue(HEIGHT_FT_MAX);
         npHeightFeet.setOnValueChangedListener(heightChangeListener);
-        npHeightFeet.setValue(5);
+        npHeightFeet.setValue(HEIGHT_FT_START);
 
         npHeightInches = (NumberPicker) findViewById(R.id.npInches);
         npHeightInches.setVisibility(View.GONE);
-        npHeightInches.setMinValue(0);
-        npHeightInches.setMaxValue(11);
+        npHeightInches.setMinValue(HEIGHT_IN_MIN);
+        npHeightInches.setMaxValue(HEIGHT_IN_MAX);
         npHeightInches.setOnValueChangedListener(heightChangeListener);
-        npHeightInches.setValue(8);
+        npHeightInches.setValue(HEIGHT_IN_START);
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout heightGroup = (LinearLayout) findViewById(R.id.heightGroup);
@@ -327,9 +344,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         txtWeight = (EditText) findViewById(R.id.txtWeight);
         txtWeight.addTextChangedListener(fieldChangeWatcher);
         txtWeight.setShowSoftInputOnFocus(true);
-        final int minWeight = 50;
-        final int maxWeight = 500;
-        txtWeight.setFilters(new InputFilter[]{new InputFilterMinMax(minWeight >= 10 ? "0" : String.valueOf(minWeight), maxWeight > -10 ? String.valueOf(maxWeight) : "0")});
+        txtWeight.setFilters(new InputFilter[]{new InputFilterMinMax(WEIGHT_MIN >= 10 ? "0" : String.valueOf(WEIGHT_MIN), WEIGHT_MAX > -10 ? String.valueOf(WEIGHT_MAX) : "0")});
         txtWeight.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
             @Override
@@ -346,13 +361,13 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
                     txtWeight.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     try
                     {
-                        if (Integer.parseInt(txtWeight.getText().toString()) > maxWeight)
+                        if (Integer.parseInt(txtWeight.getText().toString()) > WEIGHT_MAX)
                         {
-                            txtWeight.setText(String.valueOf(maxWeight));
+                            txtWeight.setText(String.valueOf(WEIGHT_MAX));
                         }
-                        if (Integer.parseInt(txtWeight.getText().toString()) < minWeight)
+                        if (Integer.parseInt(txtWeight.getText().toString()) < WEIGHT_MIN)
                         {
-                            txtWeight.setText(String.valueOf(minWeight));
+                            txtWeight.setText(String.valueOf(WEIGHT_MIN));
                         }
                     } catch (NumberFormatException e)
                     {
@@ -378,9 +393,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         txtSystolic = (EditText) findViewById(R.id.txtSystolic);
         txtSystolic.addTextChangedListener(fieldChangeWatcher);
         txtSystolic.setShowSoftInputOnFocus(true);
-        final int minSystolic = 90;
-        final int maxSystolic = 160;
-        txtSystolic.setFilters(new InputFilter[]{new InputFilterMinMax(minSystolic >= 10 ? "0" : String.valueOf(minSystolic), maxSystolic > -10 ? String.valueOf(maxSystolic) : "0")});
+        txtSystolic.setFilters(new InputFilter[]{new InputFilterMinMax(SYSTOLIC_MIN >= 10 ? "0" : String.valueOf(SYSTOLIC_MIN), SYSTOLIC_MAX > -10 ? String.valueOf(SYSTOLIC_MAX) : "0")});
         txtSystolic.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
             @Override
@@ -397,13 +410,13 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
                     txtSystolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     try
                     {
-                        if (Integer.parseInt(txtSystolic.getText().toString()) > maxSystolic)
+                        if (Integer.parseInt(txtSystolic.getText().toString()) > SYSTOLIC_MAX)
                         {
-                            txtSystolic.setText(String.valueOf(maxSystolic));
+                            txtSystolic.setText(String.valueOf(SYSTOLIC_MAX));
                         }
-                        if (Integer.parseInt(txtSystolic.getText().toString()) < minSystolic)
+                        if (Integer.parseInt(txtSystolic.getText().toString()) < SYSTOLIC_MIN)
                         {
-                            txtSystolic.setText(String.valueOf(minSystolic));
+                            txtSystolic.setText(String.valueOf(SYSTOLIC_MIN));
                         }
                     } catch (NumberFormatException e)
                     {
@@ -428,9 +441,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         txtDiastolic = (EditText) findViewById(R.id.txtDiast);
         txtDiastolic.addTextChangedListener(fieldChangeWatcher);
         txtDiastolic.setShowSoftInputOnFocus(true);
-        final int minDiastolic = 1;
-        final int maxDiastolic = 100;
-        txtDiastolic.setFilters(new InputFilter[]{new InputFilterMinMax(minDiastolic >= 0 ? "0" : String.valueOf(minSystolic), maxDiastolic > -10 ? String.valueOf(maxDiastolic) : "0")});
+        txtDiastolic.setFilters(new InputFilter[]{new InputFilterMinMax(MIN_DIASTOLIC >= 0 ? "0" : String.valueOf(SYSTOLIC_MIN), MAX_DIASTOLIC > -10 ? String.valueOf(MAX_DIASTOLIC) : "0")});
 
         txtDiastolic.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
@@ -448,13 +459,13 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
                     txtDiastolic.setTextColor(ContextCompat.getColor(PatInfoActivity.this, R.color.colorPatientEntryNormalValue));
                     try
                     {
-                        if (Integer.parseInt(txtDiastolic.getText().toString()) > maxDiastolic)
+                        if (Integer.parseInt(txtDiastolic.getText().toString()) > MAX_DIASTOLIC)
                         {
-                            txtDiastolic.setText(String.valueOf(maxDiastolic));
+                            txtDiastolic.setText(String.valueOf(MAX_DIASTOLIC));
                         }
-                        if (Integer.parseInt(txtDiastolic.getText().toString()) < minDiastolic)
+                        if (Integer.parseInt(txtDiastolic.getText().toString()) < MIN_DIASTOLIC)
                         {
-                            txtDiastolic.setText(String.valueOf(minDiastolic));
+                            txtDiastolic.setText(String.valueOf(MIN_DIASTOLIC));
                         }
                     } catch (NumberFormatException e)
                     {
