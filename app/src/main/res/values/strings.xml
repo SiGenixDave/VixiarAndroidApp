@@ -136,7 +136,7 @@
         the Indicor handheld is powered on and the blue LED is flashing. &end_test_warning1; </string>
 
     <string name="dlg_title_pressure_error_start">ERROR</string>
-    <string name="dlg_msg_pressure_error_start">You have 10 seconds from when the test starts
+    <string name="dlg_msg_pressure_error_start">You have 5 seconds from when the test starts
         to hold the pressure in the testing range.</string>
 
     <string name="dlg_title_pressure_error_running">ERROR</string>

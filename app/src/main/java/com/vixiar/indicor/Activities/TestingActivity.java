@@ -126,13 +126,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int PPGCAL_TIME_MS = 2000;
     private final int STABILIZING_TIMEOUT_MS = 60000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
-    private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 10000;
+    private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 5000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
     private final int VALSALVA_LOADING_FINAL_RESULTS_DELAY_MS = 15000;
     private final int ONE_SEC = 1000;
     private final int NEXT_TEST_DELAY_SECONDS = 60;
     private final int VALSALVA_DURATION_SECONDS = 10;
     private final int PRESSURE_OUT_MAX_TIME_MS = 1000;
+    private final int VALSALVA_PRESSURE_ERROR_IMMEDIATELY_AFTER_SECONDS = 4;
 
     private final double VALSALVA_MIN_PRESSURE = 16.0;
     private final double VALSALVA_MAX_PRESSURE = 30.0;
@@ -209,6 +210,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case PRESSURE_OUT_TIMER_ID:
                 // the user couldn't keep the pressure in range
                 m_periodicTimer.Cancel();
+                m_pressureOutTimer.Cancel();
                 DisplayPressureErrorRunning();
                 m_testingState = Testing_State.PRESSURE_ERROR;
                 // mark the error
@@ -953,10 +955,27 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 {
                     if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
                     {
-                        // start the timer if it isn't already running
-                        if (!m_pressureOutTimer.IsRunning())
+                        // up to a point in the valsalva, the pressure is allow to swing out of range for a short period
+                        // after that, it's an error immediately
+                        // see if we're in the part of valsalva where the error is allowed
+                        if (m_nCountdownSecLeft >= (VALSALVA_DURATION_SECONDS - VALSALVA_PRESSURE_ERROR_IMMEDIATELY_AFTER_SECONDS))
                         {
-                            m_pressureOutTimer.Start(this, PRESSURE_OUT_MAX_TIME_MS, true);
+                            // start the timer if it isn't already running
+                            if (!m_pressureOutTimer.IsRunning())
+                            {
+                                m_pressureOutTimer.Start(this, PRESSURE_OUT_MAX_TIME_MS, true);
+                            }
+                        }
+                        else
+                        {
+                            // the user couldn't keep the pressure in range
+                            m_periodicTimer.Cancel();
+                            m_pressureOutTimer.Cancel();
+                            DisplayPressureErrorRunning();
+                            m_testingState = Testing_State.PRESSURE_ERROR;
+                            // mark the error
+                            PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR,
+                                    PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         }
                     }
                     else
