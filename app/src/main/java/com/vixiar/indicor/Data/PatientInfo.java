@@ -315,7 +315,7 @@ public class PatientInfo
         writer.println("Application version, " + BuildConfig.VERSION_NAME);
         writer.println("Handheld serial number," + m_handheldSerialNumber);
         writer.println("Firmware version, " + m_firmwareVersion);
-        writer.println("Study location, " + m_firmwareVersion);
+        writer.println("Study location, " + m_studyLocation);
         writer.println("Subject ID, " + m_patientId);
         writer.println("Age, " + m_age_years);
         writer.println("Gender, " + m_gender);

@@ -13,7 +13,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.location.LocationManager;
-import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -76,6 +75,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        SetSiteName();
         DisplaySiteName();
 
         // setup the top bar
@@ -131,7 +131,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
     {
     }
 
-    private void DisplaySiteName()
+    private void SetSiteName()
     {
         // get the site name from the settings
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
@@ -157,6 +157,10 @@ public class MainActivity extends Activity implements CustomDialogInterface
         {
             PatientInfo.getInstance().set_studyLocation("Vixiar Testing");
         }
+    }
+
+    private void DisplaySiteName()
+    {
         TextView tv = findViewById(R.id.txtStudyLocation);
         tv.setText(PatientInfo.getInstance().get_studyLocation());
     }
