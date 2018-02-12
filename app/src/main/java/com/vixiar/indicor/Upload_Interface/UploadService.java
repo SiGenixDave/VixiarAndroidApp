@@ -45,6 +45,7 @@ import java.util.TimerTask;
 public class UploadService extends Service
 {
     private final static String TAG = UploadService.class.getSimpleName();
+    private final static boolean USE_SUBFOLDERS = false;
     private DbxClientV2 m_dbxClient;
     private boolean m_Paused = false;
     private boolean m_connected = false;
@@ -212,11 +213,18 @@ public class UploadService extends Service
      */
     private String GetDropboxDirectory(String patientID) throws DbxException
     {
-        // get the subfolder from the settings
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(NavigatorApplication.getAppContext());
-        String subFolder = sp.getString("study_location", "Vixiar_Internal-Testing");
-
-        String pathToUpload = "/vixiar-data/" + subFolder + "/" + patientID.toUpperCase();
+        String pathToUpload = "";
+        if (USE_SUBFOLDERS)
+        {
+            // get the subfolder from the settings
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(NavigatorApplication.getAppContext());
+            String subFolder = sp.getString("study_location", "Vixiar_Internal-Testing");
+            pathToUpload = "/vixiar-data/" + subFolder + "/" + patientID.toUpperCase();
+        }
+        else
+        {
+            pathToUpload = "/vixiar-data/" + patientID.toUpperCase();
+        }
         Log.i(TAG, "Path to upload = " + pathToUpload);
         CreateFolder(pathToUpload);
         return pathToUpload;
