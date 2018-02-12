@@ -60,7 +60,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
     final int HEIGHT_IN_MIN = 0;
     final int HEIGHT_IN_MAX = 11;
     final int HEIGHT_IN_START = 8;
-    final int WEIGHT_MIN = 50;
+    final int WEIGHT_MIN = 88;
     final int WEIGHT_MAX = 500;
     final int SYSTOLIC_MIN = 90;
     final int SYSTOLIC_MAX = 160;
