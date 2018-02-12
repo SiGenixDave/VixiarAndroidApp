@@ -218,7 +218,7 @@ public class PatientInfo
 
             m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * m_aCalcMinPAR[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
                     (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
-                    (0.16182 * m_aCalcMinHR[testNumber]) - (0.06949 * m_age_years);
+                    (0.16182 * m_aCalcHRAvgRest[testNumber]) - (0.06949 * m_age_years);
             return true;
         }
         else
