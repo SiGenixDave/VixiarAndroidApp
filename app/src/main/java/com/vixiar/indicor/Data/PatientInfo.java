@@ -48,7 +48,7 @@ public class PatientInfo
     private double[] m_aCalcEndPA = new double[NUM_TESTS];
     private double[] m_aCalcMinPAR = new double[NUM_TESTS];
     private double[] m_aCalcEndPAR = new double[NUM_TESTS];
-    private double[] m_aCalcMinHR = new double[NUM_TESTS];
+    private double[] m_aCalcMinHRVM = new double[NUM_TESTS];
     private double[] m_aCalcLVEDP = new double[NUM_TESTS];
 
     public void ClearAllPatientData()
@@ -68,7 +68,7 @@ public class PatientInfo
         Arrays.fill(m_aCalcHRAvgRest, 0.0);
         Arrays.fill(m_aCalcHRAvgVM,0.0);
         Arrays.fill(m_aCalcLVEDP, 0.0);
-        Arrays.fill(m_aCalcMinHR, 0.0);
+        Arrays.fill(m_aCalcMinHRVM, 0.0);
         Arrays.fill(m_aCalcMinPA, 0.0);
         Arrays.fill(m_aCalcMinPAR, 0.0);
         Arrays.fill(m_aCalcPAAvgRest, 0.0);
@@ -214,7 +214,7 @@ public class PatientInfo
             m_aCalcEndPAR[testNumber] = m_aCalcEndPA[testNumber] / m_aCalcPAAvgRest[testNumber];
 
             // get the end HR during valsalva
-            m_aCalcMinHR[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR(tm.endIndex, tm.endIndex);
+            m_aCalcMinHRVM[testNumber] = HeartRateInfo.getInstance().MinimumHeartRate(tm.endIndex, tm.endIndex);
 
             m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * m_aCalcMinPAR[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
                     (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
@@ -351,8 +351,8 @@ public class PatientInfo
                 FormatDoubleForPrint(m_aCalcMinPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPAR[2]));
         writer.println("End PAR, " + FormatDoubleForPrint(m_aCalcEndPAR[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcEndPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPAR[2]));
-        writer.println("Min HR, " + FormatDoubleForPrint(m_aCalcMinHR[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcMinHR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHR[2]));
+        writer.println("Min HR, " + FormatDoubleForPrint(m_aCalcMinHRVM[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcMinHRVM[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHRVM[2]));
         writer.println("LVEDP, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
 
