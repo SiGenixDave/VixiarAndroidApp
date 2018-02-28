@@ -29,7 +29,7 @@ public class RealtimeData
     {
         PeakValleyDetect.getInstance().Initialize(1000, 1000, false);
         PeakValleyDetect.getInstance().ResetAlgorithm();
-        HeartRateInfo.getInstance().InitializeValidation(50.0, 4, 5.0, 40.0, 120.0, 20.0);
+        HeartRateInfo.getInstance().InitializeValidation(50.0, 4, 5.0, 40.0, 150.0, 20.0);
         firFilter.Initialize(PPGFIRFilterData);
     }
 
