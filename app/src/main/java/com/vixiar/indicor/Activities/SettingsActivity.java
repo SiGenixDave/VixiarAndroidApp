@@ -82,7 +82,7 @@ public class SettingsActivity extends PreferenceActivity
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_study_location);
+            addPreferencesFromResource(R.xml.pref_configuration);
             bindPreferenceSummaryToValue(findPreference("study_location"));
         }
     }

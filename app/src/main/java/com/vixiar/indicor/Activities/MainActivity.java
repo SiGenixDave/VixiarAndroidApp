@@ -32,6 +32,7 @@ import com.vixiar.indicor.BuildConfig;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
+import com.vixiar.indicor.FactoryTestActivity;
 import com.vixiar.indicor.R;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -266,8 +267,22 @@ public class MainActivity extends Activity implements CustomDialogInterface
     public void onStartClick(View view)
     {
         PatientInfo.getInstance().ClearAllPatientData();
-        Intent intent = new Intent(this, PatInfoActivity.class);
-        startActivity(intent);
+
+        // if we're in test mode, go to that activity, otherwise normal main activity
+        // get the site name from the settings
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
+        Boolean bTestMode = sp.getBoolean ("test_mode", false);
+
+        if (bTestMode)
+        {
+            Intent intent = new Intent(this, FactoryTestActivity.class);
+            startActivity(intent);
+        }
+        else
+        {
+            Intent intent = new Intent(this, PatInfoActivity.class);
+            startActivity(intent);
+        }
     }
 
     public void onSettingsClick(View view)

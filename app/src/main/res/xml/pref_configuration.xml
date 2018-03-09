@@ -1,5 +1,9 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <SwitchPreference
+        android:key="test_mode"
+        android:title="Testing Mode" />
+
     <ListPreference
         android:defaultValue="Vixiar_Internal-Testing"
         android:entries="@array/pref_study_location_list_titles"
