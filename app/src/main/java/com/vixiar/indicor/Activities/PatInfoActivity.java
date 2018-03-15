@@ -63,9 +63,9 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
     final int WEIGHT_MIN = 88;
     final int WEIGHT_MAX = 500;
     final int SYSTOLIC_MIN = 90;
-    final int SYSTOLIC_MAX = 160;
+    final int SYSTOLIC_MAX = 200;
     final int MIN_DIASTOLIC = 30;
-    final int MAX_DIASTOLIC = 100;
+    final int MAX_DIASTOLIC = 150;
 
 
     private String[] genderString;
