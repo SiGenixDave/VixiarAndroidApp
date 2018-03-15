@@ -96,6 +96,11 @@ public class PatientInfo
         this.m_firmwareVersion = m_firmwareVersion;
     }
 
+    public String get_firmwareRevision()
+    {
+        return m_firmwareVersion;
+    }
+
     public double get_LVEDP(int testNumber)
     {
         if (testNumber <= NUM_TESTS)

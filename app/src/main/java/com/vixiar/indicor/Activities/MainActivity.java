@@ -24,6 +24,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.vixiar.indicor.Application.NavigatorApplication;
@@ -32,7 +33,6 @@ import com.vixiar.indicor.BuildConfig;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
-import com.vixiar.indicor.FactoryTestActivity;
 import com.vixiar.indicor.R;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -59,6 +59,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
     private static final int DLG_ID_STORAGE_NOT_ENABLED_PRE = 6;
     private static final int DLG_ID_STORAGE_NOT_ENABLED = 7;
 
+    private Boolean m_FactoryTestMode = false;
 
     Handler m_deviceCheckHandler = new Handler();
     final Runnable m_deviceCheckRunnable = new Runnable()
@@ -120,11 +121,29 @@ public class MainActivity extends Activity implements CustomDialogInterface
         TextView tv = findViewById(R.id.trainingLbl);
         tv.setAlpha((float) 0.3);
 
+        UpdateUIBasedOnFactoryTestMode();
+
+
         // wait a couple seconds then check the device for the proper configuration and settings
         m_deviceCheckHandler.postDelayed(m_deviceCheckRunnable, 2000);
 
         // make sure we're disconnected from the device
         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        //PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        UpdateUIBasedOnFactoryTestMode();
     }
 
     @Override
@@ -135,8 +154,8 @@ public class MainActivity extends Activity implements CustomDialogInterface
     private void SetSiteName()
     {
         // get the site name from the settings
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
-        String siteFolder = sp.getString ("study_location", "Vixiar_Internal-Testing");
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(NavigatorApplication.getAppContext());
+        String siteFolder = sp.getString("study_location", "Vixiar_Internal-Testing");
 
         if (siteFolder.equals("Stony_Brook-Training"))
         {
@@ -270,10 +289,8 @@ public class MainActivity extends Activity implements CustomDialogInterface
 
         // if we're in test mode, go to that activity, otherwise normal main activity
         // get the site name from the settings
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
-        Boolean bTestMode = sp.getBoolean ("test_mode", false);
 
-        if (bTestMode)
+        if (m_FactoryTestMode)
         {
             Intent intent = new Intent(this, FactoryTestActivity.class);
             startActivity(intent);
@@ -476,6 +493,29 @@ public class MainActivity extends Activity implements CustomDialogInterface
     @Override
     public void onClickNegativeButton(DialogInterface dialog, int dialogID)
     {
+
+    }
+
+    private void UpdateUIBasedOnFactoryTestMode()
+    {
+        // figure out if we're in factory test mode
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(NavigatorApplication.getAppContext());
+        m_FactoryTestMode = sp.getBoolean("test_mode", false);
+
+        // if it's test mode, change the background of the top and bottom bars to be red so the
+        // use knows
+        LinearLayout top = findViewById(R.id.mainScreenTitleBar);
+        LinearLayout bottom = findViewById(R.id.mainScreenBottomBar);
+        if (m_FactoryTestMode)
+        {
+            top.setBackgroundColor(getColor(R.color.colorFactoryTestModeBackgroundColor));
+            bottom.setBackgroundColor(getColor(R.color.colorFactoryTestModeBackgroundColor));
+        }
+        else
+        {
+            top.setBackgroundColor(getColor(R.color.colorTitleBar));
+            bottom.setBackgroundColor(getColor(R.color.colorBottomBar));
+        }
 
     }
 }

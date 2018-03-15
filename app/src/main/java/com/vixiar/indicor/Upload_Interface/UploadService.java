@@ -182,8 +182,21 @@ public class UploadService extends Service
                     {
                         Log.i(TAG, "uploading file " + filePath);
 
-                        // get the patient id for this file
-                        String patientID = GetPatientIDFromCSVFile(filePath);
+                        // if the app is running in test mode, there won't be a patient ID
+                        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
+                        Boolean bTestMode = sp.getBoolean ("test_mode", false);
+
+                        String patientID;
+
+                        if (bTestMode)
+                        {
+                            patientID = "test";
+                        }
+                        else
+                        {
+                            // get the patient id for this file
+                            patientID = GetPatientIDFromCSVFile(filePath);
+                        }
 
                         if (patientID != null)
                         {

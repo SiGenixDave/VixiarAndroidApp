@@ -20,4 +20,5 @@
     <color name="colorDialogTitleGreen">#8AC640</color>
     <color name="colorDialogTitleBlue">#33A6D4</color>
     <color name="colorDialogTitleOrange">#F26431</color>
+    <color name="colorFactoryTestModeBackgroundColor">#fb4235</color>
 </resources>
