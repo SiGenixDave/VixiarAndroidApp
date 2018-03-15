@@ -190,5 +190,6 @@
         <item>Vixiar_Internal-Testing</item>
     </string-array>
     <string name="title_activity_pdfview">PDFViewActivity</string>
+    <string name="test_mode">Test mode - press Back button to exit and save CSV file.</string>
 
 </resources>
