@@ -214,7 +214,7 @@ public class PatientInfo
             m_aCalcEndPAR[testNumber] = m_aCalcEndPA[testNumber] / m_aCalcPAAvgRest[testNumber];
 
             // get the end HR during valsalva
-            m_aCalcMinHRVM[testNumber] = HeartRateInfo.getInstance().MinimumHeartRate(tm.endIndex, tm.endIndex, 1);
+            m_aCalcMinHRVM[testNumber] = HeartRateInfo.getInstance().MinimumHeartRate(tm.startIndex, tm.endIndex, 1);
 
             m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * m_aCalcMinPAR[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
                     (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
