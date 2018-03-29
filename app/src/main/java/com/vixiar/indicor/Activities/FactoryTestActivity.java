@@ -1,13 +1,22 @@
 package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
+import com.felhr.usbserial.UsbSerialDevice;
+import com.felhr.usbserial.UsbSerialInterface;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
@@ -26,7 +35,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import static android.content.ContentValues.TAG;
 
@@ -38,6 +49,15 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
     private static Double m_pressureLastX = 0.0;
     private static int m_nLastDataIndex = 0;
     private String m_fileTestDateTime;
+
+    public final String ACTION_USB_PERMISSION = "com.hariharan.arduinousb.USB_PERMISSION";
+
+    private UsbManager usbManager;
+    private UsbDevice device;
+    private UsbSerialDevice serialPort;
+    private UsbDeviceConnection connection;
+
+    private boolean m_BUSBEnabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -80,12 +100,23 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         pressureGraph.setTitleTextSize(45f);
         pressureGraph.getViewport().setDrawBorder(true);
 
+        SetupUSBSerialPort();
     }
 
     public void iFullyConnected()
     {
         Log.i(TAG, "Connected");
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
+
+        TextView tv = findViewById(R.id.textViewMessage);
+        if (m_BUSBEnabled)
+        {
+            tv.setText(tv.getText() + " USB is streaming");
+        }
+        else
+        {
+            tv.setText(tv.getText() + " USB is not streaming");
+        }
     }
 
     @Override
@@ -126,6 +157,15 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
 
             m_PressureSeries.appendData(new DataPoint(m_pressureLastX, PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_pressure), true, 500);
             m_pressureLastX += 0.02;
+
+            if (m_BUSBEnabled)
+            {
+                String outLine = FormatDoubleForPrint(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG) +
+                        ", " +
+                FormatDoubleForPrint(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_pressure) +
+                        "\r\n";
+                serialPort.write(outLine.getBytes());
+            }
         }
         m_nLastDataIndex = currentDataIndex;
     }
@@ -197,5 +237,94 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
 
         return clean;
     }
+
+    private void SetupUSBSerialPort()
+    {
+        usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(broadcastReceiver, filter);
+
+        HashMap<String, UsbDevice> usbDevices = usbManager.getDeviceList();
+        if (!usbDevices.isEmpty())
+        {
+            boolean keep = true;
+            for (Map.Entry<String, UsbDevice> entry : usbDevices.entrySet())
+            {
+                device = entry.getValue();
+                int deviceVID = device.getVendorId();
+                if (deviceVID == 1659 || deviceVID == 1027)
+                {
+                    PendingIntent pi = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+                    usbManager.requestPermission(device, pi);
+                    keep = false;
+                }
+                else
+                {
+                    connection = null;
+                    device = null;
+                }
+
+                if (!keep)
+                    break;
+            }
+        }
+    }
+
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver()
+    { //Broadcast Receiver to automatically start and stop the Serial connection.
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            if (intent.getAction().equals(ACTION_USB_PERMISSION))
+            {
+                boolean granted = intent.getExtras().getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED);
+                if (granted)
+                {
+                    connection = usbManager.openDevice(device);
+                    serialPort = UsbSerialDevice.createUsbSerialDevice(device, connection);
+                    if (serialPort != null)
+                    {
+                        if (serialPort.open())
+                        { //Set Serial Connection Parameters.
+                            m_BUSBEnabled = true;
+                            serialPort.setBaudRate(115200);
+                            serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
+                            serialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
+                            serialPort.setParity(UsbSerialInterface.PARITY_NONE);
+                            serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
+                        }
+                        else
+                        {
+                            Log.d("SERIAL", "PORT NOT OPEN");
+                        }
+                    }
+                    else
+                    {
+                        Log.d("SERIAL", "PORT IS NULL");
+                    }
+                }
+                else
+                {
+                    Log.d("SERIAL", "PERM NOT GRANTED");
+                }
+            }
+            else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED))
+            {
+                //onClickStart(startButton);
+            }
+            else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED))
+            {
+                //onClickStop(stopButton);
+
+            }
+        }
+
+        ;
+    };
+
 
 }
