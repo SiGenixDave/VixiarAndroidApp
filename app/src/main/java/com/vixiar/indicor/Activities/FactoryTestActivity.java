@@ -33,6 +33,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -160,10 +162,13 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
 
             if (m_BUSBEnabled)
             {
-                String outLine = FormatDoubleForPrint(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG) +
+                DecimalFormat df = new DecimalFormat("##");
+                df.setRoundingMode(RoundingMode.DOWN);
+
+                String outLine = df.format(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG) +
                         ", " +
-                FormatDoubleForPrint(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_pressure) +
-                        "\r\n";
+                df.format(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_pressure) +
+                "\r\n";
                 serialPort.write(outLine.getBytes());
             }
         }
