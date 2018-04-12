@@ -1,15 +1,20 @@
-package com.vixiar.indicor.Data;
 
-import android.util.Log;
+package com.vixiar.indicor.Data;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static android.content.ContentValues.TAG;
-
 public class PeakValleyDetect
 {
-    private final String TAG = this.getClass().getSimpleName();
+    // //////////////////////////////////////////////////////////////////////////
+    // / Tuning constants
+    // //////////////////////////////////////////////////////////////////////////
+    private static final double P_TO_P_FILTER_CONST_OLD_VALUE = 0.8;
+    private static final double LEVEL_TO_DROP_FOR_PEAK_VALID = 0.1;
+    private static final double LEVEL_TO_INCREASE_FOR_VALLEY_VALID = 0.1;
+    private static final int DEFAULT_SAMPLES_NO_PEAK_LIMIT = 120;
+    private static final int LIMIT_FOR_NO_PEAKS = 3;
+    public static final int CYCLES_BEFORE_RESETTING_HYSTERESIS = 2;
 
     // //////////////////////////////////////////////////////////////////////////
     // / Constructors
@@ -24,10 +29,8 @@ public class PeakValleyDetect
     // //////////////////////////////////////////////////////////////////////////
     public enum ePVDStates
     {
-        DETECTING_PEAK, DETECTING_VALLEY
+        VALIDATING_PEAK, VALIDATING_VALLEY, WAIT_BEFORE_LOOKING_FOR_VALLEY
     }
-
-    ;
 
     public enum eSlopeZero
     {
@@ -59,12 +62,12 @@ public class PeakValleyDetect
     // Amount of change from the max peak detected in order to begin "looking"
     // for the next valley. This value determines the max amount of noise
     // allowed on the high part of the wave
-    private int m_DeltaPeak;
+    private int m_PeakHysteresisLevel;
 
     // Amount of change from the min valley detected in order to begin "looking"
     // for the next peak. This value determines the max amount of noise allowed
     // on the low part of the wave
-    private int m_DeltaValley;
+    private int m_ValleyHysteresisLevel;
 
     // Keep a copy of the original delta peak value in case the hysteresis
     // algorithm needs to be reset
@@ -80,25 +83,35 @@ public class PeakValleyDetect
     private ePVDStates m_State;
 
     // Current highest value while detecting a peak
-    private int m_Peak;
+    private int m_CurrentHighestSample;
 
     // Current lowest value while detecting a valley
-    private int m_Valley;
+    private int m_CurrentLowestSample;
 
     // Most recent index in localData where the detected peak is located
-    private int m_PeakIndex;
+    private int m_LastPotentialPeakIndex;
 
     // Most recent index in localData where the detected valley is located
-    private int m_ValleyIndex;
+    private int m_LastPotentialValleyIndex;
 
     // Used to determine how much data to process during an execution cycle.
     // Compared against the size of the local data list
-    private int m_LocalDataIndex;
+    private int m_DataIndex;
 
-    private int m_thresholdAdjustPeakCount;
+    private int m_HysteresisAdjustPeakCount;
     private long m_highestPeak;
     private long m_lowestValley;
     private int m_samplesWithNoPeaks;
+
+    private int m_MaxSamplesWithNoPeaksBeforeReset;
+
+    private int m_lastPeakIndex = 0;
+    private int m_lastValleyIndex = 0;
+    private int m_lastPVCount = 0;
+
+    private int m_lastMaxPeakToPeak = 0;
+
+
 
     // if this many samples go by and there are no peaks detected,
     // reset the hysteresis delta numbers
@@ -112,12 +125,12 @@ public class PeakValleyDetect
     // //////////////////////////////////////////////////////////////////////////
     public void setDeltaPeak(int deltaPeak)
     {
-        this.m_DeltaPeak = deltaPeak;
+        this.m_PeakHysteresisLevel = deltaPeak;
     }
 
     public void setDeltaValley(int deltaValley)
     {
-        this.m_DeltaPeak = deltaValley;
+        this.m_PeakHysteresisLevel = deltaValley;
     }
 
     public void setDetectFirst(ePVDStates detectFirst)
@@ -140,12 +153,12 @@ public class PeakValleyDetect
     // //////////////////////////////////////////////////////////////////////////
     public double getDeltaPeak()
     {
-        return m_DeltaPeak;
+        return m_PeakHysteresisLevel;
     }
 
     public double getDeltaValley()
     {
-        return m_DeltaValley;
+        return m_ValleyHysteresisLevel;
     }
 
     public ePVDStates getDetectFirst()
@@ -158,17 +171,17 @@ public class PeakValleyDetect
     // //////////////////////////////////////////////////////////////////////////
     public void Initialize(int deltaPeak, int deltaValley, Boolean detectPeakFirst)
     {
-        this.m_DeltaPeak = deltaPeak;
-        this.m_DeltaValley = deltaValley;
+        this.m_PeakHysteresisLevel = deltaPeak;
+        this.m_ValleyHysteresisLevel = deltaValley;
         this.m_defaultDeltaPeak = deltaPeak;
         this.m_defaultDeltaValley = deltaValley;
         this.m_samplesWithNoPeaks = 0;
 
         // Default value of
-        this.m_DetectFirst = ePVDStates.DETECTING_PEAK;
+        this.m_DetectFirst = ePVDStates.VALIDATING_PEAK;
         if (!detectPeakFirst)
         {
-            this.m_DetectFirst = ePVDStates.DETECTING_VALLEY;
+            this.m_DetectFirst = ePVDStates.VALIDATING_VALLEY;
         }
 
     }
@@ -324,11 +337,11 @@ public class PeakValleyDetect
     // Used to reset all parameters so the algorithm can start fresh.
     public void ResetAlgorithm()
     {
-        m_Peak = Integer.MIN_VALUE;
-        m_Valley = Integer.MAX_VALUE;
-        m_ValleyIndex = 0;
-        m_PeakIndex = 0;
-        m_LocalDataIndex = 0;
+        m_CurrentHighestSample = Integer.MIN_VALUE;
+        m_CurrentLowestSample = Integer.MAX_VALUE;
+        m_LastPotentialValleyIndex = 0;
+        m_LastPotentialPeakIndex = 0;
+        m_DataIndex = 0;
 
         m_State = m_DetectFirst;
 
@@ -337,7 +350,7 @@ public class PeakValleyDetect
         m_Data.clear();
         m_LocalData.clear();
 
-        m_thresholdAdjustPeakCount = 0;
+        m_HysteresisAdjustPeakCount = 0;
         m_highestPeak = 0;
         m_lowestValley = 65535;
     }
@@ -355,27 +368,33 @@ public class PeakValleyDetect
             m_Data.remove(0);
         }
 
-        while (m_LocalDataIndex < m_LocalData.size())
+        while (m_DataIndex < m_LocalData.size())
         {
-            // System.out.println(m_LocalDataIndex);
+
             // System.out.println(m_LocalData.size());
 
-            int currData = m_LocalData.get(m_LocalDataIndex);
+            int currentSample = m_LocalData.get(m_DataIndex);
+            //System.out.println(m_DataIndex + ", " + currentSample);
 
             // Always keep running track of the max and min values no matter
             // whether or not
             // searching for a peak or valley
-            if (currData > m_Peak)
+            if (currentSample > m_CurrentHighestSample)
             {
                 // Store the peak index and data
-                m_PeakIndex = m_LocalDataIndex;
-                m_Peak = currData;
+                m_LastPotentialPeakIndex = m_DataIndex;
+                m_CurrentHighestSample = currentSample;
+                //System.out.println("New high - " + m_CurrentHighestSample + " @ - " + (m_DataIndex * 0.02));
             }
-            if (currData < m_Valley)
+            if (currentSample < m_CurrentLowestSample)
             {
-                // Store the valley index and data
-                m_ValleyIndex = m_LocalDataIndex;
-                m_Valley = currData;
+                if (m_State != ePVDStates.WAIT_BEFORE_LOOKING_FOR_VALLEY)
+                {
+                    // Store the valley index and data
+                    m_LastPotentialValleyIndex = m_DataIndex;
+                    m_CurrentLowestSample = currentSample;
+                    //System.out.println("New low - " + m_CurrentLowestSample + " @ - " + (m_DataIndex * 0.02));
+                }
             }
 
             switch (m_State)
@@ -383,106 +402,150 @@ public class PeakValleyDetect
                 default:
                     break;
 
-                case DETECTING_PEAK:
-                    if (currData < (m_Peak - m_DeltaPeak))
+                case VALIDATING_PEAK:
+                    if (currentSample < (m_CurrentHighestSample - m_PeakHysteresisLevel))
                     {
+                        //System.out.println(" P - " + currentSample + " " + m_CurrentHighestSample + " " + m_PeakHysteresisLevel);
                         // getting here indicates that the peak has been detected
                         // and the data is declining to the point where the value
                         // is below the peak noise (hysteresis) threshold.
+                        m_lastPeakIndex = m_LastPotentialPeakIndex;
 
+
+                        //HeartRateFromPeaks(m_LastPotentialPeakIndex);
                         // Save the index where the most recent peak was detected
-                        m_PeaksIndexes.add(m_PeakIndex);
-                        m_State = ePVDStates.DETECTING_VALLEY;
+                        m_PeaksIndexes.add(m_LastPotentialPeakIndex);
+                        m_State = ePVDStates.WAIT_BEFORE_LOOKING_FOR_VALLEY;
 
                         // Reset the data index 1 increment behind the peak
-                        m_LocalDataIndex = m_PeakIndex - 1;
+                        m_DataIndex = m_LastPotentialPeakIndex - 1;
 
                         // store the current peak data in the valley in
                         // preparation for detecting a valley
-                        m_Valley = m_LocalData.get(m_PeakIndex);
-                        m_ValleyIndex = m_PeakIndex;
+                        m_CurrentLowestSample = m_LocalData.get(m_LastPotentialPeakIndex);
+                        m_LastPotentialValleyIndex = m_LastPotentialPeakIndex;
 
                         // reset our peak detection counter
                         m_samplesWithNoPeaks = 0;
 
-                        if (m_Peak > m_highestPeak)
+                        if (m_CurrentHighestSample > m_highestPeak)
                         {
-                            m_highestPeak = m_Peak;
-                            //System.out.println("Max at " + m_Peak);
+                            m_highestPeak = m_CurrentHighestSample;
+                            //System.out.println("Max at " + m_CurrentHighestSample);
                         }
-                        if (m_thresholdAdjustPeakCount++ > 4)
+                        if (m_HysteresisAdjustPeakCount++ > CYCLES_BEFORE_RESETTING_HYSTERESIS)
                         {
                             AdjustHysteresis();
-                            m_thresholdAdjustPeakCount = 0;
+                            m_HysteresisAdjustPeakCount = 0;
                             m_highestPeak = 0;
                             m_lowestValley = 65535;
                         }
+                        //System.out.println();
+                        //System.out.println("FOUND PEAK Starting WAITING  T = " + (lastPeakIndex * 0.02));
+                        //System.out.println("LS, HS, CS, HY " + m_CurrentLowestSample + "," + m_CurrentHighestSample + "," + currentSample + ", " + m_PeakHysteresisLevel);
                     }
                     else
                     {
                         m_samplesWithNoPeaks++;
+                        //System.out.println(currentSample + " --- " + m_samplesWithNoPeaks);
                     }
                     break;
 
-                case DETECTING_VALLEY:
-                    if (currData > (m_Valley + m_DeltaValley))
+                case WAIT_BEFORE_LOOKING_FOR_VALLEY:
+                    // wait enough time to miss any extra peak-valleys in the real signal
+                    if (m_DataIndex > (m_LastPotentialPeakIndex + (m_lastPVCount * .5)))
                     {
+                        //System.out.println();
+                        //System.out.println("WAIT is over LOOKING FOR VALLEY  T = " + (m_DataIndex * 0.02));
+                        //System.out.println("LS, HS, CS " + m_CurrentLowestSample + "," + m_CurrentHighestSample + "," + currentSample);
+                        m_State = ePVDStates.VALIDATING_VALLEY;
+                    }
+                    else
+                    {
+                        m_samplesWithNoPeaks++;
+                        //System.out.println(currentSample + " --- " + m_samplesWithNoPeaks);
+                    }
+                    break;
+
+                case VALIDATING_VALLEY:
+                    if (currentSample > (m_CurrentLowestSample + m_ValleyHysteresisLevel))
+                    {
+                        //System.out.println("V - " + currentSample + " " + m_CurrentLowestSample + " " + m_ValleyHysteresisLevel);
                         // getting here indicates that the valley has been detected
-                        // and the data is AScending in value to the point where the
+                        // and the data is Ascending in value to the point where the
                         // value
                         // is above the valley noise (hysteresis) threshold.
 
+                        m_lastValleyIndex = m_LastPotentialValleyIndex;
+                        m_lastPVCount = m_lastValleyIndex - m_lastPeakIndex;
+                        //System.out.println("Last p-v time = " + lastPVCount + " Time = " + (m_LastPotentialValleyIndex * 0.02));
+
+                        //HeartRateFromValleys(m_LastPotentialValleyIndex);
                         // Save the index where the most recent valley was detected
-                        m_ValleysIndexes.add(m_ValleyIndex);
-                        m_State = ePVDStates.DETECTING_PEAK;
+                        m_ValleysIndexes.add(m_LastPotentialValleyIndex);
+                        m_State = ePVDStates.VALIDATING_PEAK;
 
                         // Reset the data index 1 increment behind the valley
-                        m_LocalDataIndex = m_ValleyIndex - 1;
+                        m_DataIndex = m_LastPotentialValleyIndex - 1;
 
                         // store the current valley data in the peak in
                         // preparation for detecting a valley
-                        m_Peak = m_LocalData.get(m_ValleyIndex);
-                        m_PeakIndex = m_ValleyIndex;
+                        m_CurrentHighestSample = m_LocalData.get(m_LastPotentialValleyIndex);
+                        m_LastPotentialPeakIndex = m_LastPotentialValleyIndex;
 
-                        if (m_Valley < m_lowestValley)
+                        if (m_CurrentLowestSample < m_lowestValley)
                         {
-                            m_lowestValley = m_Valley;
-                            //System.out.println("Min at " + m_Valley);
+                            m_lowestValley = m_CurrentLowestSample;
+                            //System.out.println("Min at " + m_CurrentLowestSample);
                         }
+                        //System.out.println();
+                        //System.out.println("FOUND VALLEY LOOKING FOR PEAK   T = " + (lastValleyIndex * 0.02));
+                        //System.out.println("LS, HS, CS, HY " + m_CurrentLowestSample + "," + m_CurrentHighestSample + "," + currentSample + ", " + m_ValleyHysteresisLevel);
                     }
                     else
                     {
                         m_samplesWithNoPeaks++;
+                        //System.out.println(currentSample + " --- " + m_samplesWithNoPeaks);
                     }
                     break;
 
             }
-            m_LocalDataIndex++;
+            m_DataIndex++;
 
-            if (m_samplesWithNoPeaks >= SAMPLE_COUNT_TO_RESET_HYSTERESIS)
+            // figure out how many samples we can allow without peaks before resetting everything
+            if (m_lastPVCount > 0)
             {
-                Log.i(TAG, "Resetting peak detection hysteresis");
-                m_DeltaPeak = m_defaultDeltaPeak;
-                m_DeltaValley = m_defaultDeltaValley;
+                m_MaxSamplesWithNoPeaksBeforeReset = m_lastPVCount * LIMIT_FOR_NO_PEAKS;
+            }
+            else
+            {
+                m_MaxSamplesWithNoPeaksBeforeReset = DEFAULT_SAMPLES_NO_PEAK_LIMIT;
+            }
+            if (m_samplesWithNoPeaks >= m_MaxSamplesWithNoPeaksBeforeReset)
+            {
+                // if too much time has elapsed without seeing a peak, reset the hysteresis and the detection state
+                m_PeakHysteresisLevel = m_defaultDeltaPeak;
+                m_ValleyHysteresisLevel = m_defaultDeltaValley;
+                m_State = ePVDStates.VALIDATING_PEAK;
+                m_lastPVCount = 0;
                 m_samplesWithNoPeaks = 0;
+                //System.out.println();
+                //System.out.println("NO PEAKS - " + m_samplesWithNoPeaks + " threshold = " + m_MaxSamplesWithNoPeaksBeforeReset);
+                //System.out.println("TIMEOUT - Switching to VALIDATING_PEAK  T = " + (m_DataIndex * 0.02));
+                //System.out.println("LS, HS, CS " + m_CurrentLowestSample + "," + m_CurrentHighestSample + "," + currentSample);
             }
         }
-
     }
-
-    int m_lastMaxPeakToPeak = 0;
-    double filterconst = 0.8;
 
     private void AdjustHysteresis()
     {
         int maxPeakToPeak = (int) (m_highestPeak - m_lowestValley);
-        int filteredPToP = (int) ((maxPeakToPeak * (1.0 - filterconst)) + (m_lastMaxPeakToPeak * filterconst));
+        int filteredPToP = (int) ((maxPeakToPeak * (1.0 - P_TO_P_FILTER_CONST_OLD_VALUE)) + (m_lastMaxPeakToPeak * P_TO_P_FILTER_CONST_OLD_VALUE));
         m_lastMaxPeakToPeak = maxPeakToPeak;
+        m_PeakHysteresisLevel = (int) (filteredPToP * LEVEL_TO_DROP_FOR_PEAK_VALID);
+        m_ValleyHysteresisLevel = (int) (filteredPToP * LEVEL_TO_INCREASE_FOR_VALLEY_VALID);
 
-        m_DeltaPeak = (int) (filteredPToP * 0.2);
-        m_DeltaValley = m_DeltaPeak;
-
-        Log.i(TAG, "Delta Peak = " + m_DeltaPeak);
+        //System.out.println("Max p-p = " + maxPeakToPeak);
+        //System.out.println("Peak Hyseteresis = " + m_PeakHysteresisLevel + "  Valley Hyseteresis = " + m_ValleyHysteresisLevel);
     }
-
 }
