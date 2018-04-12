@@ -38,6 +38,9 @@ public class PatientInfo
     private String m_notes;
     private RealtimeData rtd = new RealtimeData();
 
+    // Constants
+    private static int SAMPLES_IN_TEN_SECONDS = (50 * 10);
+
     // calculated data
     private final int NUM_TESTS = 3;
     private double[] m_aCalcPAAvgRest = new double[NUM_TESTS];
@@ -66,7 +69,7 @@ public class PatientInfo
         Arrays.fill(m_aCalcEndPA, 0.0);
         Arrays.fill(m_aCalcEndPAR, 0.0);
         Arrays.fill(m_aCalcHRAvgRest, 0.0);
-        Arrays.fill(m_aCalcHRAvgVM,0.0);
+        Arrays.fill(m_aCalcHRAvgVM, 0.0);
         Arrays.fill(m_aCalcLVEDP, 0.0);
         Arrays.fill(m_aCalcMinHRVM, 0.0);
         Arrays.fill(m_aCalcMinPA, 0.0);
@@ -191,11 +194,20 @@ public class PatientInfo
         // make sure the test markers were found
         if (tm.endIndex != 0 && tm.startIndex != 0)
         {
-            // get the avg PA during rest
-            m_aCalcPAAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA(tm.startIndex, 12);
+            // make sure there's at least 10 seconds worth of samples before the start of valsalva
+            if (tm.startIndex > SAMPLES_IN_TEN_SECONDS)
+            {
+                // get the avg PA during rest (by definition, rest ends 10 seconds before the patient hits the 16mm pressure point)
+                m_aCalcPAAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA((tm.startIndex - SAMPLES_IN_TEN_SECONDS), 12);
 
-            // get the avg HR during rest
-            m_aCalcHRAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR(tm.startIndex, 12);
+                // get the avg HR during rest
+                m_aCalcHRAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR((tm.startIndex - SAMPLES_IN_TEN_SECONDS), 12);
+            }
+            else
+            {
+                m_aCalcPAAvgRest[testNumber] = 0;
+                m_aCalcHRAvgRest[testNumber] = 0;
+            }
 
             // get the avg PA during Valsalva
             m_aCalcPAAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgPAOverRange(tm.startIndex, tm.endIndex);
@@ -209,16 +221,32 @@ public class PatientInfo
             // get the end PA during Valsalva
             m_aCalcEndPA[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA(tm.endIndex, 1);
 
-            m_aCalcMinPAR[testNumber] = m_aCalcMinPA[testNumber] / m_aCalcPAAvgRest[testNumber];
-
-            m_aCalcEndPAR[testNumber] = m_aCalcEndPA[testNumber] / m_aCalcPAAvgRest[testNumber];
+            // make sure that the PA Avg rest isn't 0
+            if (m_aCalcPAAvgRest[testNumber] > 0)
+            {
+                m_aCalcMinPAR[testNumber] = m_aCalcMinPA[testNumber] / m_aCalcPAAvgRest[testNumber];
+                m_aCalcEndPAR[testNumber] = m_aCalcEndPA[testNumber] / m_aCalcPAAvgRest[testNumber];
+            }
+            else
+            {
+                m_aCalcMinPAR[testNumber] = 0;
+                m_aCalcEndPAR[testNumber] = 0;
+            }
 
             // get the end HR during valsalva
             m_aCalcMinHRVM[testNumber] = HeartRateInfo.getInstance().MinimumHeartRate(tm.startIndex, tm.endIndex, 1);
 
-            m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * m_aCalcMinPAR[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
-                    (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
-                    (0.16182 * m_aCalcHRAvgRest[testNumber]) - (0.06949 * m_age_years);
+            // if something went wrong, indicate that by setting the LVEDP to 0
+            if (m_aCalcMinPAR[testNumber] != 0)
+            {
+                m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * m_aCalcMinPAR[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
+                        (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
+                        (0.16182 * m_aCalcHRAvgRest[testNumber]) - (0.06949 * m_age_years);
+            }
+            else
+            {
+                m_aCalcLVEDP[testNumber] = 0;
+            }
             return true;
         }
         else
@@ -297,12 +325,14 @@ public class PatientInfo
             // if you want to load it via usb
             context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
 
-        } catch (FileNotFoundException e)
+        }
+        catch (FileNotFoundException e)
         {
             e.printStackTrace();
             Log.i(TAG, "******* File not found. Did you"
                     + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             e.printStackTrace();
         }
