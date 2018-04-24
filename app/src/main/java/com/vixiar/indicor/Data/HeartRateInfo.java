@@ -207,13 +207,19 @@ public class HeartRateInfo {
         List<Integer> peaks = PeakValleyDetect.getInstance().GetIndexesBetween(firstSampleIndex, lastSampleIndex,
                 PeakValleyDetect.eSlopeZero.PEAK);
 
-        int firstPeakIndex = peaks.get(0);
-        int lastPeakIndex = peaks.get(peaks.size() - 1);
+        if (peaks.size() > 1)
+        {
+            int firstPeakIndex = peaks.get(0);
+            int lastPeakIndex = peaks.get(peaks.size() - 1);
 
-        // Method requires the number of heart beats, since a heart beat is considered one peak to the next
-        // peak, the value passed in for the number of methods is the number of peaks - 1
-        return CalculateHeartRate(firstPeakIndex, lastPeakIndex, peaks.size() - 1);
-
+            // Method requires the number of heart beats, since a heart beat is considered one peak to the next
+            // peak, the value passed in for the number of methods is the number of peaks - 1
+            return CalculateHeartRate(firstPeakIndex, lastPeakIndex, peaks.size() - 1);
+        }
+        else
+        {
+            return 0;
+        }
     }
 
 
