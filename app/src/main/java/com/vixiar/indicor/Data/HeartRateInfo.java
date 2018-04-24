@@ -6,7 +6,9 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class HeartRateInfo {
+    private final String TAG = this.getClass().getSimpleName();
 
     // Used as a data structure to hold historical data when using a real time
     // sliding
@@ -147,6 +149,11 @@ public class HeartRateInfo {
             int firstPeakSampleIndex = peaks.get(0);
             int lastPeakSampleIndex = peaks.get(m_NumHeartBeatsToAverage);
 
+            Log.d(TAG, "delta = " + (lastPeakSampleIndex - firstPeakSampleIndex));
+            if (lastPeakSampleIndex == firstPeakSampleIndex)
+            {
+                lastPeakSampleIndex = peaks.get(peaks.size()-1);
+            }
             Log.d ("AVG_HR", " firstPeakSampleIndex: " + firstPeakSampleIndex + " lastPeakSampleIndex: " + lastPeakSampleIndex);
 
 
@@ -161,17 +168,17 @@ public class HeartRateInfo {
             historicalData.lastSampleIndex = lastPeakSampleIndex;
             m_HistoricalDataList.add(historicalData);
 
-            Log.d ("HIST", "-------------------------------------------------------" );
-            for (HistoricalData h: m_HistoricalDataList) {
-                Log.d ("HIST", "h.heartRate: " + h.heartRate +
-                                        " h.startSampleIndex: " + h.startSampleIndex +
-                                        " h.lastSampleIndex: " + h.lastSampleIndex );
-            }
+//            Log.d ("HIST", "-------------------------------------------------------" );
+//            for (HistoricalData h: m_HistoricalDataList) {
+//                Log.d ("HIST", "h.heartRate: " + h.heartRate +
+//                                        " h.startSampleIndex: " + h.startSampleIndex +
+//                                        " h.lastSampleIndex: " + h.lastSampleIndex );
+//            }
 
             // Verify enough average samples are present (meets or exceeds window length)
             if (EnoughSamplesPresent()) {
 
-                Log.d ("AVG_HR", "EnoughSamplesPresent() = true");
+                //Log.d ("AVG_HR", "EnoughSamplesPresent() = true");
 
                 boolean allSamplesWithinRange = VerifyHeartRateInRange();
                 boolean allSamplesTwoSigma = VerifyDeviation();
@@ -526,7 +533,15 @@ public class HeartRateInfo {
 
         double timeSpanSecs = (lastPeakIndex - firstPeakIndex) / m_SampleRateHz;
 
-        return numHeartBeats / timeSpanSecs * 60.0;
+        // make sure we're not dividing by 0
+        if (timeSpanSecs > 0)
+        {
+            return numHeartBeats / timeSpanSecs * 60.0;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     // Method verifies that all heart rate data currently in historical data falls between min and max
