@@ -146,9 +146,8 @@
     <string name="dlg_title_cancel_test">CANCEL TEST?</string>
     <string name="dlg_msg_cancel_test">Do you want to cancel this test? &end_test_warning2;</string>
 
-    <string name="dlg_title_hr_not_stable">HEART RATE NOT STABLE</string>
-    <string name="dlg_msg_hr_not_stable">The heart rate did not become stable within the allotted
-        time period. &end_test_warning1;</string>
+    <string name="dlg_title_hr_not_stable">PPG NOT STABLE</string>
+    <string name="dlg_msg_hr_not_stable">PPG waveform may not be stable.  Do you wish to continue? &end_test_warning1;</string>
 
     <string name="dlg_title_connection_problem">PROBLEM CONNECTING</string>
     <string name="dlg_msg_connection_problem">There was a problem connecting to the handheld device.

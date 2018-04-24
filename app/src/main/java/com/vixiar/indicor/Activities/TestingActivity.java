@@ -388,7 +388,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     {
         switch (dialogID)
         {
-            case DLG_ID_HR_NOT_STABLE:
             case DLG_ID_PRESSURE_ERROR_START:
             case DLG_ID_PRESSURE_ERROR_RUNNING:
                 // this is the "Try again" button, we need to restart this test
@@ -398,6 +397,17 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_testingState = Testing_State.STABILIZING;
 
                 PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
+                break;
+
+            case DLG_ID_HR_NOT_STABLE:
+                // this is the continue button when the hr is not stable
+                SwitchToTestingView();
+                InactivateTestingView();
+                m_testingState = Testing_State.STABLE_5SEC_COUNTDOWN;
+                m_periodicTimer.Start(this, ONE_SEC, false);
+                m_nCountdownSecLeft = AFTER_STABLE_DELAY_SECONDS;
+                UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                m_oneShotTimer.Cancel();
                 break;
 
             case DLG_ID_CANCEL_TEST:
@@ -892,7 +902,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
                                 getString(R.string.dlg_title_hr_not_stable),
                                 getString(R.string.dlg_msg_hr_not_stable),
-                                "Try Again",
+                                "Yes",
                                 "End Test",
                                 this, DLG_ID_HR_NOT_STABLE, this);
                     }
