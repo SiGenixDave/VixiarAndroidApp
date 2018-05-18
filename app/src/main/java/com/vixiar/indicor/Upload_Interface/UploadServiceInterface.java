@@ -1,3 +1,10 @@
+/**
+ *
+ * @file
+ * @brief
+ * @copyright Copyright 2018 Vixiar Inc.. All rights reserved.
+ */
+
 package com.vixiar.indicor.Upload_Interface;
 
 import android.app.AlertDialog;
@@ -26,10 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static android.content.Context.BIND_AUTO_CREATE;
-
-/**
- * Created by gsevinc on 11/28/2017.
- */
 
 public class UploadServiceInterface
 {

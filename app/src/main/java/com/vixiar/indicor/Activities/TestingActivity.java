@@ -1,3 +1,10 @@
+/**
+ *
+ * @file
+ * @brief
+ * @copyright Copyright 2018 Vixiar Inc.. All rights reserved.
+ */
+
 package com.vixiar.indicor.Activities;
 
 import android.app.Activity;

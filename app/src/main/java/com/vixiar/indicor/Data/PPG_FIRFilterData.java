@@ -1,28 +1,28 @@
-package com.vixiar.indicor.Data;
-
 /**
- * Created by gyurk on 12/13/2017.
+ * @file PPG_FIRFilterData.java
+ * @brief Contains the coefficients for the FIR filter for filtering the PPG signal
+ * @copyright Copyright 2018 Vixiar Inc.. All rights reserved.
  */
 
-/*
+package com.vixiar.indicor.Data;
 
-FIR filter designed with
+
+/**
+ * FIR filter designed with
  http://t-filter.appspot.com
 
-sampling frequency: 50 Hz
+ sampling frequency: 50 Hz
 
-* 0 Hz - 5 Hz
-  gain = 1
-  desired ripple = 2 dB
-  actual ripple = 1.3333794968150365 dB
+ * 0 Hz - 5 Hz
+ gain = 1
+ desired ripple = 2 dB
+ actual ripple = 1.3333794968150365 dB
 
-* 10 Hz - 25 Hz
-  gain = 0
-  desired attenuation = -40 dB
-  actual attenuation = -41.24374481860345 dB
-
-*/
-
+ * 10 Hz - 25 Hz
+ gain = 0
+ desired attenuation = -40 dB
+ actual attenuation = -41.24374481860345 dB
+ */
 public class PPG_FIRFilterData
 {
     public final int NUM_TAPS = 15;

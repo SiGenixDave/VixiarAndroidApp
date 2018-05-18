@@ -1,3 +1,10 @@
+/**
+ *
+ * @file
+ * @brief
+ * @copyright Copyright 2018 Vixiar Inc.. All rights reserved.
+ */
+
 package com.vixiar.indicor.Activities;
 
 import android.Manifest;
@@ -36,19 +43,33 @@ import com.vixiar.indicor.R;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
+/**
+ * This is the main activity that is run when the App is started.  It will
+ */
 public class MainActivity extends Activity implements CustomDialogInterface
 {
     private final String TAG = this.getClass().getSimpleName();
 
-    // These are local request code so you know when the result callback happens, which request it was from
+    /** @name
+     * These are local request code so you know when the result callback happens, which request it was from
+     */
+    //@{
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_STORAGE = 2;
+    //@}
 
-    // this is a request code that is used if BLE isn't turned on...
+    /** @name
+    // This is a request code that is used if BLE isn't turned on...
     // it tells the response m_deviceCheckHandler to start the data collection intent if the user enables ble
+     */
+    //@{
     private static final int REQUEST_START_CONNECTION_BLE = 1;
+    //@}
 
-    // dialog numbers so the callback m_deviceCheckHandler knows what's going on
+    /** @name
+     * Dialog numbers so the callback m_deviceCheckHandler knows what's going on
+     */
+    //@{
     private static final int DLG_ID_NO_BLE = 0;
     private static final int DLG_ID_LOCATION_SERVICES = 1;
     private static final int DLG_ID_BLE_NOT_ENABLED = 2;
@@ -57,6 +78,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
     private static final int DLG_ID_BLE_NOT_ENABLED_PRE = 5;
     private static final int DLG_ID_STORAGE_NOT_ENABLED_PRE = 6;
     private static final int DLG_ID_STORAGE_NOT_ENABLED = 7;
+    //@}
 
 
     Handler m_deviceCheckHandler = new Handler();
@@ -68,6 +90,10 @@ public class MainActivity extends Activity implements CustomDialogInterface
         }
     };
 
+    /**
+     *
+     * @param savedInstanceState Not used in this case.
+     */
     @TargetApi(Build.VERSION_CODES.M) // This is required for Android 6.0 (Marshmallow) to work
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -126,11 +152,17 @@ public class MainActivity extends Activity implements CustomDialogInterface
         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
     }
 
+    /**
+     * Don't do anything if the back button is pressed
+     */
     @Override
     public void onBackPressed()
     {
     }
 
+    /**
+     * Get's the site name setting from the shared preference and saves it to the PatientInfo
+     */
     private void SetSiteName()
     {
         // get the site name from the settings
@@ -159,13 +191,21 @@ public class MainActivity extends Activity implements CustomDialogInterface
         }
     }
 
+    /**
+     * Show the site name in the study location field
+     */
     private void DisplaySiteName()
     {
         TextView tv = findViewById(R.id.txtStudyLocation);
         tv.setText(PatientInfo.getInstance().get_studyLocation());
     }
 
-    //This method required for Android 6.0 (Marshmallow)
+    /**
+     * This is a callback from Android when a request is made to change a system setting
+     * @param requestCode The code for the request that was made
+     * @param permissions
+     * @param grantResults Whether or not the permission was granted
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults)
     {
@@ -216,7 +256,10 @@ public class MainActivity extends Activity implements CustomDialogInterface
     }
 
 
-    // quick stuff to check that BLE is supported and turned on
+    /**
+     *
+     * @return The BluetoothAdapter that is setup
+     */
     private BluetoothAdapter GetAdapter()
     {
         final BluetoothManager bluetoothManager =
@@ -224,8 +267,14 @@ public class MainActivity extends Activity implements CustomDialogInterface
         return bluetoothManager.getAdapter();
     }
 
-    // this get's called after the user either accepts or denys turning ble on
-    // it they didn't turn it on, the app quits
+    /**
+     * this get's called after the user either accepts or denys turning ble on
+     * if they didn't turn it on, the app quits
+     *
+     * @param requestCode This is the request that was made of the activity
+     * @param resultCode The result of the activities request
+     * @param data Any data back from the activity
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
@@ -263,6 +312,10 @@ public class MainActivity extends Activity implements CustomDialogInterface
         }
     }
 
+    /**
+     * This is called when the user selects the Start Test button
+     * @param view
+     */
     public void onStartClick(View view)
     {
         PatientInfo.getInstance().ClearAllPatientData();
@@ -270,6 +323,10 @@ public class MainActivity extends Activity implements CustomDialogInterface
         startActivity(intent);
     }
 
+    /**
+     * This is called when the user selects the Settings button
+     * @param view
+     */
     public void onSettingsClick(View view)
     {
         LayoutInflater li = LayoutInflater.from(this);
@@ -283,7 +340,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
         final EditText passwordEntered = (EditText) passwordDialogView
                 .findViewById(R.id.txtPasswordDialogPassword);
 
-        // set dialog message
+        /// set dialog message
         alertDialogBuilder
                 .setCancelable(false)
                 .setPositiveButton("OK",
@@ -308,19 +365,29 @@ public class MainActivity extends Activity implements CustomDialogInterface
                             }
                         });
 
-        // create alert dialog
+        /// create alert dialog
         AlertDialog alertDialog = alertDialogBuilder.create();
 
-        // show it
+        /// show it
         alertDialog.show();
     }
 
+    /**
+     * This is called when the user selects the User Manual button
+     * @param view
+     */
     public void onManualClick(View view)
     {
+        /// Start the PDFView activity
         Intent intent = new Intent(this, PDFViewActivity.class);
         startActivity(intent);
     }
 
+    /**  This function is pretty complex as to how it checks the device configuration before
+     * continuing
+     *  \image html "Vixiar device setup checks.png"
+     *  \image rtf "Vixiar device setup checks.png"
+     */
     private void checkDeviceSetup()
     {
         if (deviceSupportsBLE())
@@ -386,6 +453,10 @@ public class MainActivity extends Activity implements CustomDialogInterface
         }
     }
 
+    /**
+     *
+     * @return True if location services are turned on in the device
+     */
     private boolean locationServicesOn()
     {
         LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -399,11 +470,19 @@ public class MainActivity extends Activity implements CustomDialogInterface
         }
     }
 
+    /**
+     *
+     * @return True if the device inherently supports BLE
+     */
     private boolean deviceSupportsBLE()
     {
         return GetAdapter() != null;
     }
 
+    /**
+     *
+     * @return Treu if BLE is enabled in the device
+     */
     public boolean isBLEEnabled()
     {
         BluetoothAdapter adapter = GetAdapter();
@@ -417,18 +496,31 @@ public class MainActivity extends Activity implements CustomDialogInterface
         }
     }
 
+    /**
+     *
+     * @return True if the app has location permission enabled
+     */
     private boolean doesAppHaveLocationPermission()
     {
         // Check for location access
         return (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
     }
 
+    /**
+     *
+     * @return True if the app has storage permission enabled
+     */
     private boolean doesAppHaveStoragePermission()
     {
         // Check for location access
         return (this.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
     }
 
+    /**
+     * The user has clicked the "positive" button in the custom dialog.
+     * @param dialog
+     * @param dialogID The ID of the dialog where it came from
+     */
     @Override
     public void onClickPositiveButton(DialogInterface dialog, int dialogID)
     {
@@ -458,6 +550,11 @@ public class MainActivity extends Activity implements CustomDialogInterface
         }
     }
 
+    /**
+     * The user clicked on the "negative" button in the custom dialog
+     * @param dialog
+     * @param dialogID The ID of the dialog where it came from
+     */
     @Override
     public void onClickNegativeButton(DialogInterface dialog, int dialogID)
     {

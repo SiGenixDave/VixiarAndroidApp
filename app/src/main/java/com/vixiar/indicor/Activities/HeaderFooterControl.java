@@ -1,3 +1,10 @@
+/**
+ * The HeaderFooterControl manages the headers and footers on most of the screens.
+ * @file HeaderFooterControl.java
+ * @brief Defines the HeaderFooterControl class
+ * @copyright Copyright 2018 Vixiar Inc.. All rights reserved.
+ */
+
 package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
@@ -12,12 +19,11 @@ import android.widget.TextView;
 import com.vixiar.indicor.R;
 
 /**
- * Created by gyurk on 11/2/2017.
+ * The HeaderFooterControl manages the headers and footers on most of the screens.
  */
-
 public class HeaderFooterControl
 {
-    // make this a singleton class
+    /// make this a singleton class
     private static HeaderFooterControl ourInstance = new HeaderFooterControl();
 
     public static HeaderFooterControl getInstance()
@@ -25,12 +31,22 @@ public class HeaderFooterControl
         return ourInstance;
     }
 
+    /** @name
+     * Define the thresholds where the battery icon changes
+     */
+    //@{
     private static final int BATTERY_LEVEL_FULL = 90;
     private static final int BATTERY_LEVEL_3BARS = 70;
     private static final int BATTERY_LEVEL_2BARS = 50;
     private static final int BATTERY_LEVEL_1BARS = 30;
     private static final int BATTERY_LEVEL_0 = 10;
+    //@}
 
+    /**
+     * This function sets the typeface for the ScreenName, the navigation button,
+     * and the message area
+     * @param a The Activity that is using the control
+     */
     public void SetTypefaces(Activity a)
     {
         Typeface robotoTypeface = ResourcesCompat.getFont(a, R.font.roboto_light);
@@ -53,6 +69,11 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Set the title area text
+     * @param a The activity that is using the control
+     * @param title The title to display
+     */
     public void SetScreenTitle(Activity a, String title)
     {
         TextView v = (TextView) a.findViewById(R.id.txtScreenName);
@@ -62,6 +83,11 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Sets the string on the navigation button
+     * @param a The activity that is using the control
+     * @param title The title to display
+     */
     public void SetNavButtonTitle(Activity a, String title)
     {
         TextView v = (TextView) a.findViewById(R.id.navButton);
@@ -71,6 +97,11 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Sets the message in the footer
+     * @param a The activity that is using the control
+     * @param title The title to display
+     */
     public void SetBottomMessage(Activity a, String title)
     {
         TextView v = (TextView) a.findViewById(R.id.txtMessage);
@@ -80,6 +111,10 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Removes the practice button
+     * @param a The activity that is using the control
+     */
     public void HidePracticeButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.practiceButton);
@@ -89,6 +124,10 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Dims the practice button
+     * @param a The activity that is using the control
+     */
     public void DimPracticeButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.practiceButton);
@@ -99,6 +138,10 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Undims the practice button
+     * @param a The activity that is using the control
+     */
     public void UnDimPracticeButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.practiceButton);
@@ -109,6 +152,10 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Dims the next button
+     * @param a The activity that is using the control
+     */
     public void DimNextButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.startTestButton);
@@ -119,6 +166,10 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Undims the next button
+     * @param a The activity that is using the control
+     */
     public void UnDimNextButton(Activity a)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.startTestButton);
@@ -129,6 +180,10 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Removes the battery icon
+     * @param a The activity that is using the control
+     */
     public void HideBatteryIcon(Activity a)
     {
         ImageView v = a.findViewById(R.id.batteryIcon);
@@ -138,6 +193,12 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Displays the icon for the battery level based on the level passed and
+     * the defined thresholds for when to display each image.
+     * @param a The activity that is using the control
+     * @param level The current battery level
+     */
     public void ShowBatteryIcon(Activity a, int level)
     {
         ImageView v = a.findViewById(R.id.batteryIcon);
@@ -167,6 +228,11 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Set's the listner to be called when the user clicks on the navigation button
+     * @param a The activity that is using the control
+     * @param l The listner
+     */
     public void SetNavButtonListner(Activity a, View.OnClickListener l)
     {
         Button b = (Button) a.findViewById(R.id.navButton);
@@ -176,6 +242,11 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Set's the listner to be called when the user clicks on the next button
+     * @param a The activity that is using the control
+     * @param l The listner
+     */
     public void SetNextButtonListner(Activity a, View.OnClickListener l)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.startTestButton);
@@ -185,6 +256,11 @@ public class HeaderFooterControl
         }
     }
 
+    /**
+     * Set's the listner to be called when the user clicks on the practice button
+     * @param a The activity that is using the control
+     * @param l The listner
+     */
     public void SetPracticeButtonListner(Activity a, View.OnClickListener l)
     {
         ImageButton b = (ImageButton) a.findViewById(R.id.practiceButton);

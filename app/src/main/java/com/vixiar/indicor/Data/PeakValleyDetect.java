@@ -1,4 +1,11 @@
 
+/**
+ *
+ * @file
+ * @brief
+ * @copyright Copyright 2018 Vixiar Inc.. All rights reserved.
+ */
+
 package com.vixiar.indicor.Data;
 
 import java.util.*;
