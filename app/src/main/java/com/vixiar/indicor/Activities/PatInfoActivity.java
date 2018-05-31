@@ -1,7 +1,8 @@
 /**
+ * This class is the patient information screen of the app.
  *
- * @file
- * @brief
+ * @file PatientInfoActivity.java
+ * @brief Defines the PatInfoActivity class
  * @copyright Copyright 2018 Vixiar Inc.. All rights reserved.
  */
 
@@ -36,27 +37,18 @@ import com.vixiar.indicor.R;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * The Patient Info Activity is the screen where the user inputs the patient's information.  It contains
+ * several fields of patient information.  Some of the fields allow free entry, and some of them
+ * have a list of choices that the user can select from.  Some of the fields have limits to a range
+ * of numeric values that can be entered.  These use the InputFilterMinMax class to override the
+ * standard input filter for these fields.
+ */
 public class PatInfoActivity extends Activity implements CustomDialogInterface, IndicorBLEServiceInterfaceCallbacks
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
     private static final boolean DEBUG = false;
-
-    private EditText txtPatientID;
-    private EditText txtAge;
-    private EditText txtHeight;
-    private EditText txtWeight;
-    private EditText txtSystolic;
-    private EditText txtDiastolic;
-    private EditText txtGender;
-    private EditText txtNotes;
-
-    private NumberPicker npAge;
-    private NumberPicker npHeightFeet;
-    private NumberPicker npHeightInches;
-    private NumberPicker npWeight;
-    private NumberPicker npGender;
-
     // limits for input fields
     final int AGE_MIN = 18;
     final int AGE_MAX = 110;
@@ -73,12 +65,69 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
     final int SYSTOLIC_MAX = 200;
     final int MIN_DIASTOLIC = 30;
     final int MAX_DIASTOLIC = 150;
+    private final int DLG_ID_CANCEL = 0;
+    private EditText txtPatientID;
+    private EditText txtAge;
+    private EditText txtHeight;
+    private EditText txtWeight;
+    private EditText txtSystolic;
+    private EditText txtDiastolic;
+    private EditText txtGender;
+    // this function gets called whenever any text fields change
+    // it will enable the start test button once all the required fields are filled in
+    private final TextWatcher fieldChangeWatcher = new TextWatcher()
+    {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after)
+        {
+        }
 
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count)
+        {
+        }
 
+        @Override
+        public void afterTextChanged(Editable s)
+        {
+            if (!DEBUG)
+            {
+                 if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
+                        txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
+                        txtDiastolic.getText().toString().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
+                        txtGender.getText().toString().length() != 0)
+                {
+                    HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
+                    HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
+                    HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
+                }
+                else
+                {
+                    HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
+                    HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
+                    HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
+                }
+            }
+            else
+            {
+                HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
+                HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
+                HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
+            }
+        }
+    };
+    private EditText txtNotes;
+    private NumberPicker npAge;
+    private NumberPicker npHeightFeet;
+    private NumberPicker npHeightInches;
+    private NumberPicker npWeight;
+    private NumberPicker npGender;
     private String[] genderString;
 
-    private final int DLG_ID_CANCEL = 0;
-
+    /**
+     * Handle the onCreate call and display everything for the activity.
+     * @param savedInstanceState Not used
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -88,6 +137,8 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         InitializeHeaderAndFooter();
         initializeControls();
 
+        /// If DEBUG is set to non-zero, allow the user to not enter any data before proceeding to the
+        /// test screen.
         if (DEBUG)
         {
             HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
@@ -102,6 +153,10 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         }
     }
 
+    /**
+     * The onPause is called when another activity comes into the foreground.  It takes everything
+     * that's been entered, and set's it in the PatientInfo class.
+     */
     @Override
     protected void onPause()
     {
@@ -177,6 +232,10 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         PatientInfo.getInstance().set_notes(txtNotes.getText().toString());
     }
 
+    /**
+     * onResume is called once the activity has been paused, and then it returns as the active
+     * activity.
+     */
     @Override
     protected void onResume()
     {
@@ -188,12 +247,19 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         IndicorBLEServiceInterface.getInstance().initialize(this, this );
     }
 
+    /**
+     * Handle when the user presses the back button.
+     */
     @Override
     public void onBackPressed()
     {
         HandleRequestToCancel();
     }
 
+    /**
+     * Sets up all of the data entry fields on the activity.  This includes special fonts and colors for all of the
+     * text, adding listners for when the focus changes from one field to another, and
+     */
     private void initializeControls()
     {
         // TODO: theres some kind of divide by 0 when this runs
@@ -629,50 +695,6 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
         }
     }
-
-    // this function gets called whenever any text fields change
-    // it will enable the start test button once all the required fields are filled in
-    private final TextWatcher fieldChangeWatcher = new TextWatcher()
-    {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after)
-        {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count)
-        {
-        }
-
-        @Override
-        public void afterTextChanged(Editable s)
-        {
-            if (!DEBUG)
-            {
-                 if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
-                        txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
-                        txtDiastolic.getText().toString().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
-                        txtGender.getText().toString().length() != 0)
-                {
-                    HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
-                    HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
-                    HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
-                }
-                else
-                {
-                    HeaderFooterControl.getInstance().DimNextButton(PatInfoActivity.this);
-                    HeaderFooterControl.getInstance().DimPracticeButton(PatInfoActivity.this);
-                    HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.complete_data_entry));
-                }
-            }
-            else
-            {
-                HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
-                HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
-                HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
-            }
-        }
-    };
 
     public void SetFontFamily()
     {

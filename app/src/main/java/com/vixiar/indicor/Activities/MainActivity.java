@@ -1,7 +1,8 @@
 /**
+ * This class is the activity which is run when the application starts
  *
- * @file
- * @brief
+ * @file MainActivity.java
+ * @brief Class for the startup activity
  * @copyright Copyright 2018 Vixiar Inc.. All rights reserved.
  */
 
@@ -44,7 +45,8 @@ import com.vixiar.indicor.R;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 /**
- * This is the main activity that is run when the App is started.  It will
+ * This is the main activity that is run when the App is started.  It will present the user with the
+ * list of actions that can be performed.
  */
 public class MainActivity extends Activity implements CustomDialogInterface
 {
