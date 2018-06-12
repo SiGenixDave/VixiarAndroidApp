@@ -1,4 +1,3 @@
-
 package com.vixiar.indicor.Data;
 
 import java.util.*;
@@ -10,11 +9,12 @@ public class PeakValleyDetect
     // / Tuning constants
     // //////////////////////////////////////////////////////////////////////////
     private static final double P_TO_P_FILTER_CONST_OLD_VALUE = 0.8;
-    private static final double LEVEL_TO_DROP_FOR_PEAK_VALID = 0.1;
-    private static final double LEVEL_TO_INCREASE_FOR_VALLEY_VALID = 0.1;
+    private static final double LEVEL_TO_DROP_FOR_PEAK_VALID = 0.2;
+    private static final double LEVEL_TO_INCREASE_FOR_VALLEY_VALID = 0.2;
     private static final int DEFAULT_SAMPLES_NO_PEAK_LIMIT = 120;
     private static final int LIMIT_FOR_NO_PEAKS = 3;
     public static final int CYCLES_BEFORE_RESETTING_HYSTERESIS = 2;
+    public static final double WAIT_TIME_AS_FACTOR_OF_PREVIOUS_PV_TIME = 0.5;
 
     // //////////////////////////////////////////////////////////////////////////
     // / Constructors
@@ -110,7 +110,6 @@ public class PeakValleyDetect
     private int m_lastPVCount = 0;
 
     private int m_lastMaxPeakToPeak = 0;
-
 
 
     // if this many samples go by and there are no peaks detected,
@@ -414,7 +413,18 @@ public class PeakValleyDetect
 
                         //HeartRateFromPeaks(m_LastPotentialPeakIndex);
                         // Save the index where the most recent peak was detected
-                        m_PeaksIndexes.add(m_LastPotentialPeakIndex);
+                        if (m_PeaksIndexes.size() > 0)
+                        {
+                            // make sure this one is different than the last one
+                            if (m_LastPotentialPeakIndex != m_PeaksIndexes.get(m_PeaksIndexes.size() - 1))
+                            {
+                                m_PeaksIndexes.add(m_LastPotentialPeakIndex);
+                            }
+                        }
+                        else
+                        {
+                            m_PeaksIndexes.add(m_LastPotentialPeakIndex);
+                        }
                         m_State = ePVDStates.WAIT_BEFORE_LOOKING_FOR_VALLEY;
 
                         // Reset the data index 1 increment behind the peak
@@ -453,7 +463,7 @@ public class PeakValleyDetect
 
                 case WAIT_BEFORE_LOOKING_FOR_VALLEY:
                     // wait enough time to miss any extra peak-valleys in the real signal
-                    if (m_DataIndex > (m_LastPotentialPeakIndex + (m_lastPVCount * .5)))
+                    if (m_DataIndex > (m_LastPotentialPeakIndex + (m_lastPVCount * WAIT_TIME_AS_FACTOR_OF_PREVIOUS_PV_TIME)))
                     {
                         //System.out.println();
                         //System.out.println("WAIT is over LOOKING FOR VALLEY  T = " + (m_DataIndex * 0.02));
@@ -482,7 +492,22 @@ public class PeakValleyDetect
 
                         //HeartRateFromValleys(m_LastPotentialValleyIndex);
                         // Save the index where the most recent valley was detected
-                        m_ValleysIndexes.add(m_LastPotentialValleyIndex);
+                        if (m_ValleysIndexes.size() > 0)
+                        {
+                            // make sure this one is different than the last one
+                            if (m_LastPotentialValleyIndex != m_ValleysIndexes.get(m_ValleysIndexes.size() - 1))
+                            {
+                                // also make sure this valley is different than the last peak
+                                if (m_LastPotentialValleyIndex != m_PeaksIndexes.get(m_PeaksIndexes.size() - 1))
+                                {
+                                    m_ValleysIndexes.add(m_LastPotentialValleyIndex);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            m_ValleysIndexes.add(m_LastPotentialValleyIndex);
+                        }
                         m_State = ePVDStates.VALIDATING_PEAK;
 
                         // Reset the data index 1 increment behind the valley
