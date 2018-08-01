@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -75,6 +76,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private TextView m_txtResults1;
     private TextView m_txtResults2;
     private TextView m_txtResults3;
+    private ImageButton m_ImageButtonGraph1;
+    private ImageButton m_ImageButtonGraph2;
+    private ImageButton m_ImageButtonGraph3;
+    private GraphView m_GraphViewResults1;
+    private GraphView m_GraphViewResults2;
+    private GraphView m_GraphViewResults3;
 
     private PPGDataCalibrate m_PPPGDataCalibrate = new PPGDataCalibrate();
 
@@ -645,6 +652,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_txtResults1 = findViewById(R.id.lblRes1);
         m_txtResults2 = findViewById(R.id.lblRes2);
         m_txtResults3 = findViewById(R.id.lblRes3);
+        m_ImageButtonGraph1 = findViewById(R.id.imgBtnGraph1);
+        m_ImageButtonGraph2 = findViewById(R.id.imgBtnGraph2);
+        m_ImageButtonGraph3 = findViewById(R.id.imgBtnGraph3);
+        m_GraphViewResults1 = findViewById(R.id.graphView1);
+        m_GraphViewResults2 = findViewById(R.id.graphView2);
+        m_GraphViewResults3 = findViewById(R.id.graphView3);
+        AddOnClickListeners();
+
         m_imgRestIcon = findViewById(R.id.imgRestIcon);
         m_imgHomeButton = findViewById(R.id.imgHomeIcon);
         m_lblRest = findViewById(R.id.lblRest);
@@ -704,6 +719,70 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         }
     }
 
+    private void AddOnClickListeners() {
+        m_ImageButtonGraph1.setOnClickListener(new View.OnClickListener() {
+            private boolean state;
+            @Override
+            public void onClick(View arg0) {
+                state = !state;
+                if (state) {
+                    m_GraphViewResults1.setVisibility(View.VISIBLE);
+                    // first series is a line
+                    DataPoint[] points = new DataPoint[100];
+                    for (int i = 0; i < points.length; i++) {
+                        points[i] = new DataPoint(i, Math.sin(i*0.5) * 20*(Math.random()*10+1));
+                    }
+                    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(points);
+
+                    // set manual X bounds
+                    m_GraphViewResults1.getViewport().setYAxisBoundsManual(true);
+                    m_GraphViewResults1.getViewport().setMinY(-150);
+                    m_GraphViewResults1.getViewport().setMaxY(150);
+
+                    m_GraphViewResults1.getViewport().setXAxisBoundsManual(true);
+                    m_GraphViewResults1.getViewport().setMinX(4);
+                    m_GraphViewResults1.getViewport().setMaxX(80);
+
+                    // enable scaling and scrolling
+                    m_GraphViewResults1.getViewport().setScalable(true);
+                    m_GraphViewResults1.getViewport().setScalableY(true);
+
+                    m_GraphViewResults1.addSeries(series);
+                }
+                else {
+                    m_GraphViewResults1.setVisibility(View.GONE);
+                }
+            }
+        });
+        m_ImageButtonGraph2.setOnClickListener(new View.OnClickListener() {
+            private boolean state;
+            @Override
+            public void onClick(View arg0) {
+                state = !state;
+                if (state) {
+                    m_GraphViewResults2.setVisibility(View.VISIBLE);
+                }
+                else {
+                    m_GraphViewResults2.setVisibility(View.GONE);
+                }
+            }
+        });
+        m_ImageButtonGraph3.setOnClickListener(new View.OnClickListener() {
+            private boolean state;
+            @Override
+            public void onClick(View arg0) {
+                state = !state;
+                if (state) {
+                    m_GraphViewResults3.setVisibility(View.VISIBLE);
+                }
+                else {
+                    m_GraphViewResults3.setVisibility(View.GONE);
+                }
+            }
+        });
+
+    }
+
     private void UpdateResults()
     {
         // mark the correct number of check boxes
@@ -716,6 +795,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 String result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) +
                         " mmHg";
                 m_txtResults1.setText(result);
+                m_ImageButtonGraph1.setVisibility(View.VISIBLE);
                 break;
 
             case 2:
@@ -728,6 +808,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(1)) +
                         " mmHg";
                 m_txtResults2.setText(result);
+                m_ImageButtonGraph1.setVisibility(View.VISIBLE);
+                m_ImageButtonGraph2.setVisibility(View.VISIBLE);
                 break;
 
             case 3:
@@ -743,6 +825,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(2)) +
                         " mmHg";
                 m_txtResults3.setText(result);
+                m_ImageButtonGraph1.setVisibility(View.VISIBLE);
+                m_ImageButtonGraph2.setVisibility(View.VISIBLE);
+                m_ImageButtonGraph3.setVisibility(View.VISIBLE);
+
 
                 float avg = (float) ((PatientInfo.getInstance().get_LVEDP(0) +
                                         PatientInfo.getInstance().get_LVEDP(1) +

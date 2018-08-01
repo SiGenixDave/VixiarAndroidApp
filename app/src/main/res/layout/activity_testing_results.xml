@@ -76,29 +76,54 @@
 
             <ImageView
                 android:id="@+id/imgMeasurement1Checkbox"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="25dp"
+                android:layout_marginHorizontal="25dp"
+                android:layout_weight="2"
                 android:src="@drawable/measurement_unchecked"/>
 
             <TextView
                 android:id="@+id/lblM1"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="6"
                 android:fontFamily="@font/roboto_light"
                 android:text="@string/measurement1"
                 android:textSize="@dimen/results_measurement_font_size"/>
 
             <TextView
                 android:id="@+id/lblRes1"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="4"
                 android:fontFamily="@font/roboto_light"
                 android:text="---"
                 android:textSize="@dimen/results_measurement_font_size" />
+
+            <ImageButton
+                android:id="@+id/imgBtnGraph1"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="50dp"
+                android:background="@null"
+                android:onClick="onStartClick"
+                android:scaleType="fitXY"
+                android:visibility="invisible"
+                android:src="@drawable/graph"/>
         </LinearLayout>
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/graphView1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginTop="0dp"
+            android:layout_weight="5"
+            android:visibility="gone"/>
 
         <ImageView
             android:id="@+id/imageView2"
@@ -118,29 +143,56 @@
 
             <ImageView
                 android:id="@+id/imgMeasurement2Checkbox"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="25dp"
+                android:layout_marginHorizontal="25dp"
+                android:layout_weight="2"
                 android:src="@drawable/measurement_unchecked"/>
 
             <TextView
                 android:id="@+id/lblM2"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="6"
                 android:fontFamily="@font/roboto_light"
                 android:text="@string/measurement2"
                 android:textSize="@dimen/results_measurement_font_size"/>
 
             <TextView
                 android:id="@+id/lblRes2"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="4"
                 android:fontFamily="@font/roboto_light"
                 android:text="---"
                 android:textSize="@dimen/results_measurement_font_size" />
+
+            <ImageButton
+                android:id="@+id/imgBtnGraph2"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="50dp"
+                android:background="@null"
+                android:onClick="onStartClick"
+                android:scaleType="fitXY"
+                android:visibility="invisible"
+                android:src="@drawable/graph"/>
+
         </LinearLayout>
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/graphView2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginTop="0dp"
+            android:layout_weight="5"
+            android:visibility="gone"/>
+
 
         <ImageView
             android:id="@+id/imageView7"
@@ -160,29 +212,55 @@
 
             <ImageView
                 android:id="@+id/imgMeasurement3Checkbox"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="25dp"
+                android:layout_marginHorizontal="25dp"
+                android:layout_weight="2"
                 android:src="@drawable/measurement_unchecked"/>
 
             <TextView
                 android:id="@+id/lblM3"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="6"
                 android:fontFamily="@font/roboto_light"
                 android:text="@string/measurement3"
                 android:textSize="@dimen/results_measurement_font_size"/>
 
             <TextView
                 android:id="@+id/lblRes3"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="4"
                 android:fontFamily="@font/roboto_light"
                 android:text="---"
                 android:textSize="@dimen/results_measurement_font_size" />
+
+            <ImageButton
+                android:id="@+id/imgBtnGraph3"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="50dp"
+                android:background="@null"
+                android:onClick="onStartClick"
+                android:scaleType="fitXY"
+                android:visibility="invisible"
+                android:src="@drawable/graph"/>
         </LinearLayout>
+
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/graphView3"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginTop="0dp"
+            android:layout_weight="5"
+            android:visibility="gone"/>
+
 
         <ImageView
             android:id="@+id/imageView5"
@@ -200,30 +278,25 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/imgAverageCheckbox"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:visibility="invisible"
-                android:src="@drawable/measurement_unchecked"/>
-
             <TextView
                 android:id="@+id/lblAvg"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="8"
                 android:fontFamily="@font/roboto_light"
                 android:text="@string/average"
+                android:textAlignment="textEnd"
+                android:paddingEnd="125dp"
                 android:textSize="@dimen/results_measurement_font_size"/>
 
             <TextView
                 android:id="@+id/lblTestAverage"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="5"
                 android:fontFamily="@font/roboto_light"
                 android:text="---"
+                android:layout_marginEnd="20dp"
                 android:textSize="@dimen/results_measurement_font_size" />
         </LinearLayout>
 
