@@ -30,6 +30,7 @@ import com.vixiar.indicor.R;
 import com.vixiar.indicor.Upload_Interface.UploadServiceInterface;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
@@ -724,63 +725,68 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             private boolean state;
             @Override
             public void onClick(View arg0) {
-                state = !state;
-                if (state) {
-                    m_GraphViewResults1.setVisibility(View.VISIBLE);
-                    // first series is a line
-                    DataPoint[] points = new DataPoint[100];
-                    for (int i = 0; i < points.length; i++) {
-                        points[i] = new DataPoint(i, Math.sin(i*0.5) * 20*(Math.random()*10+1));
-                    }
-                    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(points);
-
-                    // set manual X bounds
-                    m_GraphViewResults1.getViewport().setYAxisBoundsManual(true);
-                    m_GraphViewResults1.getViewport().setMinY(-150);
-                    m_GraphViewResults1.getViewport().setMaxY(150);
-
-                    m_GraphViewResults1.getViewport().setXAxisBoundsManual(true);
-                    m_GraphViewResults1.getViewport().setMinX(4);
-                    m_GraphViewResults1.getViewport().setMaxX(80);
-
-                    // enable scaling and scrolling
-                    m_GraphViewResults1.getViewport().setScalable(true);
-                    m_GraphViewResults1.getViewport().setScalableY(true);
-
-                    m_GraphViewResults1.addSeries(series);
-                }
-                else {
-                    m_GraphViewResults1.setVisibility(View.GONE);
-                }
+                state = PlotResults(state, m_GraphViewResults1, 0);
             }
         });
         m_ImageButtonGraph2.setOnClickListener(new View.OnClickListener() {
             private boolean state;
             @Override
             public void onClick(View arg0) {
-                state = !state;
-                if (state) {
-                    m_GraphViewResults2.setVisibility(View.VISIBLE);
-                }
-                else {
-                    m_GraphViewResults2.setVisibility(View.GONE);
-                }
+                state = PlotResults(state, m_GraphViewResults2, 1);
             }
         });
         m_ImageButtonGraph3.setOnClickListener(new View.OnClickListener() {
             private boolean state;
             @Override
             public void onClick(View arg0) {
-                state = !state;
-                if (state) {
-                    m_GraphViewResults3.setVisibility(View.VISIBLE);
-                }
-                else {
-                    m_GraphViewResults3.setVisibility(View.GONE);
-                }
+                state = PlotResults(state, m_GraphViewResults3, 2);
             }
         });
+    }
 
+
+    boolean PlotResults(boolean state, GraphView graphView, int index) {
+        state = !state;
+        if (state) {
+            graphView.setVisibility(View.VISIBLE);
+
+            // clear any data in the PPG chart
+            graphView.removeAllSeries();
+
+            ArrayList<Integer> plotData = PatientInfo.getInstance().GetSummaryChartData(index);
+            LineGraphSeries<DataPoint> series = new LineGraphSeries<>();
+            double xValue = 0;
+            for (Integer y:plotData) {
+                double yValue = (double)y;
+                series.appendData(new DataPoint(xValue, yValue), true, plotData.size());
+                xValue += 0.02;
+            }
+
+            graphView.getGridLabelRenderer().setHighlightZeroLines(false);
+            graphView.getGridLabelRenderer().setVerticalLabelsAlign(Paint.Align.LEFT);
+            graphView.getGridLabelRenderer().setLabelVerticalWidth(100);
+            graphView.getGridLabelRenderer().setTextSize(20);
+            graphView.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
+            graphView.getGridLabelRenderer().setHorizontalLabelsAngle(90);
+            graphView.getGridLabelRenderer().reloadStyles();
+            graphView.getGridLabelRenderer().setVerticalLabelsVisible(false);
+
+
+            graphView.getViewport().setXAxisBoundsManual(true);
+            graphView.getViewport().setMinX(0);
+            graphView.getViewport().setMaxX(xValue);
+
+            // enable scaling and scrolling
+            graphView.getViewport().setScalable(true);
+            graphView.getViewport().setScalableY(true);
+
+            graphView.addSeries(series);
+        }
+        else {
+            graphView.setVisibility(View.GONE);
+        }
+
+        return state;
     }
 
     private void UpdateResults()

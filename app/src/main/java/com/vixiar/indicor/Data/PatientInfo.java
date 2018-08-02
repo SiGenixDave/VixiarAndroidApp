@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -254,6 +255,47 @@ public class PatientInfo
             return false;
         }
     }
+
+    // returns an array of PPG values for 30 seconds wih the center being the
+    // start of the Valsalva maneuver
+    // testNumber is 0 relative
+    public ArrayList<Integer> GetSummaryChartData(int testNumber)
+    {
+        final int SAMPLES_PER_SECOND = 50;
+
+        ArrayList<Integer> results = new ArrayList<>();
+
+        TestMarkers tm = GetTestMarkers(testNumber);
+
+        int startIndex = tm.startIndex;
+
+        // make sure there's enough data before the start of the test index
+
+        if (startIndex <= SAMPLES_PER_SECOND * 15)
+        {
+            startIndex = 0;
+        }
+        else
+        {
+            startIndex -= (SAMPLES_PER_SECOND * 15);
+        }
+
+        int endIndex = startIndex + (SAMPLES_PER_SECOND * 30);
+
+        if (endIndex >= PatientInfo.getInstance().getRealtimeData().GetFilteredData().size())
+        {
+            endIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size();
+        }
+
+        for (int i = startIndex; i < endIndex; i++)
+        {
+            results.add(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG);
+        }
+
+        return results;
+    }
+
+
 
     // get the start and end of valsalva markers for a certain test
     // both markers will be 0 if the test is not found
