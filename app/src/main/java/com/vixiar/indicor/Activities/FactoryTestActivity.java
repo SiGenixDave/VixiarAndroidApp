@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
@@ -99,6 +100,9 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
 
         PPGgraph = findViewById(R.id.PPGgraph);
         pressureGraph = findViewById(R.id.pressuregraph);
+
+        TextView v = findViewById(R.id.versionString);
+        v.setText("Version: " + BuildConfig.VERSION_NAME);
 
         FirstTimeGraphSetup();
 
