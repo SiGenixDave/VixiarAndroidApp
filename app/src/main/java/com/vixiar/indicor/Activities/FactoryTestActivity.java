@@ -13,14 +13,17 @@ import android.hardware.usb.UsbManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.Button;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.DataPointInterface;
 import com.jjoe64.graphview.series.LineGraphSeries;
+import com.vixiar.indicor.BLEInterface.IndicorBLEService;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.BuildConfig;
@@ -36,6 +39,8 @@ import java.io.PrintWriter;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -51,8 +56,12 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
     private static Double m_pressureLastX = 0.0;
     private static int m_nLastDataIndex = 0;
     private String m_fileTestDateTime;
+    private Button m_button;
+    private boolean m_bTestRunning = false;
+    private GraphView PPGgraph;
+    private GraphView pressureGraph;
 
-    public final String ACTION_USB_PERMISSION = "com.hariharan.arduinousb.USB_PERMISSION";
+    private final String ACTION_USB_PERMISSION = "com.hariharan.arduinousb.USB_PERMISSION";
 
     private UsbManager usbManager;
     private UsbDevice device;
@@ -66,19 +75,62 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_factory_test);
+
+        final Context appContext = this;
+        final FactoryTestActivity thisActivity = this;
+
+        m_button = findViewById(R.id.mainButton);
+        m_button.setText("Connect and start test");
+        m_button.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (m_bTestRunning)
+                {
+                    UserIsDone();
+                }
+                else
+                {
+                    UserStartingTest();
+                }
+            }
+        });
+
+        PPGgraph = findViewById(R.id.PPGgraph);
+        pressureGraph = findViewById(R.id.pressuregraph);
+
+        FirstTimeGraphSetup();
+
+        SetupUSBSerialPort();
+    }
+
+    public void UserIsDone()
+    {
+        m_button.setText("Saving data...");
+        IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
+        SaveRealtimeDataToCSVFile(this);
+        SavePeaksAndValleysToCSVFile(this);
+        m_button.setText("Connect and start test");
+        m_bTestRunning = false;
+        PPGgraph.removeAllSeries();
+        pressureGraph.removeAllSeries();
+    }
+
+    public void UserStartingTest()
+    {
+        m_button.setText("Connecting");
         IndicorBLEServiceInterface.getInstance().initialize(this, this);
         IndicorBLEServiceInterface.getInstance().ConnectToIndicor();
+        InitializeGraph();
+    }
 
-        GraphView PPGgraph = findViewById(R.id.PPGgraph);
-        GraphView pressureGraph = findViewById(R.id.pressuregraph);
-
-        m_PPGSeries = new LineGraphSeries<>();
-        PPGgraph.addSeries(m_PPGSeries);
+    public void FirstTimeGraphSetup()
+    {
         PPGgraph.getViewport().setXAxisBoundsManual(true);
         PPGgraph.getViewport().setMinX(0);
         PPGgraph.getViewport().setMaxX(10);
-        m_PPGSeries.setColor(Color.BLUE);
-        m_PPGSeries.setThickness(2);
+
         PPGgraph.getGridLabelRenderer().setVerticalAxisTitle("PPG");
         PPGgraph.getGridLabelRenderer().setHorizontalAxisTitle("Time (s)");
         PPGgraph.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
@@ -87,13 +139,10 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         PPGgraph.setTitleTextSize(45f);
         PPGgraph.getViewport().setDrawBorder(true);
 
-        m_PressureSeries = new LineGraphSeries<>();
-        pressureGraph.addSeries(m_PressureSeries);
         pressureGraph.getViewport().setXAxisBoundsManual(true);
         pressureGraph.getViewport().setMinX(0);
         pressureGraph.getViewport().setMaxX(10);
-        m_PressureSeries.setColor(Color.BLUE);
-        m_PressureSeries.setThickness(2);
+
         pressureGraph.getGridLabelRenderer().setVerticalAxisTitle("Pressure");
         pressureGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time (s)");
         pressureGraph.getGridLabelRenderer().setHorizontalAxisTitleTextSize(30f);
@@ -101,31 +150,34 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         pressureGraph.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
         pressureGraph.setTitleTextSize(45f);
         pressureGraph.getViewport().setDrawBorder(true);
+    }
 
-        SetupUSBSerialPort();
+    public void InitializeGraph()
+    {
+        m_PPGSeries = new LineGraphSeries<DataPointInterface>();
+        m_PPGSeries.setColor(Color.BLUE);
+        m_PPGSeries.setThickness(2);
+        PPGgraph.addSeries(m_PPGSeries);
+
+        m_PressureSeries = new LineGraphSeries<DataPointInterface>();
+        m_PressureSeries.setColor(Color.BLUE);
+        m_PressureSeries.setThickness(2);
+        pressureGraph.addSeries(m_PressureSeries);
     }
 
     public void iFullyConnected()
     {
         Log.i(TAG, "Connected");
-        HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
-
-        TextView tv = findViewById(R.id.textViewMessage);
-        if (m_BUSBEnabled)
-        {
-            tv.setText(tv.getText() + " USB is streaming");
-        }
-        else
-        {
-            tv.setText(tv.getText() + " USB is not streaming");
-        }
+        m_bTestRunning = true;
+        m_button.setText("Disconnect and save file");
     }
 
     @Override
     public void onBackPressed()
     {
         // save any data collected
-        SaveDataToCSVFile(this );
+        SaveRealtimeDataToCSVFile(this);
+        SavePeaksAndValleysToCSVFile(this);
         super.onBackPressed();
     }
 
@@ -145,7 +197,9 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
 
     public void iError(int e)
     {
-        onBackPressed();
+        m_button.setText("Connect and start test");
+
+        //onBackPressed();
     }
 
     public void iRealtimeDataNotification()
@@ -165,17 +219,14 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
                 DecimalFormat df = new DecimalFormat("##");
                 df.setRoundingMode(RoundingMode.DOWN);
 
-                String outLine = df.format(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG) +
-                        ", " +
-                df.format(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_pressure) +
-                "\r\n";
+                String outLine = df.format(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG) + ", " + df.format(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_pressure) + "\r\n";
                 serialPort.write(outLine.getBytes());
             }
         }
         m_nLastDataIndex = currentDataIndex;
     }
 
-    public boolean SaveDataToCSVFile(Context context)
+    private boolean SaveRealtimeDataToCSVFile(Context context)
     {
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
 
@@ -184,7 +235,7 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         Date date = new Date();
         m_fileTestDateTime = simpleDateFormat.format(date);
 
-        String fileName = m_fileTestDateTime + "_factory_test" + ".csv";
+        String fileName = m_fileTestDateTime + "_rtdata" + ".csv";
         String filePath = baseDir + File.separator + fileName;
         File file = new File(filePath);
 
@@ -192,7 +243,7 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         {
             FileOutputStream fos = new FileOutputStream(file);
             PrintWriter pw = new PrintWriter(fos);
-            WriteCSVContents(pw);
+            WriteRealtimeDataCSVContents(pw);
             file.setWritable(true);
             pw.flush();
             pw.close();
@@ -205,8 +256,7 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         } catch (FileNotFoundException e)
         {
             e.printStackTrace();
-            Log.i(TAG, "******* File not found. Did you"
-                    + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
+            Log.i(TAG, "******* File not found. Did you" + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -214,21 +264,121 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         return true;
     }
 
-    private boolean WriteCSVContents(PrintWriter writer)
+    private boolean WriteRealtimeDataCSVContents(PrintWriter writer)
     {
         writer.println("Test date time, " + m_fileTestDateTime);
         writer.println("Application version, " + BuildConfig.VERSION_NAME);
         writer.println("Handheld serial number," + PatientInfo.getInstance().get_handheldSerialNumber());
         writer.println("Firmware version, " + PatientInfo.getInstance().get_firmwareRevision());
 
-        // print all of the raw realtime data
-        double t = 0.0;
-        writer.println("Time (sec.), PPG (raw), Pressure (mmHg)");
-        for (int i = 0; i < PatientInfo.getInstance().getRealtimeData().GetRawData().size(); i++)
+        // print all of the realtime data
+        int dataSize;
+
+        // figure out the smaller of the data sizes and write that many rows
+        if (PatientInfo.getInstance().getRealtimeData().GetFilteredData().size() > PatientInfo.getInstance().getRealtimeData().GetRawData().size())
         {
-            writer.println(FormatDoubleForPrint(t) + ", " + PatientInfo.getInstance().getRealtimeData().GetRawData().get(i).m_PPG + ", " +
-                    FormatDoubleForPrint(PatientInfo.getInstance().getRealtimeData().GetRawData().get(i).m_pressure));
+            dataSize = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
+        }
+        else
+        {
+            dataSize = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size();
+        }
+        writer.println("Time (sec.), PPG (raw), PPG (filtered), Pressure (raw), Pressure (filtered)");
+        double t = 0.0;
+        for (int i = 0; i < dataSize; i++)
+        {
+            writer.println(FormatDoubleForPrint(t) + ", " + PatientInfo.getInstance().getRealtimeData().GetRawData().get(i).m_PPG + ", " + PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(PatientInfo.getInstance().getRealtimeData().GetRawData().get(i).m_pressure) + ", " + FormatDoubleForPrint(PatientInfo.getInstance().getRealtimeData().GetRawData().get(i).m_pressure));
             t += 0.02;
+        }
+        return true;
+    }
+
+    private boolean SavePeaksAndValleysToCSVFile(Context context)
+    {
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+
+        // get the date and time
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm", Locale.getDefault());
+        Date date = new Date();
+        m_fileTestDateTime = simpleDateFormat.format(date);
+
+        String fileName = m_fileTestDateTime + "_peaksvalleys" + ".csv";
+        String filePath = baseDir + File.separator + fileName;
+        File file = new File(filePath);
+
+        try
+        {
+            FileOutputStream fos = new FileOutputStream(file);
+            PrintWriter pw = new PrintWriter(fos);
+            WritePeaksAndValleyCSVContents(pw);
+            file.setWritable(true);
+            pw.flush();
+            pw.close();
+            fos.close();
+
+            // now we need to force android to rescan the file system so the file will show up
+            // if you want to load it via usb
+            context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
+
+        } catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "******* File not found. Did you" + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    private class TimeAndValue implements Comparable<TimeAndValue>
+    {
+        double time;
+        int value;
+
+        @Override
+        public int compareTo(TimeAndValue tv)
+        {
+            return (int) (this.time - tv.time);
+        }
+    }
+
+    private boolean WritePeaksAndValleyCSVContents(PrintWriter writer)
+    {
+        writer.println("Test date time, " + m_fileTestDateTime);
+        writer.println("Application version, " + BuildConfig.VERSION_NAME);
+        writer.println("Handheld serial number," + PatientInfo.getInstance().get_handheldSerialNumber());
+        writer.println("Firmware version, " + PatientInfo.getInstance().get_firmwareRevision());
+        writer.println("Time (sec.), Peak / Valley Amplitude");
+
+        ArrayList<TimeAndValue> pvs = new ArrayList<>();
+
+        for (int i = 0; i < PeakValleyDetect.getInstance().getPeaksIndexes().size(); i++)
+        {
+            TimeAndValue thisPeak = new TimeAndValue();
+
+            int location = PeakValleyDetect.getInstance().getPeaksIndexes().get(i);
+            thisPeak.time = location * 0.02;
+            thisPeak.value = PeakValleyDetect.getInstance().GetData(location);
+
+            pvs.add(thisPeak);
+        }
+        for (int i = 0; i < PeakValleyDetect.getInstance().getValleysIndexes().size(); i++)
+        {
+            TimeAndValue thisValley = new TimeAndValue();
+
+            int location = PeakValleyDetect.getInstance().getValleysIndexes().get(i);
+            thisValley.time = location * 0.02;
+            thisValley.value = PeakValleyDetect.getInstance().GetData(location);
+
+            pvs.add(thisValley);
+        }
+
+        Collections.sort(pvs);
+
+        for (int i = 0; i < pvs.size(); i++)
+        {
+            writer.println(FormatDoubleForPrint(pvs.get(i).time) + ", " + pvs.get(i).value);
         }
         return true;
     }
@@ -238,14 +388,13 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         String result = String.format("%1$,.2f", value);
 
         // get rid of the commas cause it's going to a csv file
-        String clean = result.replaceAll(",", "");
 
-        return clean;
+        return result.replaceAll(",", "");
     }
 
     private void SetupUSBSerialPort()
     {
-        usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
+        usbManager = (UsbManager) getSystemService(USB_SERVICE);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
@@ -273,8 +422,7 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
                     device = null;
                 }
 
-                if (!keep)
-                    break;
+                if (!keep) break;
             }
         }
     }
@@ -328,8 +476,5 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
             }
         }
 
-        ;
     };
-
-
 }

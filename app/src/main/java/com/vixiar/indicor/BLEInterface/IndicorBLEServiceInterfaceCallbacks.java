@@ -6,10 +6,10 @@ package com.vixiar.indicor.BLEInterface;
 
 public interface IndicorBLEServiceInterfaceCallbacks
 {
-    public void iError(int e);
-    public void iRealtimeDataNotification();
-    public void iFullyConnected();
-    public void iDisconnected();
-    public void iBatteryLevelRead(int level);
-    public void iRestart();
+    void iError(int e);
+    void iRealtimeDataNotification();
+    void iFullyConnected();
+    void iDisconnected();
+    void iBatteryLevelRead(int level);
+    void iRestart();
 }

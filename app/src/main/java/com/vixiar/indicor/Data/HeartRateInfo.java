@@ -14,11 +14,11 @@ public class HeartRateInfo {
     private class HistoricalData {
 
         // Calculate heart rate
-        public double heartRate;
+        double heartRate;
         // Starting sample (index into data array) where heart rate calculation started
-        public int startSampleIndex;
+        int startSampleIndex;
         // Last sample (index into data array) where heart rate calculation ended
-        public int lastSampleIndex;
+        int lastSampleIndex;
     }
 
     // //////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ public class HeartRateInfo {
     private int m_NumHeartBeatsToAverage;
 
     // Stores the average beats per minute calculations
-    private List<HistoricalData> m_HistoricalDataList = new ArrayList<>();
+    private final List<HistoricalData> m_HistoricalDataList = new ArrayList<>();
 
     // If the difference between the largest and the smallest average beats per
     // minute exceeds this value, an error is declared.

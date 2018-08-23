@@ -1,29 +1,16 @@
 package com.vixiar.indicor.Upload_Interface;
 
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanResult;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 
 import com.dropbox.core.DbxException;
-import com.vixiar.indicor.Data.PatientInfo;
-import com.vixiar.indicor.Data.RealtimeData;
-import com.vixiar.indicor.R;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 
@@ -34,7 +21,7 @@ import static android.content.Context.BIND_AUTO_CREATE;
 public class UploadServiceInterface
 {
     // make this a singleton class
-    private static UploadServiceInterface ourInstance = new UploadServiceInterface();
+    private static final UploadServiceInterface ourInstance = new UploadServiceInterface();
 
     public static UploadServiceInterface getInstance()
     {
@@ -44,12 +31,9 @@ public class UploadServiceInterface
     private final static String TAG = "IND";
     // private MyBLEMessageReceiver myBLEMessageReceiver;
 
-    // Variables to manage BLE connection
-    private static boolean mServiceConnected;
     private static UploadService mVixiarUploadService;
 
     private AlertDialog connectionDialog;
-    private Context mContext;
 
     private Handler handler = new Handler();
     private final Runnable runnable = new Runnable()
@@ -62,7 +46,7 @@ public class UploadServiceInterface
 
     public void initialize(Context c)
     {
-        mContext = c;
+        Context mContext = c;
 
         // Start the Upload Service
         Log.i(TAG, "Starting Upload Service");
@@ -88,14 +72,8 @@ public class UploadServiceInterface
         {
             Log.i(TAG, "Starting Upload Service");
             mVixiarUploadService = ((UploadService.LocalBinder) service).getService();
-            mServiceConnected = true;
-            try
-            {
-                mVixiarUploadService.Initialize();
-            } catch (DbxException e)
-            {
-                System.out.println(e.getMessage());
-            }
+            boolean mServiceConnected = true;
+            mVixiarUploadService.Initialize();
             Log.i(TAG, "Upload Service Started");
         }
 

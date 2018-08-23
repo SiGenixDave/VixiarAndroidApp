@@ -88,13 +88,12 @@ public class IndicorBLEService extends Service implements TimerCallback
 
     private static GenericTimer m_realTimeDataTimeoutTimer;
     private final int TIMEOUT_TIMER_ID = 0;
-    private final int RT_DATA_TIMEOUT_MS = 2000;
 
     private boolean m_bConnectedToIndicor = false;
 
     // ----------------------------- BLE Callbacks -----------------------------------------------
     // this is the callback used for older devices
-    private BluetoothAdapter.LeScanCallback m_LeScanCallback =
+    private final BluetoothAdapter.LeScanCallback m_LeScanCallback =
             new BluetoothAdapter.LeScanCallback()
             {
                 @Override
@@ -411,6 +410,7 @@ public class IndicorBLEService extends Service implements TimerCallback
             m_BluetoothGatt.writeDescriptor(m_RTNotificationCCCD);
 
             // start the timeout timer
+            int RT_DATA_TIMEOUT_MS = 2000;
             m_realTimeDataTimeoutTimer.Start(this, RT_DATA_TIMEOUT_MS, true);
         }
     }

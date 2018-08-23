@@ -29,27 +29,26 @@ public class PatientInfo
     private int m_height_Inches;
     private int m_weight_lbs;
     private int m_age_years;
-    private String m_applicationVersion;
     private String m_studyLocation;
     private String m_handheldSerialNumber;
     private String m_firmwareVersion;
     private String m_testDate;
     private String m_gender;
     private String m_notes;
-    private RealtimeData rtd = new RealtimeData();
+    private final RealtimeData rtd = new RealtimeData();
 
     // calculated data
     private final int NUM_TESTS = 3;
-    private double[] m_aCalcPAAvgRest = new double[NUM_TESTS];
-    private double[] m_aCalcHRAvgRest = new double[NUM_TESTS];
-    private double[] m_aCalcPAAvgVM = new double[NUM_TESTS];
-    private double[] m_aCalcHRAvgVM = new double[NUM_TESTS];
-    private double[] m_aCalcMinPA = new double[NUM_TESTS];
-    private double[] m_aCalcEndPA = new double[NUM_TESTS];
-    private double[] m_aCalcMinPAR = new double[NUM_TESTS];
-    private double[] m_aCalcEndPAR = new double[NUM_TESTS];
-    private double[] m_aCalcMinHRVM = new double[NUM_TESTS];
-    private double[] m_aCalcLVEDP = new double[NUM_TESTS];
+    private final double[] m_aCalcPAAvgRest = new double[NUM_TESTS];
+    private final double[] m_aCalcHRAvgRest = new double[NUM_TESTS];
+    private final double[] m_aCalcPAAvgVM = new double[NUM_TESTS];
+    private final double[] m_aCalcHRAvgVM = new double[NUM_TESTS];
+    private final double[] m_aCalcMinPA = new double[NUM_TESTS];
+    private final double[] m_aCalcEndPA = new double[NUM_TESTS];
+    private final double[] m_aCalcMinPAR = new double[NUM_TESTS];
+    private final double[] m_aCalcEndPAR = new double[NUM_TESTS];
+    private final double[] m_aCalcMinHRVM = new double[NUM_TESTS];
+    private final double[] m_aCalcLVEDP = new double[NUM_TESTS];
 
     public void ClearAllPatientData()
     {
@@ -88,7 +87,7 @@ public class PatientInfo
 
     public void set_applicationVersion(String m_applicationVersion)
     {
-        this.m_applicationVersion = m_applicationVersion;
+        String m_applicationVersion1 = m_applicationVersion;
     }
 
     public void set_firmwareRevision(String m_firmwareVersion)
@@ -412,8 +411,7 @@ public class PatientInfo
         String result = String.format("%1$,.2f", value);
 
         // get rid of the commas cause it's going to a csv file
-        String clean = result.replaceAll(",", "");
 
-        return clean;
+        return result.replaceAll(",", "");
     }
 }

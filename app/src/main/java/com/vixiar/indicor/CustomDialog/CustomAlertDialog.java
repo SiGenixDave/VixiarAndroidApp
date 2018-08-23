@@ -20,10 +20,9 @@ import com.vixiar.indicor.R;
 public class CustomAlertDialog implements CustomDialogInterface, DialogInterface.OnClickListener
 {
 
-    public static CustomAlertDialog mDialog;
-    public CustomDialogInterface mDialogClickInterface;
+    private static CustomAlertDialog mDialog;
+    private CustomDialogInterface mDialogClickInterface;
     private int mDialogIdentifier;
-    private Context mContext;
 
     public static CustomAlertDialog getInstance()
     {
@@ -61,7 +60,7 @@ public class CustomAlertDialog implements CustomDialogInterface, DialogInterface
 
         mDialogClickInterface = callbackInterface;
         mDialogIdentifier = dialogID;
-        mContext = context;
+        Context mContext = context;
 
         final Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);

@@ -4,13 +4,11 @@ package com.vixiar.indicor.Data;
  * Created by Dave on 12/13/2017.
  */
 
-import android.content.Intent;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class PPGDataCalibrate {
+class PPGDataCalibrate {
 
     // //////////////////////////////////////////////////////////////////////////
     // / Attributes
@@ -70,8 +68,8 @@ public class PPGDataCalibrate {
         }
 
         // Determine the max and min amplitude
-        int maxValue = CalculateMaxValue(peaks, 3);
-        int minValue = CalculateMinValue(valleys, 3);
+        int maxValue = CalculateMaxValue(peaks);
+        int minValue = CalculateMinValue(valleys);
 
         // Allow the chart scaling to slightly exceed the min and max values. The special algorithm for the
         // min is to make the scaling symmetric (if max is 40000 and min is 30000, then the scaling will be
@@ -96,7 +94,7 @@ public class PPGDataCalibrate {
     // //////////////////////////////////////////////////////////////////////////
     // / Private Methods
     // //////////////////////////////////////////////////////////////////////////
-    private int CalculateMaxValue(List<Integer> list, int recentSamplesToUse) {
+    private int CalculateMaxValue(List<Integer> list) {
         int maxValue = Integer.MIN_VALUE;
 
         int samples = 0;
@@ -107,7 +105,7 @@ public class PPGDataCalibrate {
         }
 
 
-        while (samples < recentSamplesToUse) {
+        while (samples < 3) {
             int data = PeakValleyDetect.getInstance().GetData(list.get(index));
             Log.d ("DAS", "Peak of Interest: " + data);
             if (data > maxValue) {
@@ -121,7 +119,7 @@ public class PPGDataCalibrate {
         return maxValue;
     }
 
-    private int CalculateMinValue(List<Integer> list, int recentSamplesToUse) {
+    private int CalculateMinValue(List<Integer> list) {
         int minValue = Integer.MAX_VALUE;
 
         int samples = 0;
@@ -132,7 +130,7 @@ public class PPGDataCalibrate {
         }
 
 
-        while (samples < recentSamplesToUse) {
+        while (samples < 3) {
             int data = PeakValleyDetect.getInstance().GetData(list.get(index));
             Log.d ("DAS", "Valley of Interest: " + data);
             if (data < minValue) {

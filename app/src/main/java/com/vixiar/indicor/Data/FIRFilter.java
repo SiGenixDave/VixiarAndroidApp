@@ -4,7 +4,7 @@ package com.vixiar.indicor.Data;
  * Created by gyurk on 12/13/2017.
  */
 
-public class FIRFilter
+class FIRFilter
 {
     public void Initialize(PPG_FIRFilterData f)
     {
@@ -33,7 +33,6 @@ public class FIRFilter
             index = index != 0 ? index - 1 : f.NUM_TAPS - 1;
             acc += f.history[index] * f.filter_taps[i];
         }
-        ;
         return acc;
     }
 }

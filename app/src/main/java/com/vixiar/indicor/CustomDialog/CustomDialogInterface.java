@@ -9,7 +9,7 @@ import android.content.DialogInterface;
 public interface CustomDialogInterface
 {
 
-    public void onClickPositiveButton(DialogInterface dialog, int dialogID);
+    void onClickPositiveButton(DialogInterface dialog, int dialogID);
 
-    public void onClickNegativeButton(DialogInterface dialog, int dialogID);
+    void onClickNegativeButton(DialogInterface dialog, int dialogID);
 }

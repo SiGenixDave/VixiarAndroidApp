@@ -18,11 +18,11 @@ doing the math, p(mmHg) = (-0.0263 * counts) + 46.335
 */
 public class RealtimeData
 {
-    private ArrayList<PPG_PressureSample> m_rawData = new ArrayList<PPG_PressureSample>();
-    private ArrayList<PPG_PressureSample> m_filteredData = new ArrayList<PPG_PressureSample>();
-    private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
-    private PPG_FIRFilterData PPGFIRFilterData = new PPG_FIRFilterData();
-    private FIRFilter firFilter = new FIRFilter();
+    private final ArrayList<PPG_PressureSample> m_rawData = new ArrayList<>();
+    private final ArrayList<PPG_PressureSample> m_filteredData = new ArrayList<>();
+    private final ArrayList<RealtimeDataMarker> m_markers = new ArrayList<>();
+    private final PPG_FIRFilterData PPGFIRFilterData = new PPG_FIRFilterData();
+    private final FIRFilter firFilter = new FIRFilter();
     private Boolean enableHeartRateValidation = false;
 
     public RealtimeData()
@@ -43,14 +43,14 @@ public class RealtimeData
         for (int i = 1; i < new_data.length; i += 4)
         {
             // convert the a/d counts from the handheld to pressure in mmHg
-            pressure_counts = (256 * (int) (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
+            pressure_counts = (256 * (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
             pressure_value = ((double) pressure_counts * (-0.0263)) + 46.726;
             if (pressure_value < 0.0)
             {
                 pressure_value = 0.0;
             }
 
-            ppg_value = (256 * (int) (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
+            ppg_value = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
 
             PPG_PressureSample pd = new PPG_PressureSample(ppg_value, pressure_value);
             m_rawData.add(pd);

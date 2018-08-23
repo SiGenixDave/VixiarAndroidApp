@@ -129,7 +129,7 @@
 
     <string name="dlg_title_no_handhelds">NO HANDHELD FOUND</string>
     <string name="dlg_msg_no_handhelds">No Indicor handhelds were detected.  Please make sure
-        the Indicor handheld is powered on and the blue LED is flashing. &end_test_warning1; </string>
+        the Indicor handheld is powered on and the blue LED is flashing. </string>
 
     <string name="dlg_title_pressure_error_start">ERROR</string>
     <string name="dlg_msg_pressure_error_start">You have 5 seconds from when the test starts

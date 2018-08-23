@@ -5,8 +5,6 @@ import android.util.Log;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static android.content.ContentValues.TAG;
-
 public class PeakValleyDetect
 {
     private final String TAG = this.getClass().getSimpleName();
@@ -27,8 +25,6 @@ public class PeakValleyDetect
         DETECTING_PEAK, DETECTING_VALLEY
     }
 
-    ;
-
     public enum eSlopeZero
     {
         PEAK, VALLEY
@@ -41,20 +37,20 @@ public class PeakValleyDetect
     private static final PeakValleyDetect ourInstance = new PeakValleyDetect();
 
     // Stores the indexes in "localData" where the peaks where detected
-    private List<Integer> m_PeaksIndexes = new ArrayList<>();
+    private final List<Integer> m_PeaksIndexes = new ArrayList<>();
 
     // Stores the indexes in "localData" where the valleys where detected
-    private List<Integer> m_ValleysIndexes = new ArrayList<>();
+    private final List<Integer> m_ValleysIndexes = new ArrayList<>();
 
     // External code pumps data into the list via AddToDataArray(); Execute()
     // pulls this data out and places into a local data list for processing
     // after which the data in this list is removed. Separating data and
     // local data allows multi-threading if desired to pump data into and
     // process the data concurrently
-    private ConcurrentLinkedQueue<Integer> m_Data = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Integer> m_Data = new ConcurrentLinkedQueue<>();
 
     // Stores the entire copy of data that was pumped into the data list
-    private List<Integer> m_LocalData = new ArrayList<>();
+    private final List<Integer> m_LocalData = new ArrayList<>();
 
     // Amount of change from the max peak detected in order to begin "looking"
     // for the next valley. This value determines the max amount of noise
@@ -99,13 +95,6 @@ public class PeakValleyDetect
     private long m_highestPeak;
     private long m_lowestValley;
     private int m_samplesWithNoPeaks;
-
-    // if this many samples go by and there are no peaks detected,
-    // reset the hysteresis delta numbers
-    // this is based on the lowest heart rate of 50BPM
-    // so, at 50BPM there should be about 42 samples so if we don't see
-    // a peak in 100 samples, to be safe, reset the hysteresis
-    private final int SAMPLE_COUNT_TO_RESET_HYSTERESIS = 100;
 
     // //////////////////////////////////////////////////////////////////////////
     // / Setters
@@ -190,7 +179,7 @@ public class PeakValleyDetect
     }
 
     // returns the current number of peaks detected
-    public int NumberOfPeaks()
+    private int NumberOfPeaks()
     {
         return m_PeaksIndexes.size();
     }
@@ -289,7 +278,7 @@ public class PeakValleyDetect
     }
 
     // returns the current number of valleys detected
-    public int NumberOfValleys()
+    private int NumberOfValleys()
     {
         return m_ValleysIndexes.size();
     }
@@ -459,6 +448,7 @@ public class PeakValleyDetect
             }
             m_LocalDataIndex++;
 
+            int SAMPLE_COUNT_TO_RESET_HYSTERESIS = 100;
             if (m_samplesWithNoPeaks >= SAMPLE_COUNT_TO_RESET_HYSTERESIS)
             {
                 Log.i(TAG, "Resetting peak detection hysteresis");
@@ -470,8 +460,8 @@ public class PeakValleyDetect
 
     }
 
-    int m_lastMaxPeakToPeak = 0;
-    double filterconst = 0.8;
+    private int m_lastMaxPeakToPeak = 0;
+    private final double filterconst = 0.8;
 
     private void AdjustHysteresis()
     {

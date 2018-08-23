@@ -17,7 +17,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import com.vixiar.indicor.Activities.GenericTimer;
-import com.vixiar.indicor.Activities.TestingActivity;
 import com.vixiar.indicor.Activities.TimerCallback;
 import com.vixiar.indicor.Application.NavigatorApplication;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
@@ -39,7 +38,7 @@ import static android.content.Context.BIND_AUTO_CREATE;
 public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogInterface
 {
     // make this a singleton class
-    private static IndicorBLEServiceInterface ourInstance = new IndicorBLEServiceInterface();
+    private static final IndicorBLEServiceInterface ourInstance = new IndicorBLEServiceInterface();
 
     public static IndicorBLEServiceInterface getInstance()
     {
@@ -57,7 +56,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
     private AlertDialog m_connectionDialog;
     private Context m_ActivityContext;
-    private Handler m_handler = new Handler();
+    private final Handler m_handler = new Handler();
     private final Runnable m_ScanTimeoutRunnable = new Runnable()
     {
         public void run()
@@ -69,9 +68,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
     private int m_expectedRTDataSequnceNumber;
 
-    private String m_handheldFirmwareRevision;
-
-    private ArrayList<ScanResult> m_ScanList = new ArrayList<ScanResult>()
+    private final ArrayList<ScanResult> m_ScanList = new ArrayList<ScanResult>()
     {
     };
 
@@ -79,16 +76,13 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private final static int BATTERY_READ_TIMER_ID = 3;
     private final static int CONNECTION_TIMEOUT_TIMER_ID = 10;
     private final static int BATTERY_READ_TIME_MS = 30000;
-    private GenericTimer m_updateBatteryTimer = new GenericTimer(BATTERY_READ_TIMER_ID);
-    private GenericTimer m_connectionTimeoutTimer = new GenericTimer(CONNECTION_TIMEOUT_TIMER_ID);
+    private final GenericTimer m_updateBatteryTimer = new GenericTimer(BATTERY_READ_TIMER_ID);
+    private final GenericTimer m_connectionTimeoutTimer = new GenericTimer(CONNECTION_TIMEOUT_TIMER_ID);
 
     private final int SCAN_TIME_MS = 5000;
     private final int CCONNECTION_TIMEOUT_MS = SCAN_TIME_MS + 10000;
 
     private BluetoothDevice m_connectedDevice;
-
-    // the low battery level msg will popup if battery is at or below this percentage
-    private final int BATTERY_LEVEL_LOW_FOR_TEST = 20;
 
     // dialog ids handled here
     private final int DLG_ID_AUTHENTICATION_ERROR = 0;
@@ -129,10 +123,10 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
     // list of errors
     public static final int ERROR_NO_DEVICES_FOUND = 1;
-    public static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
-    public static final int ERROR_AUTHENTICATION = 3;
+    private static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
+    private static final int ERROR_AUTHENTICATION = 3;
     public static final int ERROR_CONNECTION_ERROR = 4;
-    public static final int ERROR_SEQUENCE_ERROR = 4;
+    private static final int ERROR_SEQUENCE_ERROR = 4;
 
     // Offsets to data in characteristics
     private final static int BATTERY_LEVEL_PCT_INDEX = 0;
@@ -297,12 +291,13 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     if (device == null)
                     {
                         m_connectionTimeoutTimer.Cancel();
+                        m_connectionDialog.hide();
 
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
                                 m_ActivityContext.getString(R.string.dlg_title_no_handhelds),
                                 m_ActivityContext.getString(R.string.dlg_msg_no_handhelds),
                                 "Try Again",
-                                "End Test", m_ActivityContext,
+                                "Exit", m_ActivityContext,
                                 DLG_ID_NO_HANDHELDS, IndicorBLEServiceInterface.this);
 
                     }
@@ -370,6 +365,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 if (event == Connection_Event.EVT_BATTERY_READ)
                 {
                     // make sure the battery level is enough to start a test
+                    int BATTERY_LEVEL_LOW_FOR_TEST = 20;
                     if (GetLastReadBatteryLevel() <= BATTERY_LEVEL_LOW_FOR_TEST)
                     {
                         // stop the connection timeout timer
@@ -531,7 +527,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             else if (arg1.hasExtra(IndicorBLEService.REVISION_INFO_RECEIVED))
             {
                 byte x[] = arg1.getByteArrayExtra(IndicorBLEService.REVISION_INFO_RECEIVED);
-                m_handheldFirmwareRevision = x[1] + "." + x[2] + "." + x[3] + "." + x[4];
+                String m_handheldFirmwareRevision = x[1] + "." + x[2] + "." + x[3] + "." + x[4];
                 PatientInfo.getInstance().set_firmwareRevision(m_handheldFirmwareRevision);
                 ConnectionStateMachine(Connection_Event.EVT_REVISION_READ);
             }
@@ -649,19 +645,19 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         private int mTotalRssi;
         private int mNumAdvertisements;
 
-        public VixiarDeviceParams()
+        VixiarDeviceParams()
         {
             mTotalRssi = 0;
             mNumAdvertisements = 0;
         }
 
-        public void Accumulate(int rssi)
+        void Accumulate(int rssi)
         {
             mTotalRssi += rssi;
             mNumAdvertisements++;
         }
 
-        public int Average()
+        int Average()
         {
             return mTotalRssi / mNumAdvertisements;
         }

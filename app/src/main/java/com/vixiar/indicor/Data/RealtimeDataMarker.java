@@ -12,8 +12,8 @@ public class RealtimeDataMarker
         MARKER_END_VALSALVA,
         MARKER_TEST_ERROR,
     }
-    public Marker_Type type;
-    public int dataIndex;
+    public final Marker_Type type;
+    public final int dataIndex;
 
     RealtimeDataMarker(Marker_Type type, int index)
     {

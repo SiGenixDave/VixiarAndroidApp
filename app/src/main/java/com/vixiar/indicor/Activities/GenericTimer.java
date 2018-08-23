@@ -4,14 +4,14 @@ import android.os.Handler;
 
 public class GenericTimer
 {
-    private Handler handler;
-    TimerCallback m_callback;
-    int timerId;
-    boolean oneShot;
-    int periodMs;
+    private final Handler handler;
+    private TimerCallback m_callback;
+    private final int timerId;
+    private boolean oneShot;
+    private int periodMs;
     private boolean isRunning = false;
 
-    private Runnable runnable = new Runnable()
+    private final Runnable runnable = new Runnable()
     {
 
         @Override

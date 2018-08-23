@@ -11,6 +11,6 @@ public class PPG_PressureSample
         m_PPG = PPG;
         m_pressure = pressure;
     }
-    public double m_pressure;
-    public int m_PPG;
+    public final double m_pressure;
+    public final int m_PPG;
 }

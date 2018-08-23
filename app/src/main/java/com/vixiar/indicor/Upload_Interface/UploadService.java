@@ -80,22 +80,14 @@ public class UploadService extends Service
     /*
         Initialize by starting dropbox. Having do a new thread here, since otherwise networking functions cannot start
      */
-    public boolean Initialize() throws DbxException
+    public boolean Initialize()
     {
         new Thread(new Runnable()
         {
             @Override
             public void run()
             {
-                try
-                {
-                    StartDropbox();
-                }
-                catch (DbxException | IOException e)
-                {
-                    Log.e("Dropbox exception: ", e.getMessage());
-                }
-
+                StartDropbox();
             }
         }).start();
         return true;
@@ -104,7 +96,7 @@ public class UploadService extends Service
     /*
         Method to start dropbox api. Right now creates a test file and uploads to dropbox
      */
-    private void StartDropbox() throws DbxException, IOException
+    private void StartDropbox()
     {
         if (IsNetworkAvailable())
         {
@@ -117,6 +109,7 @@ public class UploadService extends Service
 
         // Run upload check every 10 seconds
         Timer timer = new Timer();
+
         timer.schedule(new TimerTask()
         {
             @Override
@@ -185,27 +178,12 @@ public class UploadService extends Service
                         // if the app is running in test mode, there won't be a patient ID
                         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences (NavigatorApplication.getAppContext ());
                         Boolean bTestMode = sp.getBoolean ("test_mode", false);
-
-                        String patientID;
-
-                        if (bTestMode)
+                        String patientID = "test";
+                        if (UploadFileToDropbox(filePath, GetDropboxDirectory(patientID)))
                         {
-                            patientID = "test";
-                        }
-                        else
-                        {
-                            // get the patient id for this file
-                            patientID = GetPatientIDFromCSVFile(filePath);
-                        }
-
-                        if (patientID != null)
-                        {
-                            if (UploadFileToDropbox(filePath, GetDropboxDirectory(patientID)) == true)
-                            {
-                                // delete the file if the copy worked
-                                Log.i(TAG, "deleting file - " + filePath);
-                                DeleteFile(filePath);
-                            }
+                            // delete the file if the copy worked
+                            Log.i(TAG, "deleting file - " + filePath);
+                            DeleteFile(filePath);
                         }
                     }
                 }
@@ -215,7 +193,7 @@ public class UploadService extends Service
                 }
             }
         }
-        catch (DbxException | IOException e)
+        catch (IOException e)
         {
             Log.e(TAG, "Dropbox exception");
         }
@@ -224,7 +202,7 @@ public class UploadService extends Service
     /*
         Gets the current directory for indicor application within the OS
      */
-    private String GetDropboxDirectory(String patientID) throws DbxException
+    private String GetDropboxDirectory(String patientID)
     {
         // get the subfolder from the settings
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(NavigatorApplication.getAppContext());
@@ -250,7 +228,7 @@ public class UploadService extends Service
      */
     private List<String> GetFilesInPath(File path)
     {
-        ArrayList<String> inFiles = new ArrayList<String>();
+        ArrayList<String> inFiles = new ArrayList<>();
         File[] fileNames = path.listFiles();
 
         if (fileNames != null)
@@ -276,7 +254,7 @@ public class UploadService extends Service
     /*
         Creates a test file to test with dropbox
      */
-    private String createTestFile() throws IOException
+    private String createTestFile()
     {
         String filename = "tester.csv";
         File file = new File(getApplicationContext().getFilesDir(), filename);
@@ -319,7 +297,7 @@ public class UploadService extends Service
     /*
         Uploads file to Dropbox, given a file path and an upload path.
      */
-    private boolean UploadFileToDropbox(String filePath, String uploadPath) throws DbxException, IOException
+    private boolean UploadFileToDropbox(String filePath, String uploadPath) throws IOException
     {
         boolean status = false;
 
@@ -361,7 +339,7 @@ public class UploadService extends Service
         m_Paused = false;
     }
 
-    private void CreateFolder(String folderName) throws DbxException
+    private void CreateFolder(String folderName)
     {
         try
         {
@@ -435,7 +413,7 @@ public class UploadService extends Service
                 }
             }
         }
-        catch (IOException e)
+        catch (Exception e)
         {
 
         }
@@ -446,8 +424,7 @@ public class UploadService extends Service
                 try
                 {
                     inputStream.close();
-                }
-                catch (IOException e)
+                } catch (IOException e)
                 {
                 }
             }
