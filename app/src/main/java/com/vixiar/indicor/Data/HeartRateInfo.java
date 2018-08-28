@@ -614,4 +614,67 @@ public class HeartRateInfo {
         return inRange;
     }
 
+    // Returns the root mean square between "startIndex" and "endIndex"
+    // -1.0 is returned if "startIndex" or "endIndex" are out of bounds
+    public double GetRMSInRange(int startIndex, int endIndex)
+    {
+        // 1. find number of PPG values between start and end indices
+        int numValues = endIndex - startIndex;
+
+        // 2. square all the PPG values within a window (startIndex and endIndex window)
+        double sumSquared = 0;
+        double avgData = 0;
+
+        for (int i = 0; i < numValues; i++)
+        {
+            int value = PeakValleyDetect.getInstance().GetData(startIndex + i);
+            if (value == -1)
+            {
+                return -1.0;  // 10 second window is out of bounds
+            }
+
+            // 1.5 calculate average of data points.
+            avgData += ((double) value / (double) numValues);
+        }
+
+        for (int i = 0; i < numValues; i++)
+        {
+            int value = PeakValleyDetect.getInstance().GetData(startIndex + i);
+            if (value == -1)
+            {
+                return -1.0;  // 10 second window is out of bounds
+            }
+            // subtract average of data points (#1.5 above) from the data points to shift data closer to zero line
+            value -= avgData;
+            sumSquared += (value * value);
+        }
+
+        // 3. take average of the squared PPG values
+        double average = (sumSquared) / numValues;
+
+        // 4. Take square root of the averaged squared PPG values
+        return Math.sqrt(average);
+    }
+
+    // Returns the minimum root mean square in X seconds window between "startIndex" and "endIndex"
+    public double GetMinRMS(int startIndex, int endIndex, int secondsWindow)
+    {
+        double minRMSValue = Double.MAX_VALUE;
+        int startMarker = startIndex;
+        int endMarker = startIndex + (int) (secondsWindow * m_SampleRateHz);
+
+        while (endMarker <= endIndex)
+        {
+            double rmsValue = GetRMSInRange(startMarker, endMarker);
+            if (minRMSValue > rmsValue)
+            {
+                minRMSValue = rmsValue;
+            }
+            endMarker++;
+            startMarker++;
+        }
+
+        return minRMSValue;
+    }
+
 }

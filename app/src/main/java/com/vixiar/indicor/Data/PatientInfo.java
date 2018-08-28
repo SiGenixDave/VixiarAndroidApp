@@ -38,8 +38,12 @@ public class PatientInfo
     private String m_notes;
     private RealtimeData rtd = new RealtimeData();
 
+    private enum Algo { PVD, RMS }
+    private Algo AlgoChoice = Algo.RMS;
+
     // Constants
     private static int SAMPLES_IN_TEN_SECONDS = (50 * 10);
+    private static int SAMPLES_IN_SECONDS = SAMPLES_IN_TEN_SECONDS / 10;
 
     // calculated data
     private final int NUM_TESTS = 3;
@@ -53,6 +57,20 @@ public class PatientInfo
     private double[] m_aCalcEndPAR = new double[NUM_TESTS];
     private double[] m_aCalcMinHRVM = new double[NUM_TESTS];
     private double[] m_aCalcLVEDP = new double[NUM_TESTS];
+    private double[] m_aRMSEnd = new double[NUM_TESTS];
+    private double[] m_aRMSMin = new double[NUM_TESTS];
+    private double[] m_aRMSBL = new double[NUM_TESTS];
+    private double[] m_aRMSMinPAR_PV = new double[NUM_TESTS];
+    private double[] m_aRMSEndPAR_PV = new double[NUM_TESTS];
+    private double[] m_aRMSPh1PAR_PV = new double[NUM_TESTS];
+    private double[] m_aRMSBLPAR_PV = new double[NUM_TESTS];
+    private double[] m_aRMS_Ph1 = new double[NUM_TESTS];
+    private double[] m_aRMS_Ph4 = new double[NUM_TESTS];
+    private double[] m_aRMSEndPAR_VM = new double[NUM_TESTS];
+    private double[] m_aRMSMinPAR_VM = new double[NUM_TESTS];
+    private double[] m_aRMSEndPAR_BL = new double[NUM_TESTS];
+    private double[] m_aRMSMinPAR_BL = new double[NUM_TESTS];
+    private double[] m_aRMS_LVEDP = new double[NUM_TESTS];
 
     public void ClearAllPatientData()
     {
@@ -76,6 +94,20 @@ public class PatientInfo
         Arrays.fill(m_aCalcMinPAR, 0.0);
         Arrays.fill(m_aCalcPAAvgRest, 0.0);
         Arrays.fill(m_aCalcPAAvgVM, 0.0);
+        Arrays.fill(m_aRMSEnd, 0.0);
+        Arrays.fill(m_aRMSMin, 0.0);
+        Arrays.fill(m_aRMSBL, 0.0);
+        Arrays.fill(m_aRMSEndPAR_BL, 0.0);
+        Arrays.fill(m_aRMSMinPAR_BL, 0.0);
+        Arrays.fill(m_aRMSMinPAR_PV, 0.0);
+        Arrays.fill(m_aRMSEndPAR_PV, 0.0);
+        Arrays.fill(m_aRMSPh1PAR_PV, 0.0);
+        Arrays.fill(m_aRMSBLPAR_PV, 0.0);
+        Arrays.fill(m_aRMS_Ph1, 0.0);
+        Arrays.fill(m_aRMS_Ph4, 0.0);
+        Arrays.fill(m_aRMSEndPAR_VM, 0.0);
+        Arrays.fill(m_aRMSMinPAR_VM, 0.0);
+        Arrays.fill(m_aRMS_LVEDP, 0.0);
         rtd.ClearAllData();
     }
 
@@ -103,7 +135,18 @@ public class PatientInfo
     {
         if (testNumber <= NUM_TESTS)
         {
-            return m_aCalcLVEDP[testNumber];
+            if(AlgoChoice == Algo.PVD)
+            {
+                return m_aCalcLVEDP[testNumber];
+            }
+            else if (AlgoChoice == Algo.RMS)
+            {
+                return m_aRMS_LVEDP[testNumber];
+            }
+            else
+            {
+                return 0.0;
+            }
         }
         else
         {
@@ -247,12 +290,161 @@ public class PatientInfo
             {
                 m_aCalcLVEDP[testNumber] = 0;
             }
+
+            DoRMSCalculations(testNumber);
             return true;
         }
         else
         {
             return false;
         }
+    }
+
+    public static int FindVStart(int testNumber)
+    {
+        TestMarkers tm;
+        tm = PatientInfo.getInstance().GetTestMarkers(testNumber);
+        int searchIndex = tm.startIndex;
+        int startLimit = searchIndex - (SAMPLES_IN_TEN_SECONDS);  // 10 sec backward from T0--startIndex
+        int vStart = -1;
+        boolean vStartFound = false;
+
+        // go backwards in time until the pressure goes below 2, then find when it goes over 2
+        while (!vStartFound && (searchIndex > startLimit))
+        {
+            if (PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(searchIndex).m_pressure <= 2.0)
+            {
+                while (PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(searchIndex).m_pressure <= 2.0)
+                {
+                    searchIndex++;
+                }
+                vStart = searchIndex;
+                vStartFound = true;
+            }
+            else
+            {
+                searchIndex--;
+            }
+        }
+        return vStart;
+    }
+
+    public static int FindVEnd(int testNumber)
+    {
+        TestMarkers tm;
+        tm = PatientInfo.getInstance().GetTestMarkers(testNumber);
+        int endIndex = tm.endIndex;
+        int endLimit = endIndex + (10 * 50);  // 10 sec forward from T10--endIndex
+        double slope = 0.0;
+
+        for (; endIndex != endLimit; endIndex++)
+        {   // repeat loop until 10 sec forward from endIndex (T10)
+            if (PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(endIndex).m_pressure < 16.0)
+            {
+                return endIndex;
+            }
+        }
+        return -1;
+    }
+
+    private static int FindT0FromVStart(int vStart)
+    {
+        // move from Vstart until pressure crosses 16
+        int index = vStart;
+        while (PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(index).m_pressure < 16.0)
+        {
+            index++;
+        }
+        return index;
+    }
+
+    private static void PrintResult(String label, int testNumber, double value)
+    {
+        System.out.println(label + " " + "[" + (testNumber + 1) + "]" + ": " + value);
+    }
+
+    private boolean DoRMSCalculations(int testNumber) {
+
+        int vStartIndex = FindVStart(testNumber);
+        int vEndIndex = FindVEnd(testNumber);
+        PrintResult("VStart", testNumber, vStartIndex);
+        PrintResult("VEnd", testNumber, vEndIndex);
+
+        int t0Index = FindT0FromVStart(vStartIndex);
+        int t10Index = t0Index + SAMPLES_IN_TEN_SECONDS;
+        PrintResult("t0", testNumber, t0Index);
+        PrintResult("t10", testNumber, t10Index);
+        // 10 DPR-3.3.38
+        // RMS end
+        m_aRMSEnd[testNumber] = HeartRateInfo.getInstance().GetRMSInRange(t10Index - (SAMPLES_IN_SECONDS * 3), t10Index);
+        PrintResult("RMS end", testNumber, m_aRMSEnd[testNumber]);
+
+        // 11 DPR-3.3.39
+        // RMS min
+        m_aRMSMin[testNumber] = HeartRateInfo.getInstance().GetMinRMS(t0Index, t10Index, 3);
+        PrintResult("RMS min", testNumber, m_aRMSMin[testNumber]);
+
+        // 12 DPR-3.3.27
+        // RMS BL
+        m_aRMSBL[testNumber] = HeartRateInfo.getInstance().GetRMSInRange(vStartIndex-(SAMPLES_IN_SECONDS*15), vStartIndex-(SAMPLES_IN_SECONDS*5));
+        PrintResult("RMS BL", testNumber, m_aRMSBL[testNumber]);
+
+        // 13 DPR-3.3.5
+        // RMS end PAR-BL
+        m_aRMSEndPAR_BL[testNumber] = m_aRMSEnd[testNumber] / m_aRMSBL[testNumber];
+        PrintResult("RMS end PAR-BL", testNumber, m_aRMSEndPAR_BL[testNumber]);
+
+        // 14 DPR-3.3.6
+        // RMS min PAR-BL
+        m_aRMSMinPAR_BL[testNumber] = m_aRMSMin[testNumber] / m_aRMSBL[testNumber];
+        PrintResult("RMS min PAR-BL", testNumber, m_aRMSMinPAR_BL[testNumber]);
+
+        // 18 DPR-3.3.30
+        // RMS Ph1
+        m_aRMS_Ph1[testNumber] = HeartRateInfo.getInstance().GetRMSInRange(vStartIndex, vStartIndex + (SAMPLES_IN_SECONDS * 3));
+        PrintResult("RMS Ph1", testNumber, m_aRMS_Ph1[testNumber]);
+
+        // 19 DPR-3.3.33
+        // RMS Ph4
+        int ph4Index = vEndIndex + ((int) (SAMPLES_IN_SECONDS * 2.5));
+        m_aRMS_Ph4[testNumber] = HeartRateInfo.getInstance().GetRMSInRange(ph4Index, ph4Index + (SAMPLES_IN_TEN_SECONDS));
+        PrintResult("RMS Ph4", testNumber, m_aRMS_Ph4[testNumber]);
+
+        // 20 3.3.21
+        // RMS BL PAR-PV
+        m_aRMSBLPAR_PV[testNumber] = m_aRMSBL[testNumber] / m_aRMS_Ph4[testNumber];
+        PrintResult("RMS BL PAR-PV", testNumber, m_aRMSBLPAR_PV[testNumber]);
+
+        // 21 3.3.22
+        // RMS Ph1 PAR-PV
+        m_aRMSPh1PAR_PV[testNumber] = m_aRMS_Ph1[testNumber] / m_aRMS_Ph4[testNumber];
+        PrintResult("RMS Ph1 PAR-PV", testNumber, m_aRMSPh1PAR_PV[testNumber]);
+
+        // 22 3.3.23
+        // RMS End PAR-PV
+        m_aRMSEndPAR_PV[testNumber] = m_aRMSEnd[testNumber] / m_aRMS_Ph4[testNumber];
+        PrintResult("RMS End PAR-PV", testNumber, m_aRMSEndPAR_PV[testNumber]);
+
+        // 23 3.3.24
+        // RMS Min PAR-PV
+        m_aRMSMinPAR_PV[testNumber] = m_aRMSMin[testNumber] / m_aRMS_Ph4[testNumber];
+        PrintResult("RMS Min PAR-PV", testNumber, m_aRMSMinPAR_PV[testNumber]);
+
+        // 27 DPR-3.3.11
+        // RMS End PAR-VM
+        m_aRMSEndPAR_VM[testNumber] = m_aRMSEnd[testNumber] / m_aRMS_Ph1[testNumber];
+        PrintResult("RMS End PAR-VM", testNumber, m_aRMSEndPAR_VM[testNumber]);
+
+        // 28 DPR-3.3.12
+        // RMS Min PAR-VM
+        m_aRMSMinPAR_VM[testNumber] = m_aRMSMin[testNumber] / m_aRMS_Ph1[testNumber];
+        PrintResult("RMS Min PAR-VM", testNumber, m_aRMSMinPAR_VM[testNumber]);
+
+        m_aRMS_LVEDP[testNumber] = -4.52409 + (21.25779 * m_aRMSEndPAR_BL[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
+                (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
+                (0.16182 * m_aCalcHRAvgRest[testNumber]) - (0.06949 * m_age_years);
+
+        return true;
     }
 
     // get the start and end of valsalva markers for a certain test
@@ -384,6 +576,34 @@ public class PatientInfo
         writer.println("Min HR, " + FormatDoubleForPrint(m_aCalcMinHRVM[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcMinHRVM[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHRVM[2]));
         writer.println("LVEDP, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
+        writer.println("RMS End, " + FormatDoubleForPrint(m_aRMSEnd[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSEnd[1]) + ", " + FormatDoubleForPrint(m_aRMSEnd[2]));
+        writer.println("RMS Min, " + FormatDoubleForPrint(m_aRMSMin[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSMin[1]) + ", " + FormatDoubleForPrint(m_aRMSMin[2]));
+        writer.println("RMS BL, " + FormatDoubleForPrint(m_aRMSBL[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSBL[1]) + ", " + FormatDoubleForPrint(m_aRMSBL[2]));
+        writer.println("RMS end PAR-BL, " + FormatDoubleForPrint(m_aRMSEndPAR_BL[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSEndPAR_BL[1]) + ", " + FormatDoubleForPrint(m_aRMSEndPAR_BL[2]));
+        writer.println("RMS min PAR-BL, " + FormatDoubleForPrint(m_aRMSMinPAR_BL[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSMinPAR_BL[1]) + ", " + FormatDoubleForPrint(m_aRMSMinPAR_BL[2]));
+        writer.println("RMS Ph1, " + FormatDoubleForPrint(m_aRMS_Ph1[0]) + ", " +
+                FormatDoubleForPrint(m_aRMS_Ph1[1]) + ", " + FormatDoubleForPrint(m_aRMS_Ph1[2]));
+        writer.println("RMS Ph4, " + FormatDoubleForPrint(m_aRMS_Ph4[0]) + ", " +
+                FormatDoubleForPrint(m_aRMS_Ph4[1]) + ", " + FormatDoubleForPrint(m_aRMS_Ph4[2]));
+        writer.println("RMS BL PAR-PV, " + FormatDoubleForPrint(m_aRMSBLPAR_PV[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSBLPAR_PV[1]) + ", " + FormatDoubleForPrint(m_aRMSBLPAR_PV[2]));
+        writer.println("RMS Ph1 PAR-PV, " + FormatDoubleForPrint(m_aRMSPh1PAR_PV[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSPh1PAR_PV[1]) + ", " + FormatDoubleForPrint(m_aRMSPh1PAR_PV[2]));
+        writer.println("RMS End PAR-PV, " + FormatDoubleForPrint(m_aRMSEndPAR_PV[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSEndPAR_PV[1]) + ", " + FormatDoubleForPrint(m_aRMSEndPAR_PV[2]));
+        writer.println("RMS Min PAR-PV, " + FormatDoubleForPrint(m_aRMSMinPAR_PV[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSMinPAR_PV[1]) + ", " + FormatDoubleForPrint(m_aRMSMinPAR_PV[2]));
+        writer.println("RMS End PAR-VM, " + FormatDoubleForPrint(m_aRMSEndPAR_VM[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSEndPAR_VM[1]) + ", " + FormatDoubleForPrint(m_aRMSEndPAR_VM[2]));
+        writer.println("RMS Min PAR-VM, " + FormatDoubleForPrint(m_aRMSMinPAR_VM[0]) + ", " +
+                FormatDoubleForPrint(m_aRMSMinPAR_VM[1]) + ", " + FormatDoubleForPrint(m_aRMSMinPAR_VM[2]));
+        writer.println("RMS LVEDP, " + FormatDoubleForPrint(m_aRMS_LVEDP[0]) + ", " +
                 FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
 
         // print all of markers
