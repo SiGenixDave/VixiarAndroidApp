@@ -1,10 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE resources [
-    <!ENTITY end_test_warning1 "\n\nIF YOU SELECT \u0022END TEST\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
-    WILL BE LOST.">
-    <!ENTITY end_test_warning2 "\n\nIF YOU SELECT \u0022YES\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
-    WILL BE LOST.">
-    ]>
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE resources [<!ENTITY end_test_warning1 "\n\nIF YOU SELECT \u0022END TEST\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
+    WILL BE LOST."><!ENTITY end_test_warning2 "\n\nIF YOU SELECT \u0022YES\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
+    WILL BE LOST.">]>
 
 <resources>
     <string name="app_name">Indicor Navigator</string>
@@ -193,5 +189,13 @@
         <item>Vixiar_Internal-Testing</item>
     </string-array>
     <string name="title_activity_pdfview">PDFViewActivity</string>
+
+    <string name="question_1">Have you felt more short of breath in the last day?</string>
+    <string name="question_2">Have you noticed more swelling in the last day?</string>
+    <string name="question_3">Have you had any light-headedness or dizziness in the last day?</string>
+    <string name="question_4">Did you wake up short of breath last night? </string>
+    <string name="question_5">Did you sleep in a chair or propped up with pillows, more than usual last night?</string>
+    <string name="question_6">Compared to yesterday, would you say you are feeling about the same, better, worse, or much worse?</string>
+
 
 </resources>

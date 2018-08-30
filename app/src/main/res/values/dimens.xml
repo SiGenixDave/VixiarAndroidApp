@@ -30,4 +30,8 @@
     <dimen name="results_summary_bar_font_size">24dp</dimen>
     <dimen name="results_measurement_font_size">30sp</dimen>
     <dimen name="results_measurement_bar_height">100dp</dimen>
+
+    <dimen name="question_text_font_size">30sp</dimen>
+    <dimen name="question_choice_font_size">24sp</dimen>
+
 </resources>
