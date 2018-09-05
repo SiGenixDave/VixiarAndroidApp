@@ -1,8 +1,10 @@
-package com.vixiar.indicor.Data;
+package com.vixiar.indicor.Data;//import android.util.Log;
+
+//import java.util.ArrayList;
 
 import android.util.Log;
 
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Created by gyurk on 11/15/2017.
@@ -18,58 +20,63 @@ doing the math, p(mmHg) = (-0.0263 * counts) + 46.335
 */
 public class RealtimeData
 {
-    private ArrayList<PPG_PressureSample> m_rawData = new ArrayList<PPG_PressureSample>();
-    private ArrayList<PPG_PressureSample> m_filteredData = new ArrayList<PPG_PressureSample>();
+    private ArrayList<RealtimeDataSample> m_rawData = new ArrayList<RealtimeDataSample>();
+    private ArrayList<RealtimeDataSample> m_filteredData = new ArrayList<RealtimeDataSample>();
     private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
-    private PPG_FIRFilterData PPGFIRFilterData = new PPG_FIRFilterData();
-    private FIRFilter firFilter = new FIRFilter();
     private Boolean enableHeartRateValidation = false;
+    private I_FIRFilterTap PPGTaps = new PPG_FIRFilterTaps();
+    private I_FIRFilterTap PressureTaps = new Pressure_FIRFilterTaps();
+    private FIRFilter m_PPGFIRFilter = new FIRFilter(PPGTaps.GetTaps());
+    private FIRFilter m_PressureFIRFilter = new FIRFilter(PressureTaps.GetTaps());
 
-    public RealtimeData()
+    public void Initialize()
     {
-        PeakValleyDetect.getInstance().Initialize(1000, 1000, false);
-        PeakValleyDetect.getInstance().ResetAlgorithm();
+        RealtimePeakValleyDetect.getInstance().Initialize(5000, 5000, false);
         HeartRateInfo.getInstance().InitializeValidation(50.0, 4, 5.0, 40.0, 150.0, 20.0);
-        firFilter.Initialize(PPGFIRFilterData);
+        m_PPGFIRFilter.Initialize();
+        m_PressureFIRFilter.Initialize();
+        m_rawData.clear();
+        m_filteredData.clear();
+        m_markers.clear();
     }
 
     public void AppendNewSample(byte[] new_data)
     {
         // extract the m_rawData...the first byte is the sequence number
         // followed by two bytes of PPG then pressure repetitively
-        double pressure_value = 0.0;
-        int pressure_counts = 0;
-        int ppg_value = 0;
+        double pressure_value;
+        int pressure_counts;
+        int ppg_value;
         for (int i = 1; i < new_data.length; i += 4)
         {
             // convert the a/d counts from the handheld to pressure in mmHg
-            pressure_counts = (256 * (int) (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
+            pressure_counts = (256 * (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
             pressure_value = ((double) pressure_counts * (-0.0263)) + 46.726;
             if (pressure_value < 0.0)
             {
                 pressure_value = 0.0;
             }
 
-            ppg_value = (256 * (int) (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
+            ppg_value = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
 
-            PPG_PressureSample pd = new PPG_PressureSample(ppg_value, pressure_value);
+            RealtimeDataSample pd = new RealtimeDataSample(ppg_value, pressure_value);
             m_rawData.add(pd);
 
             // filter the sample and store it in the filtered array
-            firFilter.PutSample(PPGFIRFilterData, ppg_value);
-            int ppgFiltered = (int) firFilter.GetOutput(PPGFIRFilterData);
+            m_PPGFIRFilter.PutSample(ppg_value);
+            int ppgFiltered = (int) m_PPGFIRFilter.GetOutput();
 
-            PeakValleyDetect.getInstance().AddToDataArray(ppgFiltered);
-            pd = new PPG_PressureSample(ppgFiltered, pressure_value);
+            RealtimePeakValleyDetect.getInstance().AddToDataArray(ppgFiltered);
+            pd = new RealtimeDataSample(ppgFiltered, pressure_value);
 
             m_filteredData.add(pd);
         }
 
-        PeakValleyDetect.getInstance().Execute();
+        RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
 
         if (enableHeartRateValidation)
         {
-            boolean newHeartRateAvailable = HeartRateInfo.getInstance().HeartRateValidation();
+            boolean newHeartRateAvailable = HeartRateInfo.getInstance().RealtimeHeartRateValidation();
             if (newHeartRateAvailable)
             {
                 Log.d("HeartRate", "Current Heart Rate = " + HeartRateInfo.getInstance().getCurrentBeatsPerMinute());
@@ -115,6 +122,16 @@ public class RealtimeData
         return m_markers;
     }
 
+    public List<Integer> GetFilteredPPGData()
+    {
+        List<Integer> retData = new ArrayList<>();
+        for (int i = 0; i < m_filteredData.size(); i++)
+        {
+            retData.add(m_filteredData.get(i).m_PPG);
+        }
+        return retData;
+    }
+
     public double GetHeartRateDuringValidation()
     {
         double heartRate = -1;
@@ -127,10 +144,12 @@ public class RealtimeData
         return heartRate;
     }
 
+/*
     public double GetAverageHeartRate(int startMarker, int endMarker)
     {
-        return HeartRateInfo.getInstance().GetAvgHROverRange(startMarker, endMarker);
+        return HeartRateInfo.getInstance().GetAvgHRInRange(startMarker, endMarker);
     }
+*/
 
     public void CreateMarker(RealtimeDataMarker.Marker_Type type, int index)
     {
@@ -138,26 +157,54 @@ public class RealtimeData
         m_markers.add(marker);
     }
 
-    public ArrayList<PPG_PressureSample> GetRawData()
+    public ArrayList<RealtimeDataSample> GetRawData()
     {
         return m_rawData;
     }
 
-    public ArrayList<PPG_PressureSample> GetFilteredData()
+    public ArrayList<RealtimeDataSample> GetFilteredData()
     {
         return m_filteredData;
     }
 
     public void ClearAllData()
     {
-        m_rawData.clear();
-        m_filteredData.clear();
-        m_markers.clear();
-        PeakValleyDetect.getInstance().ResetAlgorithm();
     }
 
     public ArrayList<RealtimeDataMarker> GetMarkers()
     {
         return m_markers;
     }
+
+    public void AppendNewFileSample(Double PPGSample, Double pressureSample)
+    {
+        RealtimeDataSample pd = new RealtimeDataSample(PPGSample.intValue(), pressureSample.intValue());
+        m_rawData.add(pd);
+
+        // filter the sample and store it in the filtered array
+        m_PPGFIRFilter.PutSample(PPGSample);
+        int ppgFiltered = (int) m_PPGFIRFilter.GetOutput();
+
+        RealtimePeakValleyDetect.getInstance().AddToDataArray(ppgFiltered);
+
+        // filter the pressure sample
+        m_PressureFIRFilter.PutSample(pressureSample);
+        double pressureFiltered = m_PressureFIRFilter.GetOutput();
+
+        pd = new RealtimeDataSample(ppgFiltered, pressureFiltered);
+
+        m_filteredData.add(pd);
+
+        RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
+
+        if (enableHeartRateValidation)
+        {
+            boolean newHeartRateAvailable = HeartRateInfo.getInstance().RealtimeHeartRateValidation();
+            if (newHeartRateAvailable)
+            {
+                //        Log.d("HeartRate", "Current Heart Rate = " + HeartRateInfo.getInstance().getCurrentBeatsPerMinute());
+            }
+        }
+    }
+
 }

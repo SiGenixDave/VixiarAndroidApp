@@ -37,14 +37,14 @@
             android:indeterminateTint="@color/colorBottomBar" />
 
         <TextView
-            android:id="@+id/txtAcquiringSignal"
+            android:id="@+id/txtCapturingBaseline"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginBottom="30dp"
             android:layout_marginTop="30dp"
             android:layout_weight="2"
             android:gravity="center_vertical|center_horizontal"
-            android:text="@string/acquiring_signal"
+            android:text="@string/capturing_baseline"
             android:textColor="@color/colorBottomBar"
             android:textSize="@dimen/acquiring_signal_font_size" />
 

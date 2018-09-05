@@ -18,7 +18,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -79,7 +78,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
         DisplaySiteName();
 
         // setup the top bar
-        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().SetTypefaces(this, this);
         HeaderFooterControl.getInstance().HideBatteryIcon(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, "");
         HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.main_screen_title));
@@ -88,7 +87,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
         String nameAndVersion = getString(R.string.main_screen_title) +
                 " V" + BuildConfig.VERSION_NAME;
 
-        Typeface robotoTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
+        Typeface robotoTypeface = Typeface.createFromAsset(getAssets(), "fonts/roboto_light.ttf");
 
         TextView versionText = (TextView) findViewById(R.id.txtViewVersion);
         versionText.setText(nameAndVersion);
@@ -265,7 +264,7 @@ public class MainActivity extends Activity implements CustomDialogInterface
 
     public void onStartClick(View view)
     {
-        PatientInfo.getInstance().ClearAllPatientData();
+        PatientInfo.getInstance().Initialize();
         Intent intent = new Intent(this, PatInfoActivity.class);
         startActivity(intent);
     }

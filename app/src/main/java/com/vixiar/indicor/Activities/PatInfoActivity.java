@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
@@ -33,7 +32,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private EditText txtPatientID;
     private EditText txtAge;
@@ -669,7 +668,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
 
     public void SetFontFamily()
     {
-        Typeface robotoTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
+        Typeface robotoTypeface = Typeface.createFromAsset(getAssets(), "fonts/roboto_light.ttf");
 
         TextView v = (TextView) findViewById(R.id.patIDLbl);
         v.setTypeface(robotoTypeface);
@@ -734,7 +733,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
 
     private void InitializeHeaderAndFooter()
     {
-        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().SetTypefaces(this, this);
         HeaderFooterControl.getInstance().HideBatteryIcon(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
         HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.pat_info_screen_title));

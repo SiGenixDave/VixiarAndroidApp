@@ -23,11 +23,8 @@ sampling frequency: 50 Hz
 
 */
 
-public class PPG_FIRFilterData
+public class PPG_FIRFilterTaps implements I_FIRFilterTap
 {
-    public final int NUM_TAPS = 15;
-    double[] history = new double[NUM_TAPS];
-    int last_index;
     double filter_taps[] = {
             -0.011720065131297001,
             -0.03498447461368515,
@@ -43,6 +40,11 @@ public class PPG_FIRFilterData
             -0.023945924515193045,
             -0.04377957852197897,
             -0.03498447461368515,
-            -0.011720065131297001
-    };
+            -0.011720065131297001};
+
+    @Override
+    public double[] GetTaps()
+    {
+        return filter_taps;
+    }
 }

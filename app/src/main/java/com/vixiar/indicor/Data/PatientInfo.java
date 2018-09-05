@@ -34,7 +34,7 @@ public class PatientInfo
     private String m_studyLocation;
     private String m_handheldSerialNumber;
     private String m_firmwareVersion;
-    private String m_testDate;
+    private String m_testDateTime;
     private String m_gender;
     private String m_notes;
     private RealtimeData rtd = new RealtimeData();
@@ -55,7 +55,12 @@ public class PatientInfo
     private double[] m_aCalcMinHRVM = new double[NUM_TESTS];
     private double[] m_aCalcLVEDP = new double[NUM_TESTS];
 
-    public void ClearAllPatientData()
+    public static PatientInfo getInstance()
+    {
+        return ourInstance;
+    }
+
+    public void Initialize()
     {
         m_patientId = "";
         m_systolicBloodPressure = 0;
@@ -64,7 +69,7 @@ public class PatientInfo
         m_weight_lbs = 0;
         m_age_years = 0;
         m_firmwareVersion = "";
-        m_testDate = "";
+        m_testDateTime = "";
         m_gender = "";
         m_notes = "";
         Arrays.fill(m_aCalcEndPA, 0.0);
@@ -77,12 +82,7 @@ public class PatientInfo
         Arrays.fill(m_aCalcMinPAR, 0.0);
         Arrays.fill(m_aCalcPAAvgRest, 0.0);
         Arrays.fill(m_aCalcPAAvgVM, 0.0);
-        rtd.ClearAllData();
-    }
-
-    public void set_studyLocation(String location)
-    {
-        this.m_studyLocation = location;
+        rtd.Initialize();
     }
 
     public String get_studyLocation()
@@ -90,9 +90,24 @@ public class PatientInfo
         return m_studyLocation;
     }
 
+    public void set_studyLocation(String location)
+    {
+        this.m_studyLocation = location;
+    }
+
+    public String get_applicationVersion()
+    {
+        return m_applicationVersion;
+    }
+
     public void set_applicationVersion(String m_applicationVersion)
     {
         this.m_applicationVersion = m_applicationVersion;
+    }
+
+    public String get_firmwareRevision()
+    {
+        return m_firmwareVersion;
     }
 
     public void set_firmwareRevision(String m_firmwareVersion)
@@ -112,14 +127,14 @@ public class PatientInfo
         }
     }
 
-    public String get_testDate()
+    public String get_testDateTime()
     {
-        return m_testDate;
+        return m_testDateTime;
     }
 
-    public void set_testDate(String m_testDate)
+    public void set_testDateTime(String m_testDateTime)
     {
-        this.m_testDate = m_testDate;
+        this.m_testDateTime = m_testDateTime;
     }
 
     public String get_handheldSerialNumber()
@@ -132,14 +147,19 @@ public class PatientInfo
         this.m_handheldSerialNumber = m_handheldSerialNumber;
     }
 
-    public static PatientInfo getInstance()
+    public String get_gender()
     {
-        return ourInstance;
+        return m_gender;
     }
 
     public void set_gender(String m_gender)
     {
         this.m_gender = m_gender;
+    }
+
+    public String get_notes()
+    {
+        return m_notes;
     }
 
     public void set_notes(String m_notes)
@@ -162,9 +182,19 @@ public class PatientInfo
         this.m_patientId = m_patientId;
     }
 
+    public int get_systolicBloodPressure()
+    {
+        return m_systolicBloodPressure;
+    }
+
     public void set_systolicBloodPressure(int m_systolicBloodPressure)
     {
         this.m_systolicBloodPressure = m_systolicBloodPressure;
+    }
+
+    public int get_diastolicBloodPressure()
+    {
+        return m_diastolicBloodPressure;
     }
 
     public void set_diastolicBloodPressure(int m_diastolicBloodPressure)
@@ -172,14 +202,29 @@ public class PatientInfo
         this.m_diastolicBloodPressure = m_diastolicBloodPressure;
     }
 
+    public int get_height_Inches()
+    {
+        return m_height_Inches;
+    }
+
     public void set_height_Inches(int m_height_Inches)
     {
         this.m_height_Inches = m_height_Inches;
     }
 
+    public int get_weight_lbs()
+    {
+        return m_weight_lbs;
+    }
+
     public void set_weight_lbs(int m_weight_lbs)
     {
         this.m_weight_lbs = m_weight_lbs;
+    }
+
+    public int get_age_years()
+    {
+        return m_age_years;
     }
 
     public void set_age_years(int m_age_years)
@@ -199,10 +244,10 @@ public class PatientInfo
             if (tm.startIndex > SAMPLES_IN_TEN_SECONDS)
             {
                 // get the avg PA during rest (by definition, rest ends 10 seconds before the patient hits the 16mm pressure point)
-                m_aCalcPAAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA((tm.startIndex - SAMPLES_IN_TEN_SECONDS), 12);
+                //m_aCalcPAAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA((tm.startIndex - SAMPLES_IN_TEN_SECONDS), 12);
 
                 // get the avg HR during rest
-                m_aCalcHRAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR((tm.startIndex - SAMPLES_IN_TEN_SECONDS), 12);
+                //m_aCalcHRAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR((tm.startIndex - SAMPLES_IN_TEN_SECONDS), 12);
             }
             else
             {
@@ -211,16 +256,16 @@ public class PatientInfo
             }
 
             // get the avg PA during Valsalva
-            m_aCalcPAAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgPAOverRange(tm.startIndex, tm.endIndex);
+            //m_aCalcPAAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgPAOverRange(tm.startIndex, tm.endIndex);
 
             // get the avg HR during Valsalva
-            m_aCalcHRAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgHROverRange(tm.startIndex, tm.endIndex);
+            //m_aCalcHRAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgHROverRange(tm.startIndex, tm.endIndex);
 
             // get the min PA during Valsalva
-            m_aCalcMinPA[testNumber] = HeartRateInfo.getInstance().GetMinPAOverRange(tm.startIndex, tm.endIndex);
+            //m_aCalcMinPA[testNumber] = HeartRateInfo.getInstance().GetMinPAOverRange(tm.startIndex, tm.endIndex);
 
             // get the end PA during Valsalva
-            m_aCalcEndPA[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA(tm.endIndex, 1);
+            //m_aCalcEndPA[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA(tm.endIndex, 1);
 
             // make sure that the PA Avg rest isn't 0
             if (m_aCalcPAAvgRest[testNumber] > 0)
@@ -235,7 +280,7 @@ public class PatientInfo
             }
 
             // get the end HR during valsalva
-            m_aCalcMinHRVM[testNumber] = HeartRateInfo.getInstance().MinimumHeartRate(tm.startIndex, tm.endIndex, 1);
+            //m_aCalcMinHRVM[testNumber] = HeartRateInfo.getInstance().MinimumHeartRate(tm.startIndex, tm.endIndex, 1);
 
             // if something went wrong, indicate that by setting the LVEDP to 0
             if (m_aCalcMinPAR[testNumber] != 0)
@@ -299,7 +344,7 @@ public class PatientInfo
 
     // get the start and end of valsalva markers for a certain test
     // both markers will be 0 if the test is not found
-    private TestMarkers GetTestMarkers(int testNumber)
+    public TestMarkers GetTestMarkers(int testNumber)
     {
         TestMarkers m = new TestMarkers();
         m.endIndex = 0;
@@ -340,16 +385,10 @@ public class PatientInfo
         return m;
     }
 
-    private class TestMarkers
-    {
-        private int startIndex;
-        private int endIndex;
-    }
-
     public boolean SaveCSVFile(Context context)
     {
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String fileName = m_patientId + "-" + m_testDate + ".csv";
+        String fileName = m_patientId + "-" + m_testDateTime + ".csv";
         String filePath = baseDir + File.separator + fileName;
         File file = new File(filePath);
 
@@ -383,7 +422,7 @@ public class PatientInfo
 
     private boolean WriteCSVContents(PrintWriter writer)
     {
-        writer.println("Test date time, " + m_testDate);
+        writer.println("Test date time, " + m_testDateTime);
         writer.println("Application version, " + BuildConfig.VERSION_NAME);
         writer.println("Handheld serial number," + m_handheldSerialNumber);
         writer.println("Firmware version, " + m_firmwareVersion);

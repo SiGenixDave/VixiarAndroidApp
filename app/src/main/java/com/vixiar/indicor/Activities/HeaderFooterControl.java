@@ -1,8 +1,8 @@
 package com.vixiar.indicor.Activities;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Typeface;
-import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -31,9 +31,9 @@ public class HeaderFooterControl
     private static final int BATTERY_LEVEL_1BARS = 30;
     private static final int BATTERY_LEVEL_0 = 10;
 
-    public void SetTypefaces(Activity a)
+    public void SetTypefaces(Activity a, Context c)
     {
-        Typeface robotoTypeface = ResourcesCompat.getFont(a, R.font.roboto_light);
+        Typeface robotoTypeface = Typeface.createFromAsset(c.getAssets(), "fonts/roboto_light.ttf");
 
         TextView v = (TextView) a.findViewById(R.id.txtScreenName);
         if (v != null)

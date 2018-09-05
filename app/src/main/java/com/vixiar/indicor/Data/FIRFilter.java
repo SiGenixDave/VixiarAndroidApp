@@ -4,37 +4,51 @@ package com.vixiar.indicor.Data;
  * Created by gyurk on 12/13/2017.
  */
 
+
 public class FIRFilter
 {
-    public void Initialize(PPG_FIRFilterData f)
+
+    private final int m_NumTaps;
+    private final double m_FilterTaps[];
+    private double[] m_History;
+    private int m_LastIndex;
+
+
+    public FIRFilter(final double[] filter_taps)
     {
-        for (int i = 0; i < f.NUM_TAPS; ++i)
-        {
-            f.history[i] = 0;
-        }
-        f.last_index = 0;
+        super();
+        m_FilterTaps = filter_taps;
+        m_NumTaps = m_FilterTaps.length;
+        m_History = new double[m_NumTaps];
     }
 
-    public void PutSample(PPG_FIRFilterData f, double input)
+    public void Initialize()
     {
-        f.history[f.last_index++] = input;
-        if (f.last_index == f.NUM_TAPS)
+        for (int i = 0; i < m_NumTaps; ++i)
         {
-            f.last_index = 0;
+            m_History[i] = 0;
+        }
+        m_LastIndex = 0;
+    }
+
+    public void PutSample(double input)
+    {
+        m_History[m_LastIndex++] = input;
+        if (m_LastIndex == m_NumTaps)
+        {
+            m_LastIndex = 0;
         }
     }
 
-    public double GetOutput(PPG_FIRFilterData f)
+    public double GetOutput()
     {
         double acc = 0;
-        int index = f.last_index;
-        for (int i = 0; i < f.NUM_TAPS; ++i)
+        int index = m_LastIndex;
+        for (int i = 0; i < m_NumTaps; ++i)
         {
-            index = index != 0 ? index - 1 : f.NUM_TAPS - 1;
-            acc += f.history[index] * f.filter_taps[i];
+            index = index != 0 ? index - 1 : m_NumTaps - 1;
+            acc += m_History[index] * m_FilterTaps[i];
         }
-        ;
         return acc;
     }
 }
-

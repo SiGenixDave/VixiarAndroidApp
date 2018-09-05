@@ -67,7 +67,7 @@
     <string name="measurement">Measurement </string>
     <string name="keep_arm_steady">Keep arm steady</string>
 
-    <string name="acquiring_signal">Acquiring signal...</string>
+    <string name="capturing_baseline">Capturing baseline...</string>
     <string name="pulse_amplitude">PULSE AMPLITUDE</string>
     <string name="time">TIME</string>
     <string name="time_remaining">Time Remaining</string>

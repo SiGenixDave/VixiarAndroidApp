@@ -169,8 +169,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         super.onCreate(savedInstanceState);
 
         // Some UI work
-        m_robotoLightTypeface = ResourcesCompat.getFont(this, R.font.roboto_light);
-        m_robotoRegularTypeface = ResourcesCompat.getFont(this, R.font.roboto_regular);
+        m_robotoLightTypeface = Typeface.createFromAsset(getAssets(), "fonts/roboto_light.ttf");
+        m_robotoRegularTypeface = Typeface.createFromAsset(getAssets(), "fonts/roboto_regular.ttf");
 
         InitTest();
 
@@ -451,7 +451,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
 
         // clear any data and return to the main activity
-        PatientInfo.getInstance().ClearAllPatientData();
+        PatientInfo.getInstance().Initialize();
         Intent intent = new Intent(TestingActivity.this, MainActivity.class);
         startActivity(intent);
     }
@@ -463,7 +463,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         setContentView(R.layout.activity_testing_stability);
 
         // get the controls
-        m_lblAcquiring = findViewById(R.id.txtAcquiringSignal);
+        m_lblAcquiring = findViewById(R.id.txtCapturingBaseline);
         m_spinnerProgress = findViewById(R.id.progressBar);
         m_chartPPG = findViewById(R.id.PPGStabilityGraph);
         m_txtHeartRate = findViewById(R.id.lblHeartRate);
@@ -471,7 +471,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_lblAcquiring.setTypeface(m_robotoLightTypeface);
         m_txtHeartRate.setTypeface(m_robotoLightTypeface);
 
-        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().SetTypefaces(this, this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
         HeaderFooterControl.getInstance().SetScreenTitle(this, GetMeasurementScreenTitle());
         HeaderFooterControl.getInstance().HideBatteryIcon(this);
@@ -579,7 +579,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_lblBottomMessage.setTypeface(m_robotoLightTypeface);
         m_lblBottomCountdownNumber.setTypeface(m_robotoRegularTypeface);
 
-        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().SetTypefaces(this, this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
         HeaderFooterControl.getInstance().SetScreenTitle(this, GetMeasurementScreenTitle());
         HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
@@ -679,12 +679,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         m_txtPatID.setText(PatientInfo.getInstance().get_patientId());
 
-        m_txtDateTime.setText(PatientInfo.getInstance().get_testDate());
+        m_txtDateTime.setText(PatientInfo.getInstance().get_testDateTime());
 
         m_lblBottomMessageCentered.setText("");
         m_imgHomeButton.setVisibility(View.INVISIBLE);
 
-        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().SetTypefaces(this, this);
         HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.results));
 
         if (m_nTestNumber < 3)
@@ -874,7 +874,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             @Override
             public void onClick(View view)
             {
-                PatientInfo.getInstance().ClearAllPatientData();
+                PatientInfo.getInstance().Initialize();
                 Intent intent = new Intent(TestingActivity.this, MainActivity.class);
                 startActivity(intent);
             }
@@ -919,7 +919,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private void InitTest()
     {
         m_nTestNumber = 1;
-        PatientInfo.getInstance().set_testDate(getDateTime());
+        PatientInfo.getInstance().set_testDateTime(getDateTime());
 
         SwitchToStabilityView();
         InactivateStabilityView();

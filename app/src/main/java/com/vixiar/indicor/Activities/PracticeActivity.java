@@ -36,7 +36,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
 
     private void InitializeHeaderAndFooter()
     {
-        HeaderFooterControl.getInstance().SetTypefaces(this);
+        HeaderFooterControl.getInstance().SetTypefaces(this, this ) ;
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
         HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.practice_screen_title));
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_ball));
@@ -107,7 +107,7 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
 
         // clear any data and return to the main activity
-        PatientInfo.getInstance().ClearAllPatientData();
+        PatientInfo.getInstance().Initialize();
         Intent intent = new Intent(PracticeActivity.this, MainActivity.class);
         startActivity(intent);
     }
