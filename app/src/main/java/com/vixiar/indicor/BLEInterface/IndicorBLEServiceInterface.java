@@ -67,6 +67,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private int m_batteryLevel;
 
     private int m_expectedRTDataSequnceNumber;
+    private boolean m_bFirstSequenceNumber;
 
     private final ArrayList<ScanResult> m_ScanList = new ArrayList<ScanResult>()
     {
@@ -385,7 +386,6 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
                         m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
                         m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
-                        m_expectedRTDataSequnceNumber = 0;
                         Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
                     }
                 }
@@ -403,6 +403,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case STATE_REQUESTED_CONNECTION_NOTIFICATION:
                 if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
                 {
+                    m_bFirstSequenceNumber = true;
                     m_IndicorConnectionState = IndicorConnection_State.STATE_OPERATIONAL;
 
                     // remove the dialog showing the connection progress bar
@@ -544,10 +545,10 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 // make sure the sequence number is right
                 int receivedSequenceNumber = (arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED)[0] & 0xFF);
                 //Log.i(TAG, "Received RT data, seq number= " + receivedSequenceNumber);
-
-                if (m_expectedRTDataSequnceNumber == 0)
+                if (m_bFirstSequenceNumber)
                 {
-                    // if the expected count is 0, then this is the first packet, just save the value
+                    // if this is the first message, we don't care what the sequence number is, but we need to know what to expect next time
+                    m_bFirstSequenceNumber = false;
                     m_expectedRTDataSequnceNumber = (receivedSequenceNumber + 1) % 256;
                     PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
                     m_CallbackInterface.iRealtimeDataNotification();
