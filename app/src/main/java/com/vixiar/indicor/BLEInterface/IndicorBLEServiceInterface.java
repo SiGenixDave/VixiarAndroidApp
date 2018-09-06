@@ -390,7 +390,6 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
                         m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
                         m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
-                        m_bFirstSequenceNumber = true;
                         Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
                     }
                 }
@@ -408,6 +407,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case STATE_REQUESTED_CONNECTION_NOTIFICATION:
                 if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
                 {
+                    m_bFirstSequenceNumber = true;
                     m_IndicorConnectionState = IndicorConnection_State.STATE_OPERATIONAL;
 
                     // remove the dialog showing the connection progress bar
