@@ -117,13 +117,12 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
         SavePeaksAndValleysToCSVFile(this);
         m_button.setText("Connect and start test");
         m_bTestRunning = false;
-        PPGgraph.removeAllSeries();
-        pressureGraph.removeAllSeries();
     }
 
     public void UserStartingTest()
     {
         m_button.setText("Connecting");
+        PatientInfo.getInstance().ClearAllPatientData();
         IndicorBLEServiceInterface.getInstance().initialize(this, this);
         IndicorBLEServiceInterface.getInstance().ConnectToIndicor();
         InitializeGraph();
@@ -158,6 +157,12 @@ public class FactoryTestActivity extends Activity implements IndicorBLEServiceIn
 
     public void InitializeGraph()
     {
+        m_PPGLastX = 0.0;
+        m_pressureLastX = 0.0;
+
+        PPGgraph.removeAllSeries();
+        pressureGraph.removeAllSeries();
+
         m_PPGSeries = new LineGraphSeries<DataPointInterface>();
         m_PPGSeries.setColor(Color.BLUE);
         m_PPGSeries.setThickness(2);

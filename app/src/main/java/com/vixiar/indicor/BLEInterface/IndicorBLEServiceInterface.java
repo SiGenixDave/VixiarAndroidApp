@@ -384,6 +384,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                         // start the timer to update the battery level
                         m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
 
+                        m_bFirstSequenceNumber = true;
+
                         m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
                         m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
                         Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
@@ -403,7 +405,6 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case STATE_REQUESTED_CONNECTION_NOTIFICATION:
                 if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
                 {
-                    m_bFirstSequenceNumber = true;
                     m_IndicorConnectionState = IndicorConnection_State.STATE_OPERATIONAL;
 
                     // remove the dialog showing the connection progress bar
@@ -488,6 +489,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
                 // start the timer to update the battery level
                 m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
+
+                m_bFirstSequenceNumber = true;
 
                 m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
                 m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
