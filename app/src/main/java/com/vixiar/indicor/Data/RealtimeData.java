@@ -32,7 +32,7 @@ public class RealtimeData
     public void Initialize()
     {
         RealtimePeakValleyDetect.getInstance().Initialize(5000, 5000, false);
-        HeartRateInfo.getInstance().InitializeValidation(50.0, 4, 5.0, 40.0, 150.0, 20.0);
+        //HeartRateInfo.getInstance().InitializeValidation(50.0, 4, 5.0, 40.0, 150.0, 20.0);
         m_PPGFIRFilter.Initialize();
         m_PressureFIRFilter.Initialize();
         m_rawData.clear();
@@ -74,6 +74,7 @@ public class RealtimeData
 
         RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
 
+/*
         if (enableHeartRateValidation)
         {
             boolean newHeartRateAvailable = HeartRateInfo.getInstance().RealtimeHeartRateValidation();
@@ -82,6 +83,7 @@ public class RealtimeData
                 Log.d("HeartRate", "Current Heart Rate = " + HeartRateInfo.getInstance().getCurrentBeatsPerMinute());
             }
         }
+*/
     }
 
     public void StartHeartRateValidation()
@@ -91,30 +93,56 @@ public class RealtimeData
         {
             currentMarker = 0;
         }
-        HeartRateInfo.getInstance().StartRealtimeCalcs(currentMarker);
+        //HeartRateInfo.getInstance().StartRealtimeCalcs(currentMarker);
         enableHeartRateValidation = true;
     }
 
-    public void StopHeartRateValidation()
+    public int GetCurrentDataIndex()
     {
-        enableHeartRateValidation = false;
+        return m_rawData.size() - 1;
     }
 
-    public boolean IsHeartRateStable()
+    public boolean IsPPGSignalValid(int startIndex)
     {
-        boolean isHeatRateStable = false;
+        return true;
+    }
 
-        if (enableHeartRateValidation)
+    public boolean IsPPGSignalFlatline(int startIndex)
+    {
+        return false;
+    }
+
+    public boolean IsPPGSignalContainingSpikeyNoise(int startIndex)
+    {
+        return false;
+    }
+
+    public boolean IsPPGSignalContainingHighFrequencyNoise(int startIndex)
+    {
+        return false;
+    }
+
+    public boolean IsHeartRateStable(int startIndex)
+    {
+        boolean isStable = false;
+
+        double currentRate  = HeartRateInfo.getInstance().GetCurrentHeartRate(startIndex, 3);
+
+        if (currentRate == 0)
         {
-            isHeatRateStable = HeartRateInfo.getInstance().isHeartRateStable();
+            // rate comes back as 0 when there's not enough beats
+            isStable = true;
         }
-
-        return isHeatRateStable;
+        else if (currentRate >= TestConstants.MIN_STABLE_HR && currentRate <= TestConstants.MAX_STABLE_HR)
+        {
+            isStable = true;
+        }
+        return isStable;
     }
 
-    public double GetCurrentBPM()
+    public double GetCurrentHeartRate(int startIndex)
     {
-        return HeartRateInfo.getInstance().getCurrentBeatsPerMinute();
+        return HeartRateInfo.getInstance().GetCurrentHeartRate(startIndex, 3);
     }
 
     public ArrayList<RealtimeDataMarker> GetDataMarkers()
@@ -132,6 +160,8 @@ public class RealtimeData
         return retData;
     }
 
+/*
+
     public double GetHeartRateDuringValidation()
     {
         double heartRate = -1;
@@ -144,7 +174,6 @@ public class RealtimeData
         return heartRate;
     }
 
-/*
     public double GetAverageHeartRate(int startMarker, int endMarker)
     {
         return HeartRateInfo.getInstance().GetAvgHRInRange(startMarker, endMarker);
@@ -197,6 +226,7 @@ public class RealtimeData
 
         RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
 
+/*
         if (enableHeartRateValidation)
         {
             boolean newHeartRateAvailable = HeartRateInfo.getInstance().RealtimeHeartRateValidation();
@@ -205,6 +235,7 @@ public class RealtimeData
                 //        Log.d("HeartRate", "Current Heart Rate = " + HeartRateInfo.getInstance().getCurrentBeatsPerMinute());
             }
         }
+*/
     }
 
 }

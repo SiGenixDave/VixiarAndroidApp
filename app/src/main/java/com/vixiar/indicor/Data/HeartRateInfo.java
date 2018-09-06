@@ -45,6 +45,7 @@ public class HeartRateInfo
     // //////////////////////////////////////////////////////////////////////////
     // / Getters
     // //////////////////////////////////////////////////////////////////////////
+/*
     public double getCurrentBeatsPerMinute()
     {
         return m_CurrentBeatsPerMinute;
@@ -204,6 +205,7 @@ public class HeartRateInfo
             purgeCount--;
         }
     }
+*/
 
     // Calculates the heart rate. The first and last peak is used to calculate the time span. The value returned
     // is in units beats / minute
@@ -214,7 +216,7 @@ public class HeartRateInfo
             return -1.0;
         }
 
-        double timeSpanSecs = (lastPeakIndex - firstPeakIndex) / m_SampleRateHz;
+        double timeSpanSecs = (lastPeakIndex - firstPeakIndex) / (double)TestConstants.SAMPLES_PER_SECOND;
 
         // make sure we're not dividing by 0
         if (timeSpanSecs > 0)
@@ -227,6 +229,30 @@ public class HeartRateInfo
         }
     }
 
+    public double GetCurrentHeartRate(int firstPeakIndex, int numHeartBeatsToAverage)
+    {
+        double hr;
+
+        // get all of the peaks from the first index till now
+        List<Integer> peaks = BeatProcessing.getInstance().GetItemsBetween(firstPeakIndex, -1,
+                RealtimePeakValleyDetect.eSlopeZero.PEAK, RealtimePeakValleyDetect.getInstance().GetPeaksAndValleys());
+
+        // see if there are enough peaks
+        if (peaks.size() > numHeartBeatsToAverage)
+        {
+            int startIndex = peaks.get(peaks.size() - (numHeartBeatsToAverage + 1) );
+            int endIndex = peaks.get(peaks.size()-1);
+            hr = CalculateHeartRate(startIndex, endIndex, numHeartBeatsToAverage);
+        }
+        else
+        {
+            // indicat that there's not enough peaks yet
+            hr = 0.0;
+        }
+        return hr;
+    }
+
+/*
     // Method determines if enough samples are present in the historical data so that the hear rate
     // data can be verified
     private boolean EnoughSamplesPresent()
@@ -319,6 +345,7 @@ public class HeartRateInfo
         }
         return inRange;
     }
+*/
 
     // Calculates the average heart rate between 2 samples. It first gets all of the peaks between the first and
     // last sample index. It then gets the sample index of first peak and the sample index of the last peak. It

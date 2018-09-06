@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -46,6 +45,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private static Double m_nPPGGraphLastX = 0.0;
     private int m_nCountdownSecLeft;
     private int m_nTestNumber;
+    private int m_baselineStartIndex = 0;
     private double m_nAvgPressure;
     private boolean m_bIsConnected;
 
@@ -91,8 +91,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private enum Testing_State
     {
-        STABILIZING_NOT_CONNECTED,
-        STABILIZING,
+        BASELINE_NOT_CONNECTED, BASELINE,
         STABLE_5SEC_COUNTDOWN,
         VALSALVA_WAIT_FOR_PRESSURE,
         VALSALVA,
@@ -111,7 +110,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         EVT_CONNECTED,
         EVT_PERIODIC_TIMER_TICK,
         EVT_VALSALVA_PRESSURE_UPDATE,
-        EVT_HR_STABLE,
+        EVT_HR_NOT_STABLE,
+        EVT_PPG_NOT_VALID,
+        EVT_PPG_CONTAINS_SPIKEY_NOISE,
+        EVT_PPG_CONTAINS_HIGH_FREQ_NOISE,
     }
 
     // Timer stuff
@@ -132,7 +134,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     // Timing constants
     private final int PPGCAL_TIME_MS = 2000;
-    private final int STABILIZING_TIMEOUT_MS = 60000;
+    private final int BASELINE_TIME_MS = 15000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 5000;
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
@@ -241,7 +243,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_bIsConnected = false;
         switch (m_testingState)
         {
-            case STABILIZING:
+            case BASELINE:
                 InactivateStabilityView();
                 break;
 
@@ -271,7 +273,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         switch (m_testingState)
         {
-            case STABILIZING:
+            case BASELINE:
                 RestartStability();
                 break;
 
@@ -310,7 +312,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             m_pressureOutTimer.Cancel();
         }
 
-        m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
+        m_testingState = Testing_State.BASELINE_NOT_CONNECTED;
 
     }
 
@@ -320,7 +322,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         // see if we need to do anything wit the data based on the state
         switch (m_testingState)
         {
-            case STABILIZING:
+            case BASELINE:
                 // update the PPG chart
                 int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
@@ -331,14 +333,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_nLastDataIndex = currentDataIndex;
 
                 // update the heart rate on the screen
-                double BPM = PatientInfo.getInstance().getRealtimeData().GetCurrentBPM();
+                double BPM = PatientInfo.getInstance().getRealtimeData().GetCurrentHeartRate(m_baselineStartIndex);
                 String sTemp = "HR = " + String.valueOf((int) BPM) + " BPM";
                 m_txtHeartRate.setText(sTemp);
 
                 // see if the HR is stable
-                if (PatientInfo.getInstance().getRealtimeData().IsHeartRateStable())
+                if (!PatientInfo.getInstance().getRealtimeData().IsHeartRateStable(m_baselineStartIndex))
                 {
-                    TestingStateMachine(Testing_Events.EVT_HR_STABLE);
+                    //TestingStateMachine(Testing_Events.EVT_HR_NOT_STABLE);
                 }
                 break;
 
@@ -400,9 +402,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case DLG_ID_PRESSURE_ERROR_RUNNING:
                 // this is the "Try again" button, we need to restart this test
                 SwitchToStabilityView();
-                ActivateStabilityView();
+                ActivateBaselineView();
 
-                m_testingState = Testing_State.STABILIZING;
+                m_testingState = Testing_State.BASELINE;
 
                 PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
                 break;
@@ -536,7 +538,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_spinnerProgress.setVisibility(View.INVISIBLE);
     }
 
-    private void ActivateStabilityView()
+    private void ActivateBaselineView()
     {
         m_lblAcquiring.setVisibility(View.VISIBLE);
 
@@ -556,7 +558,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_txtHeartRate.setVisibility(View.VISIBLE);
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
 
-        m_oneShotTimer.Start(this, STABILIZING_TIMEOUT_MS, true);
+        m_oneShotTimer.Start(this, BASELINE_TIME_MS, true);
 
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
 
@@ -929,7 +931,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
         m_pressureOutTimer = new GenericTimer(PRESSURE_OUT_TIMER_ID);
 
-        m_testingState = Testing_State.STABILIZING_NOT_CONNECTED;
+        m_testingState = Testing_State.BASELINE_NOT_CONNECTED;
     }
 
     private String getDateTime()
@@ -962,22 +964,23 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     {
         switch (m_testingState)
         {
-            case STABILIZING_NOT_CONNECTED:
-                //Log.i(TAG, "In state: STABILIZING_NOT_CONNECTED");
+            case BASELINE_NOT_CONNECTED:
+                //Log.i(TAG, "In state: BASELINE_NOT_CONNECTED");
                 if (event == Testing_Events.EVT_CONNECTED)
                 {
-                    ActivateStabilityView();
+                    ActivateBaselineView();
 
-                    m_testingState = Testing_State.STABILIZING;
+                    m_testingState = Testing_State.BASELINE;
+                    m_baselineStartIndex = PatientInfo.getInstance().getRealtimeData().GetCurrentDataIndex();
 
                     // start checking for stability
                     PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
                 }
                 break;
 
-            case STABILIZING:
-                //Log.i(TAG, "In state: STABILIZING");
-                if (event == Testing_Events.EVT_HR_STABLE)
+            case BASELINE:
+                //Log.i(TAG, "In state: BASELINE");
+                if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
                     SwitchToTestingView();
                     InactivateTestingView();
@@ -987,7 +990,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     UpdateBottomCountdownNumber(m_nCountdownSecLeft);
                     m_oneShotTimer.Cancel();
                 }
-                else if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
+                else if (event == Testing_Events.EVT_HR_NOT_STABLE)
                 {
                     if (m_bIsConnected)
                     {
@@ -1167,8 +1170,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             m_periodicTimer.Cancel();
                             m_nTestNumber++;
                             SwitchToStabilityView();
-                            ActivateStabilityView();
-                            m_testingState = Testing_State.STABILIZING;
+                            ActivateBaselineView();
+                            m_testingState = Testing_State.BASELINE;
 
                             // start checking for stability
                             PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
