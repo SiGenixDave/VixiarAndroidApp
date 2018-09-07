@@ -46,7 +46,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private int m_nCountdownSecLeft;
     private int m_nTestNumber;
     private int m_baselineStartIndex = 0;
-    private double m_nAvgPressure;
     private boolean m_bIsConnected;
 
     // UI Components (Stability Screen)
@@ -151,9 +150,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final double VALSALVA_MIN_PRESSURE = 16.0;
     private final double VALSALVA_MAX_PRESSURE = 30.0;
 
-    private final double PRESSURE_FILTER_OLD_VALUE_MULTIPLIER = 0.3;
-    private final double PRESSURE_FILTER_NEW_VALUE_MULTIPLIER = (1.0 - PRESSURE_FILTER_OLD_VALUE_MULTIPLIER);
-
     private int[] m_tenSecCountdownImages = new int[]
             {
                     R.drawable.countdown0sec,
@@ -167,6 +163,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     R.drawable.countdown8sec,
                     R.drawable.countdown9sec,
             };
+
+    private double m_nCurrentPressure = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -332,7 +330,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case BASELINE:
                 // update the PPG chart
-                int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
+                int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size();
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
                     m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG), true, 500);
@@ -360,22 +358,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case VALSALVA_WAIT_FOR_PRESSURE:
             case VALSALVA:
-                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
-                double tempSum = 0.0;
-                for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
-                {
-                    // sum up all the pressures from this set of data
-                    tempSum += PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_pressure;
-                }
-                double thisAvg = tempSum / (currentDataIndex - m_nLastDataIndex);
-                m_nLastDataIndex = currentDataIndex;
-
-                // TODO: fix the pressure filter
-                // calculate the new pressure average
-                m_nAvgPressure = (PRESSURE_FILTER_OLD_VALUE_MULTIPLIER * m_nAvgPressure) + (PRESSURE_FILTER_NEW_VALUE_MULTIPLIER * thisAvg);
-
                 // update the ball
-                m_graphPressure.setBallPressure(m_nAvgPressure);
+                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size() -1;
+                m_nCurrentPressure = PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(currentDataIndex).m_pressure;
+                m_graphPressure.setBallPressure(m_nCurrentPressure);
 
                 TestingStateMachine(Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE);
                 break;
@@ -1073,7 +1059,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             ActivateTestingView();
                             m_testingState = Testing_State.VALSALVA_WAIT_FOR_PRESSURE;
                             m_oneShotTimer.Start(this, VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS, true);
-                            m_nAvgPressure = 0.0;
+                            m_nCurrentPressure = 0.0;
                         }
                         else
                         {
@@ -1088,7 +1074,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 // see if we reached the starting pressure for Valsalva
                 if (event == Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE)
                 {
-                    if (m_nAvgPressure > VALSALVA_MIN_PRESSURE)
+                    if (m_nCurrentPressure > VALSALVA_MIN_PRESSURE)
                     {
                         // Valsalva is starting
                         PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_START_VALSALVA,
@@ -1111,7 +1097,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case VALSALVA:
                 if (event == Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE)
                 {
-                    if (m_nAvgPressure < VALSALVA_MIN_PRESSURE || m_nAvgPressure > VALSALVA_MAX_PRESSURE)
+                    if (m_nCurrentPressure < VALSALVA_MIN_PRESSURE || m_nCurrentPressure > VALSALVA_MAX_PRESSURE)
                     {
                         // up to a point in the valsalva, the pressure is allow to swing out of range for a short period
                         // after that, it's an error immediately

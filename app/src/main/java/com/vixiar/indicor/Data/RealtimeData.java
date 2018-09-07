@@ -57,21 +57,22 @@ public class RealtimeData
 
             ppg_value = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
 
+            // add the raw data to the list
             RealtimeDataSample pd = new RealtimeDataSample(ppg_value, pressure_value);
             m_rawData.add(pd);
 
             // filter the sample and store it in the filtered array
             m_PPGFIRFilter.PutSample(ppg_value);
             int ppgFiltered = (int) m_PPGFIRFilter.GetOutput();
+            m_PressureFIRFilter.PutSample(pressure_value);
+            double pressureFiltered = m_PressureFIRFilter.GetOutput();
+            pd = new RealtimeDataSample(ppgFiltered, pressureFiltered);
+            m_filteredData.add(pd);
 
             RealtimePeakValleyDetect.getInstance().AddToDataArray(ppgFiltered);
-            pd = new RealtimeDataSample(ppgFiltered, pressure_value);
-
-            m_filteredData.add(pd);
         }
 
         RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
-
     }
 
     public int GetCurrentDataIndex()
