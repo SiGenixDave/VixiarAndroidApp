@@ -42,29 +42,29 @@ public class RealtimeData
     {
         // extract the m_rawData...the first byte is the sequence number
         // followed by two bytes of PPG then pressure repetitively
-        double pressure_value;
-        int pressure_counts;
-        int ppg_value;
+        double pressureValue;
+        int pressureCounts;
+        int ppgValue;
         for (int i = 1; i < new_data.length; i += 4)
         {
             // convert the a/d counts from the handheld to pressure in mmHg
-            pressure_counts = (256 * (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
-            pressure_value = ((double) pressure_counts * (-0.0263)) + 46.726;
-            if (pressure_value < 0.0)
+            pressureCounts = (256 * (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
+            pressureValue = ((double) pressureCounts * (-0.0263)) + 46.726;
+            if (pressureValue < 0.0)
             {
-                pressure_value = 0.0;
+                pressureValue = 0.0;
             }
 
-            ppg_value = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
+            ppgValue = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
 
             // add the raw data to the list
-            RealtimeDataSample pd = new RealtimeDataSample(ppg_value, pressure_value);
+            RealtimeDataSample pd = new RealtimeDataSample(ppgValue, pressureValue);
             m_rawData.add(pd);
 
             // filter the sample and store it in the filtered array
-            m_PPGFIRFilter.PutSample(ppg_value);
+            m_PPGFIRFilter.PutSample(ppgValue);
             int ppgFiltered = (int) m_PPGFIRFilter.GetOutput();
-            m_PressureFIRFilter.PutSample(pressure_value);
+            m_PressureFIRFilter.PutSample(pressureValue);
             double pressureFiltered = m_PressureFIRFilter.GetOutput();
             pd = new RealtimeDataSample(ppgFiltered, pressureFiltered);
             m_filteredData.add(pd);
