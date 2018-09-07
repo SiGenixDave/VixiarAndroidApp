@@ -14,4 +14,5 @@ public class AppConstants
     public static final int LOOKBACK_SECONDS_FOR_FLATLINE = 2;
     public static final int LOOKBACK_SECONDS_FOR_MOVEMENT = 1;
     public static final double  SD_LIMIT_FOR_FLATLINE = 200.0;
+    public static final double HF_NOISE_LIMIT = 0.4;
 }

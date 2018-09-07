@@ -2,6 +2,7 @@ package com.vixiar.indicor.Data;//import android.util.Log;
 
 //import java.util.ArrayList;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -137,7 +138,60 @@ public class RealtimeData
 
     public boolean DidPPGSignalContainHighFrequencyNoise(int startIndex)
     {
-        return false;
+        // in order to determine if there's high frequency noise, it's necessary to go through all of the
+        // baseline data and take the standard deviation of 5 points with the sample of concern in the middle.
+        // that get's divided by the standard deviation of 3 seconds of data before the sample of concern
+        // then those values are accumulated and the average of the 20 lowest values is computed...if this
+        // average is greater than 0.4, there's high frequency noise present.
+
+        boolean hfNoiseDetected = false;
+        List<Double> ratioList = new ArrayList<>();
+
+        // first, there must be at least 3 seconds (+ 2 samples) of data before we even start
+        if (m_filteredData.size() > (AppConstants.SAMPLES_PER_SECOND * 3) + 2)
+        {
+            // start at the start of baseline plus 3 seconds
+            int startingRangeIndex = startIndex + (AppConstants.SAMPLES_PER_SECOND * 3);
+            int endingRangeIndex = m_filteredData.size() - 3;
+            for (int i = startingRangeIndex; i < endingRangeIndex; i++)
+            {
+                double localPointsStdev = DataMath.getInstance().CalculateStdev(i-2, i + 2, m_filteredData);
+                double localSecondsStdev = DataMath.getInstance().CalculateStdev(i - (AppConstants.SAMPLES_PER_SECOND * 3), i, m_filteredData);
+
+                if (localSecondsStdev != 0.0)
+                {
+                    double ratio = localPointsStdev / localSecondsStdev;
+
+                    // keep all of the ratios in an array
+                    ratioList.add(ratio);
+                }
+            }
+            // now sort the ratios
+            Collections.sort(ratioList);
+
+            // get the average of the lowest 20
+            double sum = 0.0;
+            int numToAverage;
+            if (ratioList.size() < 20)
+            {
+                numToAverage = ratioList.size();
+            }
+            else
+            {
+                numToAverage = 20;
+            }
+            for (int i = 0; i < numToAverage; i++)
+            {
+                sum += ratioList.get(i);
+            }
+            double average = sum / numToAverage;
+
+            if (average > AppConstants.HF_NOISE_LIMIT)
+            {
+                hfNoiseDetected = true;
+            }
+        }
+        return hfNoiseDetected;
     }
 
     public boolean WasHeartRateInRange(int startIndex)
