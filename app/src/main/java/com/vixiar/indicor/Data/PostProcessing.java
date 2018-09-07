@@ -6,9 +6,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.vixiar.indicor.Data.TestConstants.BASELINE_END_BEFORE_VSTART_SEC;
-import static com.vixiar.indicor.Data.TestConstants.BASELINE_LENGTH_SEC;
-import static com.vixiar.indicor.Data.TestConstants.SAMPLES_PER_SECOND;
+import static com.vixiar.indicor.Data.AppConstants.BASELINE_END_BEFORE_VSTART_SEC;
+import static com.vixiar.indicor.Data.AppConstants.BASELINE_LENGTH_SEC;
+import static com.vixiar.indicor.Data.AppConstants.SAMPLES_PER_SECOND;
 
 
 public class PostProcessing

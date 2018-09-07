@@ -2,8 +2,6 @@ package com.vixiar.indicor.Data;//import android.util.Log;
 
 //import java.util.ArrayList;
 
-import android.util.Log;
-
 import java.util.*;
 
 /**
@@ -23,7 +21,6 @@ public class RealtimeData
     private ArrayList<RealtimeDataSample> m_rawData = new ArrayList<RealtimeDataSample>();
     private ArrayList<RealtimeDataSample> m_filteredData = new ArrayList<RealtimeDataSample>();
     private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
-    private Boolean enableHeartRateValidation = false;
     private I_FIRFilterTap PPGTaps = new PPG_FIRFilterTaps();
     private I_FIRFilterTap PressureTaps = new Pressure_FIRFilterTaps();
     private FIRFilter m_PPGFIRFilter = new FIRFilter(PPGTaps.GetTaps());
@@ -74,27 +71,6 @@ public class RealtimeData
 
         RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
 
-/*
-        if (enableHeartRateValidation)
-        {
-            boolean newHeartRateAvailable = HeartRateInfo.getInstance().RealtimeHeartRateValidation();
-            if (newHeartRateAvailable)
-            {
-                Log.d("HeartRate", "Current Heart Rate = " + HeartRateInfo.getInstance().getCurrentBeatsPerMinute());
-            }
-        }
-*/
-    }
-
-    public void StartHeartRateValidation()
-    {
-        int currentMarker = m_rawData.size() - 1;
-        if (currentMarker < 0)
-        {
-            currentMarker = 0;
-        }
-        //HeartRateInfo.getInstance().StartRealtimeCalcs(currentMarker);
-        enableHeartRateValidation = true;
     }
 
     public int GetCurrentDataIndex()
@@ -102,47 +78,84 @@ public class RealtimeData
         return m_rawData.size() - 1;
     }
 
-    public boolean IsPPGSignalValid(int startIndex)
+
+    public boolean IsPPGSignalFlatlining(int startIndex)
     {
-        return true;
-    }
+        boolean isFlatlining = false;
 
-    public boolean IsPPGSignalFlatline(int startIndex)
-    {
-        return false;
-    }
-
-    public boolean IsPPGSignalContainingSpikeyNoise(int startIndex)
-    {
-        return false;
-    }
-
-    public boolean IsPPGSignalContainingHighFrequencyNoise(int startIndex)
-    {
-        return false;
-    }
-
-    public boolean IsHeartRateStable(int startIndex)
-    {
-        boolean isStable = false;
-
-        double currentRate  = HeartRateInfo.getInstance().GetCurrentHeartRate(startIndex, 3);
-
-        if (currentRate == 0)
+        // make sure there is enough data collected based on the lookback window setting
+        if ((m_filteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_FLATLINE * AppConstants.SAMPLES_PER_SECOND))
         {
-            // rate comes back as 0 when there's not enough beats
-            isStable = true;
+            // get the standard deviation for the last 2 seconds
+            int startCheckIndex = m_filteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_FLATLINE * AppConstants.SAMPLES_PER_SECOND);
+            int endCheckIndex = m_filteredData.size() - 1;
+
+            double stDev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_filteredData);
+            if (stDev < AppConstants.SD_LIMIT_FOR_FLATLINE)
+            {
+                isFlatlining = true;
+            }
         }
-        else if (currentRate >= TestConstants.MIN_STABLE_HR && currentRate <= TestConstants.MAX_STABLE_HR)
+        else
         {
-            isStable = true;
+            // there's not enough data yet to tell, just say everything is ok
+            isFlatlining = false;
         }
-        return isStable;
+
+        return isFlatlining;
+    }
+
+    public boolean IsMovementDetected(int startIndex)
+    {
+        boolean isMovement = false;
+
+        // make sure there is enough data collected based on the lookback window setting
+        if ((m_filteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND))
+        {
+            // get the standard deviation for the last 2 seconds
+            int startCheckIndex = m_filteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND);
+            int endCheckIndex = m_filteredData.size() - 1;
+
+            for (int i = startCheckIndex; i < endCheckIndex - 1; i++)
+            {
+                if (m_filteredData.get(i).m_PPG > AppConstants.PPG_AMPLITUDE_LIMIT_FOR_MOVEMENT)
+                {
+                    isMovement = true;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            // there's not enough data yet to tell, just say everything is ok
+            isMovement = false;
+        }
+
+        return isMovement;
+
+    }
+
+    public boolean DidPPGSignalContainHighFrequencyNoise(int startIndex)
+    {
+        return false;
+    }
+
+    public boolean WasHeartRateInRange(int startIndex)
+    {
+        boolean isInRange = false;
+
+        double baselineHeartRate  = HeartRateInfo.getInstance().CalculateEndHeartRateStartingAt(startIndex, -1);
+
+        if (baselineHeartRate >= AppConstants.MIN_STABLE_HR && baselineHeartRate <= AppConstants.MAX_STABLE_HR)
+        {
+            isInRange = true;
+        }
+        return isInRange;
     }
 
     public double GetCurrentHeartRate(int startIndex)
     {
-        return HeartRateInfo.getInstance().GetCurrentHeartRate(startIndex, 3);
+        return HeartRateInfo.getInstance().CalculateEndHeartRateStartingAt(startIndex, 3);
     }
 
     public ArrayList<RealtimeDataMarker> GetDataMarkers()
@@ -159,26 +172,6 @@ public class RealtimeData
         }
         return retData;
     }
-
-/*
-
-    public double GetHeartRateDuringValidation()
-    {
-        double heartRate = -1;
-
-        if (enableHeartRateValidation)
-        {
-            heartRate = HeartRateInfo.getInstance().getCurrentBeatsPerMinute();
-        }
-
-        return heartRate;
-    }
-
-    public double GetAverageHeartRate(int startMarker, int endMarker)
-    {
-        return HeartRateInfo.getInstance().GetAvgHRInRange(startMarker, endMarker);
-    }
-*/
 
     public void CreateMarker(RealtimeDataMarker.Marker_Type type, int index)
     {
@@ -226,16 +219,6 @@ public class RealtimeData
 
         RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
 
-/*
-        if (enableHeartRateValidation)
-        {
-            boolean newHeartRateAvailable = HeartRateInfo.getInstance().RealtimeHeartRateValidation();
-            if (newHeartRateAvailable)
-            {
-                //        Log.d("HeartRate", "Current Heart Rate = " + HeartRateInfo.getInstance().getCurrentBeatsPerMinute());
-            }
-        }
-*/
     }
 
 }

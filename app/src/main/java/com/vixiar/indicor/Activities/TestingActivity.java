@@ -91,8 +91,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private enum Testing_State
     {
-        BASELINE_NOT_CONNECTED, BASELINE,
-        STABLE_5SEC_COUNTDOWN,
+        BASELINE_NOT_CONNECTED,
+        BASELINE,
+        BASELINE_WITH_ERROR_DIALOG_DISPLAYING,
+        BASELINE_GOOD_5SEC_COUNTDOWN,
         VALSALVA_WAIT_FOR_PRESSURE,
         VALSALVA,
         LOADING_RESULTS,
@@ -110,10 +112,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         EVT_CONNECTED,
         EVT_PERIODIC_TIMER_TICK,
         EVT_VALSALVA_PRESSURE_UPDATE,
-        EVT_HR_NOT_STABLE,
-        EVT_PPG_NOT_VALID,
-        EVT_PPG_CONTAINS_SPIKEY_NOISE,
-        EVT_PPG_CONTAINS_HIGH_FREQ_NOISE,
+        EVT_PPG_FLATLINING,
+        EVT_PPG_IS_CLIPPING,
     }
 
     // Timer stuff
@@ -130,7 +130,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int DLG_ID_PRESSURE_ERROR_START = 0;
     private final int DLG_ID_PRESSURE_ERROR_RUNNING = 1;
     private final int DLG_ID_CANCEL_TEST = 2;
-    private final int DLG_ID_HR_NOT_STABLE = 4;
+    private final int DLG_ID_HR_OUT_OF_RANGE = 4;
+    private final int DLG_ID_PPG_CLIPPING = 5;
+    private final int DLG_ID_PPG_FLATLINE = 6;
+    private final int DLG_ID_PPG_HF_NOISE = 7;
 
     // Timing constants
     private final int PPGCAL_TIME_MS = 2000;
@@ -244,10 +247,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         switch (m_testingState)
         {
             case BASELINE:
+            case BASELINE_WITH_ERROR_DIALOG_DISPLAYING:
                 InactivateStabilityView();
                 break;
 
-            case STABLE_5SEC_COUNTDOWN:
+            case BASELINE_GOOD_5SEC_COUNTDOWN:
             case VALSALVA_WAIT_FOR_PRESSURE:
             case VALSALVA:
                 InactivateTestingView();
@@ -274,10 +278,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         switch (m_testingState)
         {
             case BASELINE:
+            case BASELINE_WITH_ERROR_DIALOG_DISPLAYING:
                 RestartStability();
                 break;
 
-            case STABLE_5SEC_COUNTDOWN:
+            case BASELINE_GOOD_5SEC_COUNTDOWN:
             case VALSALVA_WAIT_FOR_PRESSURE:
             case VALSALVA:
                 SwitchToStabilityView();
@@ -322,6 +327,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         // see if we need to do anything wit the data based on the state
         switch (m_testingState)
         {
+            case BASELINE_WITH_ERROR_DIALOG_DISPLAYING:
+                break;
+
             case BASELINE:
                 // update the PPG chart
                 int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
@@ -337,10 +345,16 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 String sTemp = "HR = " + String.valueOf((int) BPM) + " BPM";
                 m_txtHeartRate.setText(sTemp);
 
-                // see if the HR is stable
-                if (!PatientInfo.getInstance().getRealtimeData().IsHeartRateStable(m_baselineStartIndex))
+                // see if there is a flatline signal
+                if (PatientInfo.getInstance().getRealtimeData().IsPPGSignalFlatlining(m_baselineStartIndex))
                 {
-                    //TestingStateMachine(Testing_Events.EVT_HR_NOT_STABLE);
+                    TestingStateMachine(Testing_Events.EVT_PPG_FLATLINING);
+                }
+
+                // see if there is clipping in the ppg
+                if (PatientInfo.getInstance().getRealtimeData().IsMovementDetected(m_baselineStartIndex))
+                {
+                    TestingStateMachine(Testing_Events.EVT_PPG_IS_CLIPPING);
                 }
                 break;
 
@@ -356,6 +370,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 double thisAvg = tempSum / (currentDataIndex - m_nLastDataIndex);
                 m_nLastDataIndex = currentDataIndex;
 
+                // TODO: fix the pressure filter
                 // calculate the new pressure average
                 m_nAvgPressure = (PRESSURE_FILTER_OLD_VALUE_MULTIPLIER * m_nAvgPressure) + (PRESSURE_FILTER_NEW_VALUE_MULTIPLIER * thisAvg);
 
@@ -400,24 +415,19 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         {
             case DLG_ID_PRESSURE_ERROR_START:
             case DLG_ID_PRESSURE_ERROR_RUNNING:
+            case DLG_ID_HR_OUT_OF_RANGE:
+            case DLG_ID_PPG_CLIPPING:
+            case DLG_ID_PPG_FLATLINE:
+            case DLG_ID_PPG_HF_NOISE:
+
                 // this is the "Try again" button, we need to restart this test
                 SwitchToStabilityView();
                 ActivateBaselineView();
 
                 m_testingState = Testing_State.BASELINE;
 
-                PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
-                break;
+                m_baselineStartIndex = PatientInfo.getInstance().getRealtimeData().GetCurrentDataIndex();
 
-            case DLG_ID_HR_NOT_STABLE:
-                // this is the continue button when the hr is not stable
-                SwitchToTestingView();
-                InactivateTestingView();
-                m_testingState = Testing_State.STABLE_5SEC_COUNTDOWN;
-                m_periodicTimer.Start(this, ONE_SEC, false);
-                m_nCountdownSecLeft = AFTER_STABLE_DELAY_SECONDS;
-                UpdateBottomCountdownNumber(m_nCountdownSecLeft);
-                m_oneShotTimer.Cancel();
                 break;
 
             case DLG_ID_CANCEL_TEST:
@@ -432,9 +442,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         switch (dialogID)
         {
-            case DLG_ID_HR_NOT_STABLE:
+            case DLG_ID_HR_OUT_OF_RANGE:
             case DLG_ID_PRESSURE_ERROR_START:
             case DLG_ID_PRESSURE_ERROR_RUNNING:
+            case DLG_ID_PPG_CLIPPING:
+            case DLG_ID_PPG_FLATLINE:
+            case DLG_ID_PPG_HF_NOISE:
                 ExitToMainActivity();
                 break;
         }
@@ -558,6 +571,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_txtHeartRate.setVisibility(View.VISIBLE);
         HeaderFooterControl.getInstance().SetBottomMessage(this, getString(R.string.keep_arm_steady));
 
+        m_oneShotTimer.Cancel();
         m_oneShotTimer.Start(this, BASELINE_TIME_MS, true);
 
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
@@ -972,9 +986,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
                     m_testingState = Testing_State.BASELINE;
                     m_baselineStartIndex = PatientInfo.getInstance().getRealtimeData().GetCurrentDataIndex();
-
-                    // start checking for stability
-                    PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
                 }
                 break;
 
@@ -982,29 +993,71 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: BASELINE");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    SwitchToTestingView();
-                    InactivateTestingView();
-                    m_testingState = Testing_State.STABLE_5SEC_COUNTDOWN;
-                    m_periodicTimer.Start(this, ONE_SEC, false);
-                    m_nCountdownSecLeft = AFTER_STABLE_DELAY_SECONDS;
-                    UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                    // baseline is over, now check the signal for a good heart rate before proceeding
+                    if (!PatientInfo.getInstance().getRealtimeData().WasHeartRateInRange(m_baselineStartIndex))
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                                getString(R.string.dlg_title_hr_out_of_range),
+                                getString(R.string.dlg_msg_hr_out_of_range),
+                                "Yes",
+                                "End Test",
+                                this, DLG_ID_HR_OUT_OF_RANGE, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
+                    // baseline is over, now check the signal for high frequency noise before proceeding
+                    else if (PatientInfo.getInstance().getRealtimeData().DidPPGSignalContainHighFrequencyNoise(m_baselineStartIndex))
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                                getString(R.string.dlg_title_ppg_hf_noise),
+                                getString(R.string.dlg_msg_ppg_hf_noise),
+                                "Yes",
+                                "End Test",
+                                this, DLG_ID_PPG_HF_NOISE, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
+                    else
+                    {
+                        SwitchToTestingView();
+                        InactivateTestingView();
+                        m_testingState = Testing_State.BASELINE_GOOD_5SEC_COUNTDOWN;
+                        m_periodicTimer.Start(this, ONE_SEC, false);
+                        m_nCountdownSecLeft = AFTER_STABLE_DELAY_SECONDS;
+                        UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                    }
                     m_oneShotTimer.Cancel();
                 }
-                else if (event == Testing_Events.EVT_HR_NOT_STABLE)
+                else if (event == Testing_Events.EVT_PPG_FLATLINING)
                 {
                     if (m_bIsConnected)
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                                getString(R.string.dlg_title_hr_not_stable),
-                                getString(R.string.dlg_msg_hr_not_stable),
+                                getString(R.string.dlg_title_ppg_flatline),
+                                getString(R.string.dlg_msg_ppg_flatline),
                                 "Yes",
                                 "End Test",
-                                this, DLG_ID_HR_NOT_STABLE, this);
+                                this, DLG_ID_PPG_FLATLINE, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
+                }
+                else if (event == Testing_Events.EVT_PPG_IS_CLIPPING)
+                {
+                    if (m_bIsConnected)
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
+                                getString(R.string.dlg_title_ppg_clipping),
+                                getString(R.string.dlg_msg_ppg_clipping),
+                                "Yes",
+                                "End Test",
+                                this, DLG_ID_PPG_CLIPPING, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                 }
                 break;
 
-            case STABLE_5SEC_COUNTDOWN:
+            case BASELINE_WITH_ERROR_DIALOG_DISPLAYING:
+                break;
+
+            case BASELINE_GOOD_5SEC_COUNTDOWN:
                 if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
                 {
                     m_nCountdownSecLeft--;
@@ -1172,9 +1225,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             SwitchToStabilityView();
                             ActivateBaselineView();
                             m_testingState = Testing_State.BASELINE;
-
-                            // start checking for stability
-                            PatientInfo.getInstance().getRealtimeData().StartHeartRateValidation();
                         }
                         else
                         {

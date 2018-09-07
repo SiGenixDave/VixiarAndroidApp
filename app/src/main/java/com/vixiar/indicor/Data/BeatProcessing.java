@@ -3,7 +3,7 @@ package com.vixiar.indicor.Data;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.vixiar.indicor.Data.TestConstants.SAMPLES_PER_SECOND;
+import static com.vixiar.indicor.Data.AppConstants.SAMPLES_PER_SECOND;
 
 public class BeatProcessing
 {
@@ -599,7 +599,7 @@ public class BeatProcessing
             }
             else
             {
-                double heartRate = HeartRateInfo.getInstance().CalculateHeartRate(timeMarkerN, timeMarkerNPlus1, 1);
+                double heartRate = HeartRateInfo.getInstance().HeartRate(timeMarkerN, timeMarkerNPlus1, 1);
                 heartRateAvgSum += heartRate;
                 numHeartbeats++;
                 numBeats--;

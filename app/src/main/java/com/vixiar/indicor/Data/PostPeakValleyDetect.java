@@ -2,7 +2,10 @@ package com.vixiar.indicor.Data;
 
 import java.util.ArrayList;
 
-import static com.vixiar.indicor.Data.TestConstants.SAMPLES_PER_SECOND;
+import static com.vixiar.indicor.Data.AppConstants.BASELINE_SCALE_FACTOR;
+import static com.vixiar.indicor.Data.AppConstants.POST_VALSALVA_SCALE_FACTOR;
+import static com.vixiar.indicor.Data.AppConstants.SAMPLES_PER_SECOND;
+import static com.vixiar.indicor.Data.AppConstants.VALSALVA_SCALE_FACTOR;
 
 public class PostPeakValleyDetect
 {
@@ -16,10 +19,6 @@ public class PostPeakValleyDetect
     {
         return ourInstance;
     }
-
-    private final double BASELINE_SCALE_FACTOR = 0.7;
-    private final double VALSALVA_SCALE_FACTOR = 0.8;
-    private final double POST_VALSALVA_SCALE_FACTOR = 1.0;
 
     // this is a peak detection method from a paper titled:
     // A Robust Algorithm for Real-Time Peak
@@ -172,8 +171,8 @@ public class PostPeakValleyDetect
 
         if (detectionType == eHarryPeakDetectionType.BASELINE)
         {
-            mean = CalculateMean(startIndex, endIndex, dataSet);
-            stdev = CalculateStdev(startIndex, endIndex, dataSet);
+            mean = DataMath.getInstance().CalculateMean(startIndex, endIndex, dataSet);
+            stdev = DataMath.getInstance().CalculateStdev(startIndex, endIndex, dataSet);
         }
 
         // find everything that qualifies as a peak
@@ -189,20 +188,20 @@ public class PostPeakValleyDetect
                 if (currentIndex < startIndex + (SAMPLES_PER_SECOND * 2))
                 {
                     // in the first two seconds they are just the first two seconds
-                    mean = CalculateMean(startIndex, startIndex + (SAMPLES_PER_SECOND * 2), dataSet);
-                    stdev = CalculateStdev(startIndex, startIndex + (SAMPLES_PER_SECOND * 2), dataSet);
+                    mean = DataMath.getInstance().CalculateMean(startIndex, startIndex + (SAMPLES_PER_SECOND * 2), dataSet);
+                    stdev = DataMath.getInstance().CalculateStdev(startIndex, startIndex + (SAMPLES_PER_SECOND * 2), dataSet);
                 }
                 else if (currentIndex > endIndex - (SAMPLES_PER_SECOND * 2))
                 {
                     // in the last two seconds, they are just the last two seconds
-                    mean = CalculateMean(endIndex - (SAMPLES_PER_SECOND * 2), endIndex, dataSet);
-                    stdev = CalculateStdev(endIndex - (SAMPLES_PER_SECOND * 2), endIndex, dataSet);
+                    mean = DataMath.getInstance().CalculateMean(endIndex - (SAMPLES_PER_SECOND * 2), endIndex, dataSet);
+                    stdev = DataMath.getInstance().CalculateStdev(endIndex - (SAMPLES_PER_SECOND * 2), endIndex, dataSet);
                 }
                 else
                 {
                     // otherwise they are one second before and one second after the current time
-                    mean = CalculateMean(currentIndex - (SAMPLES_PER_SECOND * 1), currentIndex + (SAMPLES_PER_SECOND * 1), dataSet);
-                    stdev = CalculateStdev(currentIndex - (SAMPLES_PER_SECOND * 1), currentIndex + (SAMPLES_PER_SECOND * 1), dataSet);
+                    mean = DataMath.getInstance().CalculateMean(currentIndex - (SAMPLES_PER_SECOND * 1), currentIndex + (SAMPLES_PER_SECOND * 1), dataSet);
+                    stdev = DataMath.getInstance().CalculateStdev(currentIndex - (SAMPLES_PER_SECOND * 1), currentIndex + (SAMPLES_PER_SECOND * 1), dataSet);
                 }
             }
 
@@ -297,28 +296,6 @@ public class PostPeakValleyDetect
             pv.valleys.add(lowestValleyLocation);
         }
         return pv;
-    }
-
-    private double CalculateMean(int startIndex, int endIndex, ArrayList<RealtimeDataSample> dataSet)
-    {
-        int dataSum = 0;
-        for (int i = startIndex; i < endIndex; i++)
-        {
-            dataSum += dataSet.get(i).m_PPG;
-        }
-        return dataSum / (endIndex - startIndex);
-    }
-
-    private double CalculateStdev(int startIndex, int endIndex, ArrayList<RealtimeDataSample> dataSet)
-    {
-        double diffSumSquared = 0.0;
-        double mean = CalculateMean(startIndex, endIndex, dataSet);
-
-        for (int i = startIndex; i < endIndex; i++)
-        {
-            diffSumSquared += Math.pow((dataSet.get(i).m_PPG - mean), 2);
-        }
-        return Math.sqrt(diffSumSquared / (endIndex - startIndex));
     }
 
     public enum ePostPeakDetection

@@ -1,6 +1,5 @@
 package com.vixiar.indicor.Data;
 
-import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -127,7 +126,7 @@ public class HeartRateInfo
             Log.d("AVG_HR", " firstPeakSampleIndex: " + firstPeakSampleIndex + " lastPeakSampleIndex: " + lastPeakSampleIndex);
 
             // Calculate the average heart rate over the sample window
-            m_CurrentBeatsPerMinute = CalculateHeartRate(firstPeakSampleIndex, lastPeakSampleIndex, m_NumHeartBeatsToAverage);
+            m_CurrentBeatsPerMinute = HeartRate(firstPeakSampleIndex, lastPeakSampleIndex, m_NumHeartBeatsToAverage);
 
             // Save the heart rate and the sample index (1st peak) where the average heart rate calculation started
             HistoricalData historicalData = new HistoricalData();
@@ -209,14 +208,14 @@ public class HeartRateInfo
 
     // Calculates the heart rate. The first and last peak is used to calculate the time span. The value returned
     // is in units beats / minute
-    public double CalculateHeartRate(int firstPeakIndex, int lastPeakIndex, int numHeartBeats)
+    public double HeartRate(int firstPeakIndex, int lastPeakIndex, int numHeartBeats)
     {
         if (numHeartBeats < 1)
         {
             return -1.0;
         }
 
-        double timeSpanSecs = (lastPeakIndex - firstPeakIndex) / (double)TestConstants.SAMPLES_PER_SECOND;
+        double timeSpanSecs = (lastPeakIndex - firstPeakIndex) / (double) AppConstants.SAMPLES_PER_SECOND;
 
         // make sure we're not dividing by 0
         if (timeSpanSecs > 0)
@@ -229,7 +228,7 @@ public class HeartRateInfo
         }
     }
 
-    public double GetCurrentHeartRate(int firstPeakIndex, int numHeartBeatsToAverage)
+    public double CalculateEndHeartRateStartingAt(int firstPeakIndex, int numHeartBeatsToAverage)
     {
         double hr;
 
@@ -237,17 +236,27 @@ public class HeartRateInfo
         List<Integer> peaks = BeatProcessing.getInstance().GetItemsBetween(firstPeakIndex, -1,
                 RealtimePeakValleyDetect.eSlopeZero.PEAK, RealtimePeakValleyDetect.getInstance().GetPeaksAndValleys());
 
-        // see if there are enough peaks
-        if (peaks.size() > numHeartBeatsToAverage)
+        // if numBeatsToAverage is set to -1, the user wants to calculate the HR using all of the beats
+        if (numHeartBeatsToAverage == -1)
         {
-            int startIndex = peaks.get(peaks.size() - (numHeartBeatsToAverage + 1) );
-            int endIndex = peaks.get(peaks.size()-1);
-            hr = CalculateHeartRate(startIndex, endIndex, numHeartBeatsToAverage);
+            int startIndex = peaks.get(0);
+            int endIndex = peaks.get(peaks.size() - 1);
+            hr = HeartRate(startIndex, endIndex, peaks.size() - 1);
         }
         else
         {
-            // indicat that there's not enough peaks yet
-            hr = 0.0;
+            // see if there are enough peaks
+            if (peaks.size() > numHeartBeatsToAverage)
+            {
+                int startIndex = peaks.get(peaks.size() - (numHeartBeatsToAverage + 1));
+                int endIndex = peaks.get(peaks.size() - 1);
+                hr = HeartRate(startIndex, endIndex, numHeartBeatsToAverage);
+            }
+            else
+            {
+                // indicat that there's not enough peaks yet
+                hr = 0.0;
+            }
         }
         return hr;
     }
@@ -361,7 +370,7 @@ public class HeartRateInfo
 
             // Method requires the number of heart beats, since a heart beat is considered one peak to the next
             // peak, the value passed in for the number of methods is the number of peaks - 1
-            return CalculateHeartRate(firstPeakIndex, lastPeakIndex, peaks.size() - 1);
+            return HeartRate(firstPeakIndex, lastPeakIndex, peaks.size() - 1);
         }
         else
         {
@@ -408,7 +417,7 @@ public class HeartRateInfo
         {
             int firstPeakIndex = peaks.get(index);
             int lastPeakIndex = peaks.get(index + numHeartbeatsInAvg);
-            double heartRate = CalculateHeartRate(firstPeakIndex, lastPeakIndex, numHeartbeatsInAvg);
+            double heartRate = HeartRate(firstPeakIndex, lastPeakIndex, numHeartbeatsInAvg);
             // New minimum detected
             if (heartRate < minHeartRate)
             {
