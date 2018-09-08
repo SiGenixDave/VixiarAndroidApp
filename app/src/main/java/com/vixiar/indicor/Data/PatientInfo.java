@@ -42,17 +42,7 @@ public class PatientInfo
     // Constants
     private static int SAMPLES_IN_TEN_SECONDS = (50 * 10);
 
-    // calculated data
     private final int NUM_TESTS = 3;
-    private double[] m_aCalcPAAvgRest = new double[NUM_TESTS];
-    private double[] m_aCalcHRAvgRest = new double[NUM_TESTS];
-    private double[] m_aCalcPAAvgVM = new double[NUM_TESTS];
-    private double[] m_aCalcHRAvgVM = new double[NUM_TESTS];
-    private double[] m_aCalcMinPA = new double[NUM_TESTS];
-    private double[] m_aCalcEndPA = new double[NUM_TESTS];
-    private double[] m_aCalcMinPAR = new double[NUM_TESTS];
-    private double[] m_aCalcEndPAR = new double[NUM_TESTS];
-    private double[] m_aCalcMinHRVM = new double[NUM_TESTS];
     private double[] m_aCalcLVEDP = new double[NUM_TESTS];
 
     public static PatientInfo getInstance()
@@ -72,16 +62,7 @@ public class PatientInfo
         m_testDateTime = "";
         m_gender = "";
         m_notes = "";
-        Arrays.fill(m_aCalcEndPA, 0.0);
-        Arrays.fill(m_aCalcEndPAR, 0.0);
-        Arrays.fill(m_aCalcHRAvgRest, 0.0);
-        Arrays.fill(m_aCalcHRAvgVM, 0.0);
         Arrays.fill(m_aCalcLVEDP, 0.0);
-        Arrays.fill(m_aCalcMinHRVM, 0.0);
-        Arrays.fill(m_aCalcMinPA, 0.0);
-        Arrays.fill(m_aCalcMinPAR, 0.0);
-        Arrays.fill(m_aCalcPAAvgRest, 0.0);
-        Arrays.fill(m_aCalcPAAvgVM, 0.0);
         rtd.Initialize();
     }
 
@@ -235,70 +216,25 @@ public class PatientInfo
     // test number is 0 relative
     public boolean CalculateResults(int testNumber)
     {
-        TestMarkers tm = GetTestMarkers(testNumber);
+        // run Harry's peak detection
+        PeaksAndValleys pv = PostPeakValleyDetect.getInstance().HarrySilberPeakDetection(testNumber, PatientInfo.getInstance().getRealtimeData().GetFilteredData());
+        PostProcessing.getInstance().CalculatePostProcessingResults(testNumber, pv, PatientInfo.getInstance().getRealtimeData().GetFilteredData());
 
-        // make sure the test markers were found
-        if (tm.endIndex != 0 && tm.startIndex != 0)
+        // get the results we need to calculate LVEDP
+        double endPAR = PostProcessing.getInstance().getEndPAR_PV_BL(testNumber);
+        double avgHrRest = PostProcessing.getInstance().getBLHR_Avg(testNumber);
+
+        // if something went wrong, indicate that by setting the LVEDP to 0
+        if (endPAR != 0)
         {
-            // make sure there's at least 10 seconds worth of samples before the start of valsalva
-            if (tm.startIndex > SAMPLES_IN_TEN_SECONDS)
-            {
-                // get the avg PA during rest (by definition, rest ends 10 seconds before the patient hits the 16mm pressure point)
-                //m_aCalcPAAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA((tm.startIndex - SAMPLES_IN_TEN_SECONDS), 12);
-
-                // get the avg HR during rest
-                //m_aCalcHRAvgRest[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgHR((tm.startIndex - SAMPLES_IN_TEN_SECONDS), 12);
-            }
-            else
-            {
-                m_aCalcPAAvgRest[testNumber] = 0;
-                m_aCalcHRAvgRest[testNumber] = 0;
-            }
-
-            // get the avg PA during Valsalva
-            //m_aCalcPAAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgPAOverRange(tm.startIndex, tm.endIndex);
-
-            // get the avg HR during Valsalva
-            //m_aCalcHRAvgVM[testNumber] = HeartRateInfo.getInstance().GetAvgHROverRange(tm.startIndex, tm.endIndex);
-
-            // get the min PA during Valsalva
-            //m_aCalcMinPA[testNumber] = HeartRateInfo.getInstance().GetMinPAOverRange(tm.startIndex, tm.endIndex);
-
-            // get the end PA during Valsalva
-            //m_aCalcEndPA[testNumber] = HeartRateInfo.getInstance().GetHistoricalAvgPA(tm.endIndex, 1);
-
-            // make sure that the PA Avg rest isn't 0
-            if (m_aCalcPAAvgRest[testNumber] > 0)
-            {
-                m_aCalcMinPAR[testNumber] = m_aCalcMinPA[testNumber] / m_aCalcPAAvgRest[testNumber];
-                m_aCalcEndPAR[testNumber] = m_aCalcEndPA[testNumber] / m_aCalcPAAvgRest[testNumber];
-            }
-            else
-            {
-                m_aCalcMinPAR[testNumber] = 0;
-                m_aCalcEndPAR[testNumber] = 0;
-            }
-
-            // get the end HR during valsalva
-            //m_aCalcMinHRVM[testNumber] = HeartRateInfo.getInstance().MinimumHeartRate(tm.startIndex, tm.endIndex, 1);
-
-            // if something went wrong, indicate that by setting the LVEDP to 0
-            if (m_aCalcMinPAR[testNumber] != 0)
-            {
-                m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * m_aCalcMinPAR[testNumber]) + (0.03415 * m_height_Inches * 2.54) -
-                        (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) +
-                        (0.16182 * m_aCalcHRAvgRest[testNumber]) - (0.06949 * m_age_years);
-            }
-            else
-            {
-                m_aCalcLVEDP[testNumber] = 0;
-            }
-            return true;
+            m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * endPAR) + (0.03415 * m_height_Inches * 2.54) - (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) + (0.16182 * avgHrRest) - (0.06949 * m_age_years);
         }
         else
         {
+            m_aCalcLVEDP[testNumber] = 0;
             return false;
         }
+        return true;
     }
 
     // returns an array of PPG values for 30 seconds wih the center being the
@@ -339,7 +275,6 @@ public class PatientInfo
 
         return results;
     }
-
 
 
     // get the start and end of valsalva markers for a certain test
@@ -406,14 +341,11 @@ public class PatientInfo
             // if you want to load it via usb
             context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
 
-        }
-        catch (FileNotFoundException e)
+        } catch (FileNotFoundException e)
         {
             e.printStackTrace();
-            Log.i(TAG, "******* File not found. Did you"
-                    + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
-        }
-        catch (IOException e)
+            Log.i(TAG, "******* File not found. Did you" + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
+        } catch (IOException e)
         {
             e.printStackTrace();
         }
@@ -444,28 +376,21 @@ public class PatientInfo
 
         writer.println("Notes:, " + m_notes);
 
+/*
+
         // print all of the calculated data
         writer.println("Calculated values-Trial, 1, 2, 3");
-        writer.println("PA avg rest, " + FormatDoubleForPrint(m_aCalcPAAvgRest[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcPAAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgRest[2]));
-        writer.println("HR avg (BPM) rest, " + FormatDoubleForPrint(m_aCalcHRAvgRest[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcHRAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgRest[2]));
-        writer.println("PA avg VM, " + FormatDoubleForPrint(m_aCalcPAAvgVM[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcPAAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgVM[2]));
-        writer.println("HR avg (BPM) VM, " + FormatDoubleForPrint(m_aCalcHRAvgVM[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcHRAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgVM[2]));
-        writer.println("Min PA, " + FormatDoubleForPrint(m_aCalcMinPA[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcMinPA[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPA[2]));
-        writer.println("End PA, " + FormatDoubleForPrint(m_aCalcEndPA[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcEndPA[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPA[2]));
-        writer.println("Min PAR, " + FormatDoubleForPrint(m_aCalcMinPAR[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcMinPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPAR[2]));
-        writer.println("End PAR, " + FormatDoubleForPrint(m_aCalcEndPAR[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcEndPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPAR[2]));
-        writer.println("Min HR, " + FormatDoubleForPrint(m_aCalcMinHRVM[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcMinHRVM[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHRVM[2]));
-        writer.println("LVEDP, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
+        writer.println("PA avg rest, " + FormatDoubleForPrint(m_aCalcPAAvgRest[0]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgRest[2]));
+        writer.println("HR avg (BPM) rest, " + FormatDoubleForPrint(m_aCalcHRAvgRest[0]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgRest[2]));
+        writer.println("PA avg VM, " + FormatDoubleForPrint(m_aCalcPAAvgVM[0]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgVM[2]));
+        writer.println("HR avg (BPM) VM, " + FormatDoubleForPrint(m_aCalcHRAvgVM[0]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgVM[2]));
+        writer.println("Min PA, " + FormatDoubleForPrint(m_aCalcMinPA[0]) + ", " + FormatDoubleForPrint(m_aCalcMinPA[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPA[2]));
+        writer.println("End PA, " + FormatDoubleForPrint(m_aCalcEndPA[0]) + ", " + FormatDoubleForPrint(m_aCalcEndPA[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPA[2]));
+        writer.println("Min PAR, " + FormatDoubleForPrint(m_aCalcMinPAR[0]) + ", " + FormatDoubleForPrint(m_aCalcMinPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPAR[2]));
+        writer.println("End PAR, " + FormatDoubleForPrint(m_aCalcEndPAR[0]) + ", " + FormatDoubleForPrint(m_aCalcEndPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPAR[2]));
+        writer.println("Min HR, " + FormatDoubleForPrint(m_aCalcMinHRVM[0]) + ", " + FormatDoubleForPrint(m_aCalcMinHRVM[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHRVM[2]));
+        writer.println("LVEDP, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
+*/
 
         // print all of markers
         writer.println("Marker index, Type");
@@ -479,8 +404,7 @@ public class PatientInfo
         writer.println("Time (sec.), PPG (raw), Pressure (mmHg)");
         for (int i = 0; i < rtd.GetRawData().size(); i++)
         {
-            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetRawData().get(i).m_PPG + ", " +
-                    FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetRawData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
             t += 0.02;
         }
 
@@ -489,8 +413,7 @@ public class PatientInfo
         writer.println("Time (sec.), PPG (5Hz filter), Pressure (mmHg)");
         for (int i = 0; i < rtd.GetFilteredData().size(); i++)
         {
-            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " +
-                    FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
             t += 0.02;
         }
 

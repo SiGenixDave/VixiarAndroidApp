@@ -560,7 +560,7 @@ public class PostProcessing
         writer.println("Subject ID, " + PatientInfo.getInstance().get_patientId() + ", Date, " + PatientInfo.getInstance().get_testDateTime());
         writer.println("Calculated values-Trial, 1, 2, 3, Mean");
 
-        PrintVal(writer,"End PAR - peak values-BL", m_aEndPAR_PV_BL);
+        PrintVal(writer, "End PAR - peak values-BL", m_aEndPAR_PV_BL);
         PrintVal(writer, "min PAR - peak values-BL", m_aMinPAR_PV_BL);
         PrintVal(writer, "End PAR - avg of 3 values-BL", m_aEndPAR_Avg3_BL);
         PrintVal(writer, "min PAR - avg of 3 values-BL", m_aMinPAR_Avg3_BL);
@@ -608,7 +608,7 @@ public class PostProcessing
         PrintVal(writer, "Ph2 HR min", m_aPh2HR_min);
         PrintVal(writer, "Ph2 PA avg", m_aPh2PA_avg);
     }
-    
+
     private void PrintVal(PrintWriter writer, String label, double[] val)
     {
         double total = 0;
@@ -651,13 +651,37 @@ public class PostProcessing
 
         if (count > 0)
         {
-            writer.println(FormatDoubleForPrint(total/count));
+            writer.println(FormatDoubleForPrint(total / count));
         }
         else
         {
             writer.println("ERROR");
         }
 
+    }
+
+    public double getEndPAR_PV_BL(int testNumber)
+    {
+        if (testNumber < m_aEndPAR_PV_BL.length)
+        {
+            return m_aEndPAR_PV_BL[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+
+    public double getBLHR_Avg(int testNumber)
+    {
+        if (testNumber < m_aBLHR_Avg.length)
+        {
+            return m_aBLHR_Avg[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
     }
 
     private String FormatDoubleForPrint(double value)
