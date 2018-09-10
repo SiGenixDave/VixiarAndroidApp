@@ -1,10 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE resources [
-    <!ENTITY end_test_warning1 "\n\nIF YOU SELECT \u0022END TEST\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
-    WILL BE LOST.">
-    <!ENTITY end_test_warning2 "\n\nIF YOU SELECT \u0022YES\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
-    WILL BE LOST.">
-    ]>
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE resources [<!ENTITY end_test_warning1 "\n\nIF YOU SELECT \u0022END TEST\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
+    WILL BE LOST."><!ENTITY end_test_warning2 "\n\nIF YOU SELECT \u0022YES\u0022, ALL DATA COLLECTED FROM THIS TEST AND PATIENT INFORMATION
+    WILL BE LOST.">]>
 
 <resources>
     <string name="app_name">Indicor Navigator</string>

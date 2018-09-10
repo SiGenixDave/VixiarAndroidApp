@@ -20,7 +20,7 @@ android {
     productFlavors {
     }
     aaptOptions {
-        noCompress "pdf"
+        noCompress "pdf", "mp4"
     }
     allprojects {
         gradle.projectsEvaluated {
