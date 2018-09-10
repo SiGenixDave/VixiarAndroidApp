@@ -142,7 +142,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int VALSALVA_LOADING_RESULTS_DELAY_MS = 3000;
     private final int VALSALVA_LOADING_FINAL_RESULTS_DELAY_MS = 15000;
     private final int ONE_SEC = 1000;
-    private final int NEXT_TEST_DELAY_SECONDS = 60;
+    private final int NEXT_TEST_DELAY_SECONDS = 30;
     private final int VALSALVA_DURATION_SECONDS = 10;
     private final int PRESSURE_OUT_MAX_TIME_MS = 1000;
     private final int VALSALVA_PRESSURE_ERROR_IMMEDIATELY_AFTER_SECONDS = 4;
