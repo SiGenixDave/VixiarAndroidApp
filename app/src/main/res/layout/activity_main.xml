@@ -177,6 +177,7 @@
                 android:layout_height="@dimen/main_screen_icon_size"
                 android:background="@null"
                 android:scaleType="fitXY"
+                android:onClick="onVideoClick"
                 android:src="@drawable/training_video_button"
                 android:visibility="visible" />
 
@@ -186,6 +187,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/roboto_light"
                 android:paddingStart="50dp"
+                android:onClick="onVideoClick"
                 android:text="@string/training"
                 android:textSize="@dimen/main_screen_label_size" />
             />
