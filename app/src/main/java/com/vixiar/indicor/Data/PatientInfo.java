@@ -39,9 +39,8 @@ public class PatientInfo
     private String m_notes;
     private RealtimeData rtd = new RealtimeData();
 
-    // Constants
-    private static int SAMPLES_IN_TEN_SECONDS = (50 * 10);
 
+    // Constants
     private final int NUM_TESTS = 3;
     private double[] m_aCalcLVEDP = new double[NUM_TESTS];
 
@@ -217,23 +216,11 @@ public class PatientInfo
     public boolean CalculateResults(int testNumber)
     {
         // run Harry's peak detection
-        PeaksAndValleys pv = PostPeakValleyDetect.getInstance().HarrySilberPeakDetection(testNumber, PatientInfo.getInstance().getRealtimeData().GetFilteredData());
-        PostProcessing.getInstance().CalculatePostProcessingResults(testNumber, pv, PatientInfo.getInstance().getRealtimeData().GetFilteredData());
+        PeaksAndValleys pv = PostPeakValleyDetect.getInstance().HarrySilberPeakDetection(testNumber, PatientInfo.getInstance().getRealtimeData().GetFilteredData(), false);
+        PostProcessing.getInstance().CalculatePostProcessingResults(testNumber, pv, PatientInfo.getInstance().getRealtimeData().GetFilteredData(), false);
 
-        // get the results we need to calculate LVEDP
-        double endPAR = PostProcessing.getInstance().getEndPAR_PV_BL(testNumber);
-        double avgHrRest = PostProcessing.getInstance().getBLHR_Avg(testNumber);
+        m_aCalcLVEDP[testNumber] = PostProcessing.getInstance().getLVEDP(testNumber, m_height_Inches, m_diastolicBloodPressure, m_systolicBloodPressure, m_age_years);
 
-        // if something went wrong, indicate that by setting the LVEDP to 0
-        if (endPAR != 0)
-        {
-            m_aCalcLVEDP[testNumber] = -4.52409 + (21.25779 * endPAR) + (0.03415 * m_height_Inches * 2.54) - (0.20827 * m_diastolicBloodPressure) + (0.09374 * m_systolicBloodPressure) + (0.16182 * avgHrRest) - (0.06949 * m_age_years);
-        }
-        else
-        {
-            m_aCalcLVEDP[testNumber] = 0;
-            return false;
-        }
         return true;
     }
 
