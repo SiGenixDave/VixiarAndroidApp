@@ -228,7 +228,7 @@ public class PostProcessing
     }
 
     // test number is 0 relative
-    public boolean CalculatePostProcessingResults(int testNumber, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
+    public boolean CalculatePostProcessingResults(int testNumber, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet, boolean includePostVMResults)
     {
         TestMarkers tm;
         tm = PatientInfo.getInstance().GetTestMarkers(testNumber);
@@ -352,31 +352,34 @@ public class PostProcessing
                 m_aRMS_Ph1[testNumber] = BeatProcessing.getInstance().GetRMSInRange(vStartIndex, vStartIndex + (SAMPLES_PER_SECOND * 3), dataSet);
                 PrintResultToConsole("RMS Ph1", testNumber, m_aRMS_Ph1[testNumber]);
 
-                // 19 DPR-3.3.33
-                // RMS Ph4
-                int ph4Index = vEndIndex + ((int) (SAMPLES_PER_SECOND * 2.5));
-                m_aRMS_Ph4[testNumber] = BeatProcessing.getInstance().GetRMSInRange(ph4Index, ph4Index + (SAMPLES_PER_SECOND * 10), dataSet);
-                PrintResultToConsole("RMS Ph4", testNumber, m_aRMS_Ph4[testNumber]);
+                if (includePostVMResults)
+                {
+                    // 19 DPR-3.3.33
+                    // RMS Ph4
+                    int ph4Index = vEndIndex + ((int) (SAMPLES_PER_SECOND * 2.5));
+                    m_aRMS_Ph4[testNumber] = BeatProcessing.getInstance().GetRMSInRange(ph4Index, ph4Index + (SAMPLES_PER_SECOND * 10), dataSet);
+                    PrintResultToConsole("RMS Ph4", testNumber, m_aRMS_Ph4[testNumber]);
 
-                // 20 3.3.21
-                // RMS BL PAR-PV
-                m_aRMSBLPAR_PV[testNumber] = m_aRMSBL[testNumber] / m_aRMS_Ph4[testNumber];
-                PrintResultToConsole("RMS BL PAR-PV", testNumber, m_aRMSBLPAR_PV[testNumber]);
+                    // 20 3.3.21
+                    // RMS BL PAR-PV
+                    m_aRMSBLPAR_PV[testNumber] = m_aRMSBL[testNumber] / m_aRMS_Ph4[testNumber];
+                    PrintResultToConsole("RMS BL PAR-PV", testNumber, m_aRMSBLPAR_PV[testNumber]);
 
-                // 21 3.3.22
-                // RMS Ph1 PAR-PV
-                m_aRMSPh1PAR_PV[testNumber] = m_aRMS_Ph1[testNumber] / m_aRMS_Ph4[testNumber];
-                PrintResultToConsole("RMS Ph1 PAR-PV", testNumber, m_aRMSPh1PAR_PV[testNumber]);
+                    // 21 3.3.22
+                    // RMS Ph1 PAR-PV
+                    m_aRMSPh1PAR_PV[testNumber] = m_aRMS_Ph1[testNumber] / m_aRMS_Ph4[testNumber];
+                    PrintResultToConsole("RMS Ph1 PAR-PV", testNumber, m_aRMSPh1PAR_PV[testNumber]);
 
-                // 22 3.3.23
-                // RMS End PAR-PV
-                m_aRMSEndPAR_PV[testNumber] = m_aRMSEnd[testNumber] / m_aRMS_Ph4[testNumber];
-                PrintResultToConsole("RMS End PAR-PV", testNumber, m_aRMSEndPAR_PV[testNumber]);
+                    // 22 3.3.23
+                    // RMS End PAR-PV
+                    m_aRMSEndPAR_PV[testNumber] = m_aRMSEnd[testNumber] / m_aRMS_Ph4[testNumber];
+                    PrintResultToConsole("RMS End PAR-PV", testNumber, m_aRMSEndPAR_PV[testNumber]);
 
-                // 23 3.3.24
-                // RMS Min PAR-PV
-                m_aRMSMinPAR_PV[testNumber] = m_aRMSMin[testNumber] / m_aRMS_Ph4[testNumber];
-                PrintResultToConsole("RMS Min PAR-PV", testNumber, m_aRMSMinPAR_PV[testNumber]);
+                    // 23 3.3.24
+                    // RMS Min PAR-PV
+                    m_aRMSMinPAR_PV[testNumber] = m_aRMSMin[testNumber] / m_aRMS_Ph4[testNumber];
+                    PrintResultToConsole("RMS Min PAR-PV", testNumber, m_aRMSMinPAR_PV[testNumber]);
+                }
 
                 // 24 DPR-3.3.29
                 // Ph1 PA - avg 3
@@ -403,57 +406,60 @@ public class PostProcessing
                 m_aRMSMinPAR_VM[testNumber] = m_aRMSMin[testNumber] / m_aRMS_Ph1[testNumber];
                 PrintResultToConsole("RMS Min PAR-VM", testNumber, m_aRMSMinPAR_VM[testNumber]);
 
-                // 38 DPR-3.3.31
-                // Ph4 PA - peak
-                vl = BeatProcessing.getInstance().GetMaxPAInRange(vEndIndex + (int) ((SAMPLES_PER_SECOND * 2.5)), vEndIndex + (int) ((SAMPLES_PER_SECOND * 12.5)), pv, dataSet);
-                m_aPh4PA_Peak[testNumber] = vl.value;
-                ph4PAPeakIndex = vl.location;
-                PrintResultToConsole("Ph4 PA - peak", testNumber, m_aPh4PA_Peak[testNumber]);
+                if (includePostVMResults)
+                {
+                    // 38 DPR-3.3.31
+                    // Ph4 PA - peak
+                    vl = BeatProcessing.getInstance().GetMaxPAInRange(vEndIndex + (int) ((SAMPLES_PER_SECOND * 2.5)), vEndIndex + (int) ((SAMPLES_PER_SECOND * 12.5)), pv, dataSet);
+                    m_aPh4PA_Peak[testNumber] = vl.value;
+                    ph4PAPeakIndex = vl.location;
+                    PrintResultToConsole("Ph4 PA - peak", testNumber, m_aPh4PA_Peak[testNumber]);
 
-                // 29 DPR-3.3.13
-                // BL PAR - peak values-PV
-                m_aBLPAR_PV[testNumber] = m_aPA_Avg_BL[testNumber] / m_aPh4PA_Peak[testNumber];
-                PrintResultToConsole("BL PAR - peak values-PV", testNumber, m_aBLPAR_PV[testNumber]);
+                    // 29 DPR-3.3.13
+                    // BL PAR - peak values-PV
+                    m_aBLPAR_PV[testNumber] = m_aPA_Avg_BL[testNumber] / m_aPh4PA_Peak[testNumber];
+                    PrintResultToConsole("BL PAR - peak values-PV", testNumber, m_aBLPAR_PV[testNumber]);
 
-                // 30 DPR-3.3.14
-                // Ph1 PAR - peak values-PV
-                m_aPh1PAR_PV[testNumber] = m_aPh1PA_Peak[testNumber] / m_aPh4PA_Peak[testNumber];
-                PrintResultToConsole("Ph1 PAR - peak values-PV", testNumber, m_aPh1PAR_PV[testNumber]);
+                    // 30 DPR-3.3.14
+                    // Ph1 PAR - peak values-PV
+                    m_aPh1PAR_PV[testNumber] = m_aPh1PA_Peak[testNumber] / m_aPh4PA_Peak[testNumber];
+                    PrintResultToConsole("Ph1 PAR - peak values-PV", testNumber, m_aPh1PAR_PV[testNumber]);
 
-                // 31 DPR-3.3.15
-                // End PAR - peak values-PV
-                m_aEndPAR_PV[testNumber] = m_aEndPA_Peak[testNumber] / m_aPh4PA_Peak[testNumber];
-                PrintResultToConsole("End PAR - peak values-PV", testNumber, m_aEndPAR_PV[testNumber]);
+                    // 31 DPR-3.3.15
+                    // End PAR - peak values-PV
+                    m_aEndPAR_PV[testNumber] = m_aEndPA_Peak[testNumber] / m_aPh4PA_Peak[testNumber];
+                    PrintResultToConsole("End PAR - peak values-PV", testNumber, m_aEndPAR_PV[testNumber]);
 
-                // 32 DPR-3.3.16
-                // Min PAR - peak values-PV
-                m_aMinPAR_PV[testNumber] = m_aMinPA_Peak[testNumber] / m_aPh4PA_Peak[testNumber];
-                PrintResultToConsole("Min PAR - peak values-PV", testNumber, m_aMinPAR_PV[testNumber]);
+                    // 32 DPR-3.3.16
+                    // Min PAR - peak values-PV
+                    m_aMinPAR_PV[testNumber] = m_aMinPA_Peak[testNumber] / m_aPh4PA_Peak[testNumber];
+                    PrintResultToConsole("Min PAR - peak values-PV", testNumber, m_aMinPAR_PV[testNumber]);
 
-                // 39 DPR-3.3.32
-                // Ph4 PA - avg 3
-                m_aPh4PA_Avg3[testNumber] = BeatProcessing.getInstance().GetPh4PAAvg3(ph4PAPeakIndex, vEndIndex, pv, dataSet);
-                PrintResultToConsole("Ph4 PA - avg 3", testNumber, m_aPh4PA_Avg3[testNumber]);
+                    // 39 DPR-3.3.32
+                    // Ph4 PA - avg 3
+                    m_aPh4PA_Avg3[testNumber] = BeatProcessing.getInstance().GetPh4PAAvg3(ph4PAPeakIndex, vEndIndex, pv, dataSet);
+                    PrintResultToConsole("Ph4 PA - avg 3", testNumber, m_aPh4PA_Avg3[testNumber]);
 
-                // 33 DPR-3.3.17
-                // BL PAR - avg of 3 values -PV
-                m_aBLPAR_Avg3_PV[testNumber] = m_aPA_Avg_BL[testNumber] / m_aPh4PA_Avg3[testNumber];
-                PrintResultToConsole("BL PAR - avg of 3 values -PV", testNumber, m_aBLPAR_Avg3_PV[testNumber]);
+                    // 33 DPR-3.3.17
+                    // BL PAR - avg of 3 values -PV
+                    m_aBLPAR_Avg3_PV[testNumber] = m_aPA_Avg_BL[testNumber] / m_aPh4PA_Avg3[testNumber];
+                    PrintResultToConsole("BL PAR - avg of 3 values -PV", testNumber, m_aBLPAR_Avg3_PV[testNumber]);
 
-                // 34 DPR-3.3.18
-                // Ph1 PAR - avg of 3 values-PV
-                m_aPh1PAR_Avg3_PV[testNumber] = m_aPh1PA_Avg3[testNumber] / m_aPh4PA_Avg3[testNumber];
-                PrintResultToConsole("Ph1 PAR - avg of 3 values-PV", testNumber, m_aPh1PAR_Avg3_PV[testNumber]);
+                    // 34 DPR-3.3.18
+                    // Ph1 PAR - avg of 3 values-PV
+                    m_aPh1PAR_Avg3_PV[testNumber] = m_aPh1PA_Avg3[testNumber] / m_aPh4PA_Avg3[testNumber];
+                    PrintResultToConsole("Ph1 PAR - avg of 3 values-PV", testNumber, m_aPh1PAR_Avg3_PV[testNumber]);
 
-                // 35 DPR-3.3.19
-                // End PAR - avg of 3 values-PV
-                m_aEndPAR_Avg3_PV[testNumber] = m_aEndPA_Avg3[testNumber] / m_aPh4PA_Avg3[testNumber];
-                PrintResultToConsole("End PAR - avg of 3 values-PV", testNumber, m_aEndPAR_Avg3_PV[testNumber]);
+                    // 35 DPR-3.3.19
+                    // End PAR - avg of 3 values-PV
+                    m_aEndPAR_Avg3_PV[testNumber] = m_aEndPA_Avg3[testNumber] / m_aPh4PA_Avg3[testNumber];
+                    PrintResultToConsole("End PAR - avg of 3 values-PV", testNumber, m_aEndPAR_Avg3_PV[testNumber]);
 
-                // 36 DPR-3.3.20
-                // Min PAR - avg of 3 values-PV
-                m_aMinPAR_Avg3_PV[testNumber] = m_aMinPA_Avg3[testNumber] / m_aPh4PA_Avg3[testNumber];
-                PrintResultToConsole("Min PAR - avg of 3 values-PV", testNumber, m_aMinPAR_Avg3_PV[testNumber]);
+                    // 36 DPR-3.3.20
+                    // Min PAR - avg of 3 values-PV
+                    m_aMinPAR_Avg3_PV[testNumber] = m_aMinPA_Avg3[testNumber] / m_aPh4PA_Avg3[testNumber];
+                    PrintResultToConsole("Min PAR - avg of 3 values-PV", testNumber, m_aMinPAR_Avg3_PV[testNumber]);
+                }
 
                 // 40 DPR-3.3.40
                 // Time for Phase 2
@@ -501,6 +507,7 @@ public class PostProcessing
                 // Ph2 PA avg
                 m_aPh2PA_avg[testNumber] = BeatProcessing.getInstance().GetAvgPAInRange(t0Index, t10Index, pv, dataSet);
                 PrintResultToConsole("Ph2 PA avg", testNumber, m_aPh2PA_avg[testNumber]);
+
 
             } catch (Exception e)
             {
@@ -660,6 +667,18 @@ public class PostProcessing
 
     }
 
+    public double getPh2HR_min(int testNumber)
+    {
+        if (testNumber < m_aPh2HR_min.length)
+        {
+            return m_aPh2HR_min[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+
     public double getEndPAR_PV_BL(int testNumber)
     {
         if (testNumber < m_aEndPAR_PV_BL.length)
@@ -671,6 +690,107 @@ public class PostProcessing
             return 0.0;
         }
     }
+
+    public double getMinPAR_PV_BL(int testNumber)
+    {
+        if (testNumber < m_aMinPAR_PV_BL.length)
+        {
+            return m_aMinPAR_PV_BL[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+
+    public double getEndPA_Peak(int testNumber)
+    {
+        if (testNumber < m_aEndPA_Peak.length)
+        {
+            return m_aEndPA_Peak[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+
+    public double getMinPA_Peak(int testNumber)
+    {
+        if (testNumber < m_aMinPA_Peak.length)
+        {
+            return m_aMinPA_Peak[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+
+    public double getPh2HR_Avg(int testNumber)
+    {
+        if (testNumber < m_aPh2HR_Avg.length)
+        {
+            return m_aPh2HR_Avg[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+
+    public double getPh2PA_Avg(int testNumber)
+    {
+        if (testNumber < m_aPh2PA_avg.length)
+        {
+            return m_aPh2PA_avg[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+
+    public double getBLPA_Avg(int testNumber)
+    {
+        if (testNumber < m_aPA_Avg_BL.length)
+        {
+            return m_aPA_Avg_BL[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+
+
+    public double getLVEDP(int testNumber, double heightInches, double diastolicPressure, double m_systolicBloodPressure, double ageYears)
+    {
+        double lvedp;
+
+        if (testNumber < m_aEndPAR_PV_BL.length && testNumber < m_aBLHR_Avg.length)
+        {
+            double endPAR = PostProcessing.getInstance().getEndPAR_PV_BL(testNumber);
+            double avgHrRest = PostProcessing.getInstance().getBLHR_Avg(testNumber);
+
+            // if something went wrong, indicate that by setting the LVEDP to 0
+            if (endPAR != 0)
+            {
+                lvedp = -4.52409 + (21.25779 * endPAR) + (0.03415 * heightInches * 2.54) - (0.20827 * diastolicPressure) + (0.09374 * m_systolicBloodPressure) + (0.16182 * avgHrRest) - (0.06949 * ageYears);
+            }
+            else
+
+            {
+                lvedp = 0.0;
+            }
+        }
+        else
+        {
+            lvedp = 0.0;
+        }
+        return lvedp;
+    }
+
 
     public double getBLHR_Avg(int testNumber)
     {
