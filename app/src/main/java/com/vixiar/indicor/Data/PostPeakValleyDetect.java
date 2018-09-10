@@ -126,7 +126,7 @@ public class PostPeakValleyDetect
 
     // This is the peak detection algorithm by Dr. Harry Silber which he implemented in an excel spreadsheet.
     // This code mimics the algorithm from the spreadsheet : Auto-Analyzer-2018-08-04.xlsx
-    public PeaksAndValleys HarrySilberPeakDetection(int testNumber, ArrayList<RealtimeDataSample> dataSet)
+    public PeaksAndValleys HarrySilberPeakDetection(int testNumber, ArrayList<RealtimeDataSample> dataSet, boolean detectPostVMPeaksAndValleys)
     {
         PeaksAndValleys pvBaseline, pvValsalva, pvPostValsalva;
         PeaksAndValleys allPV = new PeaksAndValleys();
@@ -137,23 +137,25 @@ public class PostPeakValleyDetect
         int baselineStart = PostProcessing.getInstance().FindBaselineStart(testNumber, dataSet);
         int baselineEnd = PostProcessing.getInstance().FindBaselineEnd(testNumber, dataSet);
         pvBaseline = DetectPeaksAndValleysForRegionHarryMethod(baselineStart, baselineEnd, BASELINE_SCALE_FACTOR, dataSet, eHarryPeakDetectionType.BASELINE);
+        allPV.peaks.addAll(pvBaseline.peaks);
+        allPV.valleys.addAll(pvBaseline.valleys);
 
         // Find the Valsalva peaks and valleys
         int vStart = PostProcessing.getInstance().FindVStart(testNumber, dataSet);
         int vEnd = PostProcessing.getInstance().FindVEnd(testNumber, dataSet);
         pvValsalva = DetectPeaksAndValleysForRegionHarryMethod(vStart, vEnd, VALSALVA_SCALE_FACTOR, dataSet, eHarryPeakDetectionType.NON_BASELINE);
-
-        // Find the post Valsalva peaks and valleys
-        int postVMStart = vEnd + (int)(SAMPLES_PER_SECOND * 2.5);
-        int postVMEnd = postVMStart + (SAMPLES_PER_SECOND * 10);
-        pvPostValsalva = DetectPeaksAndValleysForRegionHarryMethod(postVMStart, postVMEnd, POST_VALSALVA_SCALE_FACTOR, dataSet, eHarryPeakDetectionType.NON_BASELINE);
-
-        allPV.peaks.addAll(pvBaseline.peaks);
-        allPV.valleys.addAll(pvBaseline.valleys);
         allPV.peaks.addAll(pvValsalva.peaks);
         allPV.valleys.addAll(pvValsalva.valleys);
-        allPV.peaks.addAll(pvPostValsalva.peaks);
-        allPV.valleys.addAll(pvPostValsalva.valleys);
+
+        if (detectPostVMPeaksAndValleys)
+        {
+            // Find the post Valsalva peaks and valleys
+            int postVMStart = vEnd + (int)(SAMPLES_PER_SECOND * 2.5);
+            int postVMEnd = postVMStart + (SAMPLES_PER_SECOND * 10);
+            pvPostValsalva = DetectPeaksAndValleysForRegionHarryMethod(postVMStart, postVMEnd, POST_VALSALVA_SCALE_FACTOR, dataSet, eHarryPeakDetectionType.NON_BASELINE);
+            allPV.peaks.addAll(pvPostValsalva.peaks);
+            allPV.valleys.addAll(pvPostValsalva.valleys);
+        }
 
         return allPV;
     }
