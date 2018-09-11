@@ -15,7 +15,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static com.vixiar.indicor.Data.AppConstants.LENGTH_OF_RESULTS_GRAPH;
 import static com.vixiar.indicor.Data.AppConstants.SAMPLES_PER_SECOND;
+import static com.vixiar.indicor.Data.AppConstants.SECONDS_BEFORE_T0_FOR_RESULTS_GRAPH;
 
 /**
  * Created by Dave on 7/12/2017.
@@ -239,16 +241,16 @@ public class PatientInfo
 
         // make sure there's enough data before the start of the test index
 
-        if (startIndex <= SAMPLES_PER_SECOND * 15)
+        if (startIndex <= SAMPLES_PER_SECOND * SECONDS_BEFORE_T0_FOR_RESULTS_GRAPH)
         {
             startIndex = 0;
         }
         else
         {
-            startIndex -= (SAMPLES_PER_SECOND * 15);
+            startIndex -= (SAMPLES_PER_SECOND * SECONDS_BEFORE_T0_FOR_RESULTS_GRAPH);
         }
 
-        int endIndex = startIndex + (SAMPLES_PER_SECOND * 30);
+        int endIndex = startIndex + (SAMPLES_PER_SECOND * LENGTH_OF_RESULTS_GRAPH);
 
         if (endIndex >= PatientInfo.getInstance().getRealtimeData().GetFilteredData().size())
         {
