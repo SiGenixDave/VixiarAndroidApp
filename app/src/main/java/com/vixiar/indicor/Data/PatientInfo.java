@@ -15,6 +15,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static com.vixiar.indicor.Data.AppConstants.SAMPLES_PER_SECOND;
+
 /**
  * Created by Dave on 7/12/2017.
  */
@@ -224,14 +226,12 @@ public class PatientInfo
         return true;
     }
 
-    // returns an array of PPG values for 30 seconds wih the center being the
+    // returns an array of PPG and pressure values for 30 seconds wih the center being the
     // start of the Valsalva maneuver
     // testNumber is 0 relative
-    public ArrayList<Integer> GetSummaryChartData(int testNumber)
+    public ArrayList<PPG_PressureDataPoint> GetSummaryChartData(int testNumber)
     {
-        final int SAMPLES_PER_SECOND = 50;
-
-        ArrayList<Integer> results = new ArrayList<>();
+        ArrayList<PPG_PressureDataPoint> results = new ArrayList<>();
 
         TestMarkers tm = GetTestMarkers(testNumber);
 
@@ -257,7 +257,9 @@ public class PatientInfo
 
         for (int i = startIndex; i < endIndex; i++)
         {
-            results.add(PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG);
+            PPG_PressureDataPoint data;
+            data = PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i);
+            results.add(data);
         }
 
         return results;

@@ -72,7 +72,7 @@ public class PostProcessing
         return ourInstance;
     }
 
-    public int FindVStart(int testNumber, ArrayList<RealtimeDataSample> dataSet)
+    public int FindVStart(int testNumber, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         TestMarkers tm;
         tm = PatientInfo.getInstance().GetTestMarkers(testNumber);
@@ -101,7 +101,7 @@ public class PostProcessing
         return vStart;
     }
 
-    public int FindVEnd(int testNumber, ArrayList<RealtimeDataSample> dataSet)
+    public int FindVEnd(int testNumber, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         TestMarkers tm;
         tm = PatientInfo.getInstance().GetTestMarkers(testNumber);
@@ -119,17 +119,17 @@ public class PostProcessing
         return -1;
     }
 
-    public int FindBaselineStart(int testNumber, ArrayList<RealtimeDataSample> dataSet)
+    public int FindBaselineStart(int testNumber, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         return (FindVStart(testNumber, dataSet) - (SAMPLES_PER_SECOND * (BASELINE_END_BEFORE_VSTART_SEC + BASELINE_LENGTH_SEC)));
     }
 
-    public int FindBaselineEnd(int testNumber, ArrayList<RealtimeDataSample> dataSet)
+    public int FindBaselineEnd(int testNumber, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         return (FindBaselineStart(testNumber, dataSet) + (SAMPLES_PER_SECOND * BASELINE_LENGTH_SEC));
     }
 
-    public int FindT0FromVStart(int vStart, ArrayList<RealtimeDataSample> dataSet)
+    public int FindT0FromVStart(int vStart, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         // move from Vstart until pressure crosses 16
         int index = vStart;
@@ -140,7 +140,7 @@ public class PostProcessing
         return index;
     }
 
-    private double CalculateMeanPressure(int startIndex, int endIndex, ArrayList<RealtimeDataSample> dataSet)
+    private double CalculateMeanPressure(int startIndex, int endIndex, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         double mean = 0.0;
         for (int i = startIndex; i < endIndex; i++)
@@ -151,7 +151,7 @@ public class PostProcessing
         return mean;
     }
 
-    private double CalculateMedianPressure(int startIndex, int endIndex, ArrayList<RealtimeDataSample> dataSet)
+    private double CalculateMedianPressure(int startIndex, int endIndex, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         List<Double> data = new ArrayList<>();
 
@@ -228,7 +228,7 @@ public class PostProcessing
     }
 
     // test number is 0 relative
-    public boolean CalculatePostProcessingResults(int testNumber, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet, boolean includePostVMResults)
+    public boolean CalculatePostProcessingResults(int testNumber, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet, boolean includePostVMResults)
     {
         TestMarkers tm;
         tm = PatientInfo.getInstance().GetTestMarkers(testNumber);

@@ -17,7 +17,7 @@ public class BeatProcessing
     // return the peaks and valleys that are contained within the two indices
     // the first item after the startIndex will be a peak
     // and the last item will be the last valley that is followed by a peak which is before the endIndex
-    public PeaksAndValleys GetPeakAndValleyIndicesInRangeHarryMethod(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
+    public PeaksAndValleys GetPeakAndValleyIndicesInRangeHarryMethod(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         PeaksAndValleys pv = new PeaksAndValleys();
 
@@ -210,7 +210,7 @@ public class BeatProcessing
         return pv.valleys.size();
     }
 
-    public double GetMinPAAvg3(int startIndex, int endIndex, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
+    public double GetMinPAAvg3(int startIndex, int endIndex, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         double minPA = -1.0;
 
@@ -239,7 +239,7 @@ public class BeatProcessing
         return minPA;
     }
 
-    public double GetPh1PAAvg3(int ph1PAPeakIndex, int vStartIndex, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
+    public double GetPh1PAAvg3(int ph1PAPeakIndex, int vStartIndex, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         double ph1PAAvg3;
 
@@ -260,7 +260,7 @@ public class BeatProcessing
         return ph1PAAvg3;
     }
 
-    public double GetPh4PAAvg3(int ph4PAPeakIndex, int vEndIndex, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
+    public double GetPh4PAAvg3(int ph4PAPeakIndex, int vEndIndex, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         double ph4PAAvg3;
 
@@ -294,7 +294,7 @@ public class BeatProcessing
 
     // Returns the root mean square between "startIndex" and "endIndex"
     // -1.0 is returned if "startIndex" or "endIndex" are out of bounds
-    public double GetRMSInRange(int startIndex, int endIndex, ArrayList<RealtimeDataSample> dataSet)
+    public double GetRMSInRange(int startIndex, int endIndex, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         // 1. find number of PPG values between start and end indices
         int numValues = endIndex - startIndex;
@@ -337,7 +337,7 @@ public class BeatProcessing
     }
 
     // Returns the minimum root mean square in X seconds window between "startIndex" and "endIndex"
-    public double GetMinRMS(int startIndex, int endIndex, int secondsWindow, ArrayList<RealtimeDataSample> dataSet)
+    public double GetMinRMS(int startIndex, int endIndex, int secondsWindow, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         double minRMSValue = Double.MAX_VALUE;
         int startMarker = startIndex;
@@ -356,7 +356,7 @@ public class BeatProcessing
         return minRMSValue;
     }
 
-    public ValueAndLocation GetEndPA(int endIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
+    public ValueAndLocation GetEndPA(int endIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         ValueAndLocation vl = new ValueAndLocation();
 
@@ -383,7 +383,7 @@ public class BeatProcessing
     // "last" sample indexes. If "last" = -1, then all of the peaks and valleys collected from "first"
     // until when this method is called will be used.
     // the location returned will be the peak of the minPA pulse cycle
-    public ValueAndLocation GetMinPAInRange(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
+    public ValueAndLocation GetMinPAInRange(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         ValueAndLocation vl = new ValueAndLocation();
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeHarryMethod(startIndex, endIndex, pvIn, dataSet);
@@ -445,7 +445,7 @@ public class BeatProcessing
     // Method calculates and returns the peak to valley amplitude of a maximum peak seen between "first" and
     // "last" sample indexes. If "last" = -1, then all of the peaks and valleys collected from "first"
     // until when this method is called will be used.
-    public ValueAndLocation GetMaxPAInRange(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
+    public ValueAndLocation GetMaxPAInRange(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         ValueAndLocation vl = new ValueAndLocation();
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeHarryMethod(startIndex, endIndex, pvIn, dataSet);
@@ -514,7 +514,7 @@ public class BeatProcessing
     // Method calculates and returns the peak to valley amplitude average seen between "first" and
     // "last" sample indexes. If "last" = -1, then all of the peaks and valleys collected from "first"
     // until when this method is called will be used.
-    public double GetAvgPAInRange(int firstIndex, int lastIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
+    public double GetAvgPAInRange(int firstIndex, int lastIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeHarryMethod(firstIndex, lastIndex, pvIn, dataSet);
 
@@ -568,7 +568,7 @@ public class BeatProcessing
 
     // Returns the average heart rage from "endIndex" looking back in time "numBeats" heart beats
     // -1.0 is returned if there are were no heart beats detected from "endIndex" looking back
-    public double GetAvgHRHistorical(int endIndex, int numBeats, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
+    public double GetAvgHRHistorical(int endIndex, int numBeats, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         if (endIndex < 0)
         {
@@ -616,7 +616,7 @@ public class BeatProcessing
         return heartBeatAvg;
     }
 
-    public double GetAvgPAHistorical(int endIndex, int numBeatsOfHistory, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
+    public double GetAvgPAHistorical(int endIndex, int numBeatsOfHistory, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         int startIndex = GetIndexOfNthPriorPeak(numBeatsOfHistory, endIndex, pvIn);
 
@@ -635,7 +635,7 @@ public class BeatProcessing
         return nTotal / numBeatsOfHistory;
     }
 
-    public double GetAvgPAFuture(int startIndex, int numBeatsOfFuture, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
+    public double GetAvgPAFuture(int startIndex, int numBeatsOfFuture, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         int endIndex = startIndex;
 

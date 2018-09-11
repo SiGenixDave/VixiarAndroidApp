@@ -126,7 +126,7 @@ public class PostPeakValleyDetect
 
     // This is the peak detection algorithm by Dr. Harry Silber which he implemented in an excel spreadsheet.
     // This code mimics the algorithm from the spreadsheet : Auto-Analyzer-2018-08-04.xlsx
-    public PeaksAndValleys HarrySilberPeakDetection(int testNumber, ArrayList<RealtimeDataSample> dataSet, boolean detectPostVMPeaksAndValleys)
+    public PeaksAndValleys HarrySilberPeakDetection(int testNumber, ArrayList<PPG_PressureDataPoint> dataSet, boolean detectPostVMPeaksAndValleys)
     {
         PeaksAndValleys pvBaseline, pvValsalva, pvPostValsalva;
         PeaksAndValleys allPV = new PeaksAndValleys();
@@ -160,7 +160,7 @@ public class PostPeakValleyDetect
         return allPV;
     }
 
-    private PeaksAndValleys DetectPeaksAndValleysForRegionHarryMethod(int startIndex, int endIndex, double scaleFactor, ArrayList<RealtimeDataSample> dataSet, eHarryPeakDetectionType detectionType)
+    private PeaksAndValleys DetectPeaksAndValleysForRegionHarryMethod(int startIndex, int endIndex, double scaleFactor, ArrayList<PPG_PressureDataPoint> dataSet, eHarryPeakDetectionType detectionType)
     {
         PeaksAndValleys pv = new PeaksAndValleys();
         pv.peaks = new ArrayList<>();

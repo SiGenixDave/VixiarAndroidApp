@@ -3,6 +3,7 @@ package com.vixiar.indicor.Activities;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
@@ -22,6 +24,7 @@ import com.vixiar.indicor.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PPGDataCalibrate;
+import com.vixiar.indicor.Data.PPG_PressureDataPoint;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.Data.RealtimeDataMarker;
 import com.vixiar.indicor.Graphics.TestPressureGraph;
@@ -90,16 +93,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private enum Testing_State
     {
-        BASELINE_NOT_CONNECTED,
-        BASELINE,
-        BASELINE_WITH_ERROR_DIALOG_DISPLAYING,
-        BASELINE_GOOD_5SEC_COUNTDOWN,
-        VALSALVA_WAIT_FOR_PRESSURE,
-        VALSALVA,
-        LOADING_RESULTS,
-        RESULTS,
-        COMPLETE,
-        PRESSURE_ERROR,
+        BASELINE_NOT_CONNECTED, BASELINE, BASELINE_WITH_ERROR_DIALOG_DISPLAYING, BASELINE_GOOD_5SEC_COUNTDOWN, VALSALVA_WAIT_FOR_PRESSURE, VALSALVA, LOADING_RESULTS, RESULTS, COMPLETE, PRESSURE_ERROR,
     }
 
     private Testing_State m_testingState;
@@ -107,12 +101,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private enum Testing_Events
     {
-        EVT_ONESHOT_TIMER_TIMEOUT,
-        EVT_CONNECTED,
-        EVT_PERIODIC_TIMER_TICK,
-        EVT_VALSALVA_PRESSURE_UPDATE,
-        EVT_PPG_FLATLINING,
-        EVT_PPG_IS_CLIPPING,
+        EVT_ONESHOT_TIMER_TIMEOUT, EVT_CONNECTED, EVT_PERIODIC_TIMER_TICK, EVT_VALSALVA_PRESSURE_UPDATE, EVT_PPG_FLATLINING, EVT_PPG_IS_CLIPPING,
     }
 
     // Timer stuff
@@ -150,19 +139,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final double VALSALVA_MIN_PRESSURE = 16.0;
     private final double VALSALVA_MAX_PRESSURE = 30.0;
 
-    private int[] m_tenSecCountdownImages = new int[]
-            {
-                    R.drawable.countdown0sec,
-                    R.drawable.countdown1sec,
-                    R.drawable.countdown2sec,
-                    R.drawable.countdown3sec,
-                    R.drawable.countdown4sec,
-                    R.drawable.countdown5sec,
-                    R.drawable.countdown6sec,
-                    R.drawable.countdown7sec,
-                    R.drawable.countdown8sec,
-                    R.drawable.countdown9sec,
-            };
+    private int[] m_tenSecCountdownImages = new int[]{R.drawable.countdown0sec, R.drawable.countdown1sec, R.drawable.countdown2sec, R.drawable.countdown3sec, R.drawable.countdown4sec, R.drawable.countdown5sec, R.drawable.countdown6sec, R.drawable.countdown7sec, R.drawable.countdown8sec, R.drawable.countdown9sec,};
 
     private double m_nCurrentPressure = 0.0;
 
@@ -225,8 +202,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 DisplayPressureErrorRunning();
                 m_testingState = Testing_State.PRESSURE_ERROR;
                 // mark the error
-                PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR,
-                        PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+                PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                 break;
         }
     }
@@ -359,7 +335,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case VALSALVA_WAIT_FOR_PRESSURE:
             case VALSALVA:
                 // update the ball
-                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size() -1;
+                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size() - 1;
                 m_nCurrentPressure = PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(currentDataIndex).m_pressure;
                 m_graphPressure.setBallPressure(m_nCurrentPressure);
 
@@ -522,11 +498,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private void UserRequestingToCancel()
     {
         // display the test cancel dialog
-        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                getString(R.string.dlg_title_cancel_test),
-                getString(R.string.dlg_msg_cancel_test),
-                "Yes",
-                "No", TestingActivity.this, DLG_ID_CANCEL_TEST, TestingActivity.this);
+        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_cancel_test), getString(R.string.dlg_msg_cancel_test), "Yes", "No", TestingActivity.this, DLG_ID_CANCEL_TEST, TestingActivity.this);
     }
 
     private void InactivateStabilityView()
@@ -722,45 +694,62 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         }
     }
 
-    private void AddOnClickListeners() {
-        m_ImageButtonGraph1.setOnClickListener(new View.OnClickListener() {
+    private void AddOnClickListeners()
+    {
+        m_ImageButtonGraph1.setOnClickListener(new View.OnClickListener()
+        {
             private boolean state;
+
             @Override
-            public void onClick(View arg0) {
+            public void onClick(View arg0)
+            {
                 state = PlotResults(state, m_GraphViewResults1, 0);
             }
         });
-        m_ImageButtonGraph2.setOnClickListener(new View.OnClickListener() {
+        m_ImageButtonGraph2.setOnClickListener(new View.OnClickListener()
+        {
             private boolean state;
+
             @Override
-            public void onClick(View arg0) {
+            public void onClick(View arg0)
+            {
                 state = PlotResults(state, m_GraphViewResults2, 1);
             }
         });
-        m_ImageButtonGraph3.setOnClickListener(new View.OnClickListener() {
+        m_ImageButtonGraph3.setOnClickListener(new View.OnClickListener()
+        {
             private boolean state;
+
             @Override
-            public void onClick(View arg0) {
+            public void onClick(View arg0)
+            {
                 state = PlotResults(state, m_GraphViewResults3, 2);
             }
         });
     }
 
 
-    boolean PlotResults(boolean state, GraphView graphView, int index) {
+    boolean PlotResults(boolean state, GraphView graphView, int index)
+    {
         state = !state;
-        if (state) {
+        if (state)
+        {
             graphView.setVisibility(View.VISIBLE);
 
-            // clear any data in the PPG chart
+            // clear any data in the chart
             graphView.removeAllSeries();
 
-            ArrayList<Integer> plotData = PatientInfo.getInstance().GetSummaryChartData(index);
-            LineGraphSeries<DataPoint> series = new LineGraphSeries<>();
+            ArrayList<PPG_PressureDataPoint> plotData = PatientInfo.getInstance().GetSummaryChartData(index);
+
+            LineGraphSeries<DataPoint> PPGSeries = new LineGraphSeries<>();
+            LineGraphSeries<DataPoint> PressureSeries = new LineGraphSeries<>();
             double xValue = 0;
-            for (Integer y:plotData) {
-                double yValue = (double)y;
-                series.appendData(new DataPoint(xValue, yValue), true, plotData.size());
+            for (int i = 0; i < plotData.size(); i++)
+            {
+                double y1Value = plotData.get(i).m_PPG;
+                double y2Value = plotData.get(i).m_pressure;
+                PPGSeries.appendData(new DataPoint(xValue, y1Value), true, plotData.size());
+                PressureSeries.appendData(new DataPoint(xValue, y2Value), true, plotData.size());
                 xValue += 0.02;
             }
 
@@ -773,7 +762,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             graphView.getGridLabelRenderer().reloadStyles();
             graphView.getGridLabelRenderer().setVerticalLabelsVisible(false);
 
-
             graphView.getViewport().setXAxisBoundsManual(true);
             graphView.getViewport().setMinX(0);
             graphView.getViewport().setMaxX(xValue);
@@ -782,9 +770,32 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             graphView.getViewport().setScalable(true);
             graphView.getViewport().setScalableY(true);
 
-            graphView.addSeries(series);
+            Paint paintPPG = new Paint();
+            paintPPG.setStrokeWidth(3);
+            paintPPG.setColor(Color.BLUE);
+            PPGSeries.setCustomPaint(paintPPG);
+
+            Paint paintPressure = new Paint();
+            paintPressure.setStrokeWidth(3);
+            paintPressure.setColor(Color.GRAY);
+            PressureSeries.setCustomPaint(paintPressure);
+
+            graphView.addSeries(PPGSeries);
+            graphView.getSecondScale().addSeries(PressureSeries);
+            graphView.getSecondScale().setMinY(0);
+            graphView.getSecondScale().setMaxY(35);
+            graphView.getSecondScale().setLabelFormatter(new DefaultLabelFormatter()
+            {
+                @Override
+                public String formatLabel(double value, boolean isValueX)
+                {
+                    return "";
+                }
+
+            });
         }
-        else {
+        else
+        {
             graphView.setVisibility(View.GONE);
         }
 
@@ -800,8 +811,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_unchecked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
-                String result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) +
-                        " mmHg";
+                String result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) + " mmHg";
                 m_txtResults1.setText(result);
                 m_ImageButtonGraph1.setVisibility(View.VISIBLE);
                 break;
@@ -810,11 +820,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
-                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) +
-                        " mmHg";
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) + " mmHg";
                 m_txtResults1.setText(result);
-                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(1)) +
-                        " mmHg";
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(1)) + " mmHg";
                 m_txtResults2.setText(result);
                 m_ImageButtonGraph1.setVisibility(View.VISIBLE);
                 m_ImageButtonGraph2.setVisibility(View.VISIBLE);
@@ -824,23 +832,18 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults2Checkbox.setImageResource(R.drawable.measurement_checked);
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_checked);
-                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) +
-                        " mmHg";
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) + " mmHg";
                 m_txtResults1.setText(result);
-                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(1)) +
-                        " mmHg";
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(1)) + " mmHg";
                 m_txtResults2.setText(result);
-                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(2)) +
-                        " mmHg";
+                result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(2)) + " mmHg";
                 m_txtResults3.setText(result);
                 m_ImageButtonGraph1.setVisibility(View.VISIBLE);
                 m_ImageButtonGraph2.setVisibility(View.VISIBLE);
                 m_ImageButtonGraph3.setVisibility(View.VISIBLE);
 
 
-                float avg = (float) ((PatientInfo.getInstance().get_LVEDP(0) +
-                                        PatientInfo.getInstance().get_LVEDP(1) +
-                                        PatientInfo.getInstance().get_LVEDP(2)) / 3.0);
+                float avg = (float) ((PatientInfo.getInstance().get_LVEDP(0) + PatientInfo.getInstance().get_LVEDP(1) + PatientInfo.getInstance().get_LVEDP(2)) / 3.0);
                 TextView avgText = findViewById(R.id.lblTestAverage);
                 avgText.setText(RoundAndTruncateDouble(avg) + " mmHg");
 
@@ -857,7 +860,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private String RoundAndTruncateDouble(double value)
     {
-        String s = String.format("%d", (int)(value + 0.5));
+        String s = String.format("%d", (int) (value + 0.5));
         return s;
     }
 
@@ -885,13 +888,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private void DisableHomeButton()
     {
-        m_imgHomeButton.setAlpha((float)0.3);
+        m_imgHomeButton.setAlpha((float) 0.3);
         m_imgHomeButton.setEnabled(false);
     }
 
     private void EnableHomeButton()
     {
-        m_imgHomeButton.setAlpha((float)1.0);
+        m_imgHomeButton.setAlpha((float) 1.0);
         m_imgHomeButton.setEnabled(true);
     }
 
@@ -943,20 +946,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private void DisplayPressureErrorOnStart()
     {
-        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                getString(R.string.dlg_title_pressure_error_start),
-                getString(R.string.dlg_msg_pressure_error_start),
-                "Try Again",
-                "End Test", this, DLG_ID_PRESSURE_ERROR_START, this);
+        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_pressure_error_start), getString(R.string.dlg_msg_pressure_error_start), "Try Again", "End Test", this, DLG_ID_PRESSURE_ERROR_START, this);
     }
 
     private void DisplayPressureErrorRunning()
     {
-        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                getString(R.string.dlg_title_pressure_error_running),
-                getString(R.string.dlg_msg_pressure_error_running),
-                "Try Again",
-                "End Test", this, DLG_ID_PRESSURE_ERROR_RUNNING, this);
+        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_pressure_error_running), getString(R.string.dlg_msg_pressure_error_running), "Try Again", "End Test", this, DLG_ID_PRESSURE_ERROR_RUNNING, this);
     }
 
 
@@ -982,23 +977,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     // baseline is over, now check the signal for a good heart rate before proceeding
                     if (!PatientInfo.getInstance().getRealtimeData().WasHeartRateInRange(m_baselineStartIndex))
                     {
-                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                                getString(R.string.dlg_title_hr_out_of_range),
-                                getString(R.string.dlg_msg_hr_out_of_range),
-                                "Yes",
-                                "End Test",
-                                this, DLG_ID_HR_OUT_OF_RANGE, this);
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_hr_out_of_range), getString(R.string.dlg_msg_hr_out_of_range), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // baseline is over, now check the signal for high frequency noise before proceeding
                     else if (PatientInfo.getInstance().getRealtimeData().DidPPGSignalContainHighFrequencyNoise(m_baselineStartIndex))
                     {
-                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                                getString(R.string.dlg_title_ppg_hf_noise),
-                                getString(R.string.dlg_msg_ppg_hf_noise),
-                                "Yes",
-                                "End Test",
-                                this, DLG_ID_PPG_HF_NOISE, this);
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_hf_noise), getString(R.string.dlg_msg_ppg_hf_noise), "Yes", "End Test", this, DLG_ID_PPG_HF_NOISE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     else
@@ -1016,12 +1001,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 {
                     if (m_bIsConnected)
                     {
-                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                                getString(R.string.dlg_title_ppg_flatline),
-                                getString(R.string.dlg_msg_ppg_flatline),
-                                "Yes",
-                                "End Test",
-                                this, DLG_ID_PPG_FLATLINE, this);
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_flatline), getString(R.string.dlg_msg_ppg_flatline), "Yes", "End Test", this, DLG_ID_PPG_FLATLINE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                 }
@@ -1029,12 +1009,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 {
                     if (m_bIsConnected)
                     {
-                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                                getString(R.string.dlg_title_ppg_clipping),
-                                getString(R.string.dlg_msg_ppg_clipping),
-                                "Yes",
-                                "End Test",
-                                this, DLG_ID_PPG_CLIPPING, this);
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_clipping), getString(R.string.dlg_msg_ppg_clipping), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                 }
@@ -1077,8 +1052,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     if (m_nCurrentPressure > VALSALVA_MIN_PRESSURE)
                     {
                         // Valsalva is starting
-                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_START_VALSALVA,
-                                PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_START_VALSALVA, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         m_testingState = Testing_State.VALSALVA;
                         m_periodicTimer.Start(this, ONE_SEC, false);
                         m_nCountdownSecLeft = VALSALVA_DURATION_SECONDS;
@@ -1118,8 +1092,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             DisplayPressureErrorRunning();
                             m_testingState = Testing_State.PRESSURE_ERROR;
                             // mark the error
-                            PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR,
-                                    PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+                            PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         }
                     }
                     else
@@ -1139,8 +1112,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         if (m_bIsConnected)
                         {
                             // Valsalva is over
-                            PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_END_VALSALVA,
-                                    PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+                            PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_END_VALSALVA, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
 
                             m_periodicTimer.Cancel();
                             m_pressureOutTimer.Cancel();

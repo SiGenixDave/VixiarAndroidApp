@@ -359,7 +359,7 @@ public class HeartRateInfo
     // Calculates the average heart rate between 2 samples. It first gets all of the peaks between the first and
     // last sample index. It then gets the sample index of first peak and the sample index of the last peak. It
     // then calculates the average heart rate over that time and returns a value in heart beats per minute
-    public double GetAvgHRInRange(int firstSampleIndex, int lastSampleIndex, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
+    public double GetAvgHRInRange(int firstSampleIndex, int lastSampleIndex, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         List<Integer> peaks = BeatProcessing.getInstance().GetItemsBetween(firstSampleIndex, lastSampleIndex, RealtimePeakValleyDetect.eSlopeZero.PEAK, pv);
 

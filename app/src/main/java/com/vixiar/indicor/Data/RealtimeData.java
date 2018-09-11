@@ -19,8 +19,8 @@ doing the math, p(mmHg) = (-0.0263 * counts) + 46.335
 */
 public class RealtimeData
 {
-    private ArrayList<RealtimeDataSample> m_rawData = new ArrayList<RealtimeDataSample>();
-    private ArrayList<RealtimeDataSample> m_filteredData = new ArrayList<RealtimeDataSample>();
+    private ArrayList<PPG_PressureDataPoint> m_rawData = new ArrayList<PPG_PressureDataPoint>();
+    private ArrayList<PPG_PressureDataPoint> m_filteredData = new ArrayList<PPG_PressureDataPoint>();
     private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
     private I_FIRFilterTap PPGTaps = new PPG_FIRFilterTaps();
     private I_FIRFilterTap PressureTaps = new Pressure_FIRFilterTaps();
@@ -58,7 +58,7 @@ public class RealtimeData
             ppgValue = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
 
             // add the raw data to the list
-            RealtimeDataSample pd = new RealtimeDataSample(ppgValue, pressureValue);
+            PPG_PressureDataPoint pd = new PPG_PressureDataPoint(ppgValue, pressureValue);
             m_rawData.add(pd);
 
             // filter the sample and store it in the filtered array
@@ -66,7 +66,7 @@ public class RealtimeData
             int ppgFiltered = (int) m_PPGFIRFilter.GetOutput();
             m_PressureFIRFilter.PutSample(pressureValue);
             double pressureFiltered = m_PressureFIRFilter.GetOutput();
-            pd = new RealtimeDataSample(ppgFiltered, pressureFiltered);
+            pd = new PPG_PressureDataPoint(ppgFiltered, pressureFiltered);
             m_filteredData.add(pd);
 
             RealtimePeakValleyDetect.getInstance().AddToDataArray(ppgFiltered);
@@ -234,12 +234,12 @@ public class RealtimeData
         m_markers.add(marker);
     }
 
-    public ArrayList<RealtimeDataSample> GetRawData()
+    public ArrayList<PPG_PressureDataPoint> GetRawData()
     {
         return m_rawData;
     }
 
-    public ArrayList<RealtimeDataSample> GetFilteredData()
+    public ArrayList<PPG_PressureDataPoint> GetFilteredData()
     {
         return m_filteredData;
     }
@@ -255,7 +255,7 @@ public class RealtimeData
 
     public void AppendNewFileSample(Double PPGSample, Double pressureSample)
     {
-        RealtimeDataSample pd = new RealtimeDataSample(PPGSample.intValue(), pressureSample.intValue());
+        PPG_PressureDataPoint pd = new PPG_PressureDataPoint(PPGSample.intValue(), pressureSample.intValue());
         m_rawData.add(pd);
 
         // filter the sample and store it in the filtered array
@@ -268,7 +268,7 @@ public class RealtimeData
         m_PressureFIRFilter.PutSample(pressureSample);
         double pressureFiltered = m_PressureFIRFilter.GetOutput();
 
-        pd = new RealtimeDataSample(ppgFiltered, pressureFiltered);
+        pd = new PPG_PressureDataPoint(ppgFiltered, pressureFiltered);
 
         m_filteredData.add(pd);
 

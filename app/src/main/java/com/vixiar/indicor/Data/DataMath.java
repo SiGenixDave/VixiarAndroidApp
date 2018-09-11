@@ -11,7 +11,7 @@ public class DataMath
         return ourInstance;
     }
 
-    public double CalculateMean(int startIndex, int endIndex, ArrayList<RealtimeDataSample> dataSet)
+    public double CalculateMean(int startIndex, int endIndex, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         int dataSum = 0;
         for (int i = startIndex; i < endIndex; i++)
@@ -21,7 +21,7 @@ public class DataMath
         return dataSum / (endIndex - startIndex);
     }
 
-    public double CalculateStdev(int startIndex, int endIndex, ArrayList<RealtimeDataSample> dataSet)
+    public double CalculateStdev(int startIndex, int endIndex, ArrayList<PPG_PressureDataPoint> dataSet)
     {
         double diffSumSquared = 0.0;
         double mean = CalculateMean(startIndex, endIndex, dataSet);
