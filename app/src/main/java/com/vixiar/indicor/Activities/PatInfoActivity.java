@@ -32,7 +32,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
-    private static final boolean DEBUG = true;  // TODO: remember to set this back
+    private static final boolean DEBUG = false;
 
     private EditText txtPatientID;
     private EditText txtAge;
