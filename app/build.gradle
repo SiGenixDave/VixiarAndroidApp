@@ -4,9 +4,9 @@ android {
     compileSdkVersion 28
     buildToolsVersion '28.0.2'
     defaultConfig {
-        applicationId 'com.vixiar.indicor'
+        applicationId 'com.vixiar.indicor2'
         minSdkVersion 25
-        targetSdkVersion 25
+        targetSdkVersion 26
         versionCode 293
         versionName "2.00"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

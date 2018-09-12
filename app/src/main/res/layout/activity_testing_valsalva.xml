@@ -31,7 +31,7 @@
             android:layout_height="match_parent"
             android:orientation="horizontal">
 
-            <com.vixiar.indicor.Graphics.TestPressureGraph
+            <com.vixiar.indicor2.Graphics.TestPressureGraph
                 android:id="@+id/testPressureGraph"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

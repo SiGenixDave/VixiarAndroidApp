@@ -3,7 +3,7 @@
     WILL BE LOST.">]>
 
 <resources>
-    <string name="app_name">Indicor Navigator</string>
+    <string name="app_name">Indicor Navigator 2</string>
     <!-- Training Activity -->
     <string name="pressure">Pressure</string>
     <string name="timer">Timer</string>
