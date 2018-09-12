@@ -367,21 +367,48 @@ public class PatientInfo
 
         writer.println("Notes:, " + m_notes);
 
-/*
-
         // print all of the calculated data
         writer.println("Calculated values-Trial, 1, 2, 3");
-        writer.println("PA avg rest, " + FormatDoubleForPrint(m_aCalcPAAvgRest[0]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgRest[2]));
-        writer.println("HR avg (BPM) rest, " + FormatDoubleForPrint(m_aCalcHRAvgRest[0]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgRest[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgRest[2]));
-        writer.println("PA avg VM, " + FormatDoubleForPrint(m_aCalcPAAvgVM[0]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcPAAvgVM[2]));
-        writer.println("HR avg (BPM) VM, " + FormatDoubleForPrint(m_aCalcHRAvgVM[0]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgVM[1]) + ", " + FormatDoubleForPrint(m_aCalcHRAvgVM[2]));
-        writer.println("Min PA, " + FormatDoubleForPrint(m_aCalcMinPA[0]) + ", " + FormatDoubleForPrint(m_aCalcMinPA[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPA[2]));
-        writer.println("End PA, " + FormatDoubleForPrint(m_aCalcEndPA[0]) + ", " + FormatDoubleForPrint(m_aCalcEndPA[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPA[2]));
-        writer.println("Min PAR, " + FormatDoubleForPrint(m_aCalcMinPAR[0]) + ", " + FormatDoubleForPrint(m_aCalcMinPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcMinPAR[2]));
-        writer.println("End PAR, " + FormatDoubleForPrint(m_aCalcEndPAR[0]) + ", " + FormatDoubleForPrint(m_aCalcEndPAR[1]) + ", " + FormatDoubleForPrint(m_aCalcEndPAR[2]));
-        writer.println("Min HR, " + FormatDoubleForPrint(m_aCalcMinHRVM[0]) + ", " + FormatDoubleForPrint(m_aCalcMinHRVM[1]) + ", " + FormatDoubleForPrint(m_aCalcMinHRVM[2]));
-        writer.println("LVEDP, " + FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
-*/
+        writer.println("BL PA - avg, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getBLPA_Avg(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getBLPA_Avg(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getBLPA_Avg(2)));
+        writer.println("BL HR - avg, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getBLHR_Avg(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getBLHR_Avg(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getBLHR_Avg(2)));
+        writer.println("Ph2 PA - avg, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2PA_Avg(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2PA_Avg(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2PA_Avg(2)));
+        writer.println("Ph2 HR - avg, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2HR_Avg(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2HR_Avg(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2HR_Avg(2)));
+        writer.println("Min PA - peak, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getMinPA_Peak(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getMinPA_Peak(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getMinPA_Peak(2)));
+        writer.println("End PA - peak, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getEndPA_Peak(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getEndPA_Peak(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getEndPA_Peak(2)));
+        writer.println("Min PAR - peak values - BL, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getMinPAR_PV_BL(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getMinPAR_PV_BL(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getMinPAR_PV_BL(2)));
+        writer.println("End PAR - peak values - BL, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getEndPAR_PV_BL(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getEndPAR_PV_BL(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getEndPAR_PV_BL(2)));
+        writer.println("Ph2 HR - min, " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2HR_min(0)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2HR_min(1)) + ", " +
+                FormatDoubleForPrint(PostProcessing.getInstance().getPh2HR_min(2)));
+        writer.println("LVEDP, " +
+                FormatDoubleForPrint(m_aCalcLVEDP[0]) + ", " +
+                FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " +
+                FormatDoubleForPrint(m_aCalcLVEDP[2]));
 
         // print all of markers
         writer.println("Marker index, Type");

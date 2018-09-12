@@ -633,7 +633,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_GraphViewResults1 = findViewById(R.id.graphView1);
         m_GraphViewResults2 = findViewById(R.id.graphView2);
         m_GraphViewResults3 = findViewById(R.id.graphView3);
-        AddOnClickListeners();
 
         m_imgRestIcon = findViewById(R.id.imgRestIcon);
         m_imgHomeButton = findViewById(R.id.imgHomeIcon);
@@ -654,6 +653,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_txtPatID.setText(PatientInfo.getInstance().get_patientId());
 
         m_txtDateTime.setText(PatientInfo.getInstance().get_testDateTime());
+
+        m_ImageButtonGraph1.setVisibility(View.INVISIBLE);
+        m_ImageButtonGraph2.setVisibility(View.INVISIBLE);
+        m_ImageButtonGraph3.setVisibility(View.INVISIBLE);
 
         m_lblBottomMessageCentered.setText("");
         m_imgHomeButton.setVisibility(View.INVISIBLE);
@@ -694,40 +697,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         }
     }
 
-    private void AddOnClickListeners()
-    {
-        m_ImageButtonGraph1.setOnClickListener(new View.OnClickListener()
-        {
-            private boolean state;
-
-            @Override
-            public void onClick(View arg0)
-            {
-                state = PlotResults(state, m_GraphViewResults1, 0);
-            }
-        });
-        m_ImageButtonGraph2.setOnClickListener(new View.OnClickListener()
-        {
-            private boolean state;
-
-            @Override
-            public void onClick(View arg0)
-            {
-                state = PlotResults(state, m_GraphViewResults2, 1);
-            }
-        });
-        m_ImageButtonGraph3.setOnClickListener(new View.OnClickListener()
-        {
-            private boolean state;
-
-            @Override
-            public void onClick(View arg0)
-            {
-                state = PlotResults(state, m_GraphViewResults3, 2);
-            }
-        });
-    }
-
 
     boolean PlotResults(boolean state, GraphView graphView, int index)
     {
@@ -741,6 +710,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             ArrayList<PPG_PressureDataPoint> plotData = PatientInfo.getInstance().GetSummaryChartData(index);
 
+            int minPPG = 65535;
+            int maxPPG = 0;
+
+            int maxPressure = 0;
+
             LineGraphSeries<DataPoint> PPGSeries = new LineGraphSeries<>();
             LineGraphSeries<DataPoint> PressureSeries = new LineGraphSeries<>();
             double xValue = 0;
@@ -751,6 +725,21 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 PPGSeries.appendData(new DataPoint(xValue, y1Value), true, plotData.size());
                 PressureSeries.appendData(new DataPoint(xValue, y2Value), true, plotData.size());
                 xValue += 0.02;
+
+                // save the min and max ppg for scaling the graph
+                if (y1Value > maxPPG)
+                {
+                    maxPPG = (int) y1Value;
+                }
+                if (y1Value < minPPG)
+                {
+                    minPPG = (int) y1Value;
+                }
+
+                if (y2Value > maxPressure)
+                {
+                    maxPressure = (int) y2Value;
+                }
             }
 
             graphView.getGridLabelRenderer().setHighlightZeroLines(false);
@@ -763,35 +752,41 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             graphView.getGridLabelRenderer().setVerticalLabelsVisible(false);
 
             graphView.getViewport().setXAxisBoundsManual(true);
-            graphView.getViewport().setMinX(0);
-            graphView.getViewport().setMaxX(xValue);
+            graphView.getViewport().setMinX(5);
+            graphView.getViewport().setMaxX(30);
+
+            // set the scaling for the y axis based on the data
+            graphView.getViewport().setYAxisBoundsManual(true);
+            graphView.getViewport().setMinY(minPPG - 2000);
+            graphView.getViewport().setMaxY(maxPPG + 2000);
 
             // enable scaling and scrolling
             graphView.getViewport().setScalable(true);
-            graphView.getViewport().setScalableY(true);
+            graphView.getViewport().setScalableY(false);
 
             Paint paintPPG = new Paint();
-            paintPPG.setStrokeWidth(3);
+            paintPPG.setStrokeWidth(2);
             paintPPG.setColor(Color.BLUE);
             PPGSeries.setCustomPaint(paintPPG);
 
             Paint paintPressure = new Paint();
-            paintPressure.setStrokeWidth(3);
-            paintPressure.setColor(Color.GRAY);
+            paintPressure.setStrokeWidth(2);
+            paintPressure.setColor(Color.MAGENTA);
             PressureSeries.setCustomPaint(paintPressure);
 
             graphView.addSeries(PPGSeries);
             graphView.getSecondScale().addSeries(PressureSeries);
             graphView.getSecondScale().setMinY(0);
-            graphView.getSecondScale().setMaxY(35);
+            graphView.getSecondScale().setMaxY(maxPressure + 5);
+
+            // add mmHg to the labels
             graphView.getSecondScale().setLabelFormatter(new DefaultLabelFormatter()
             {
                 @Override
                 public String formatLabel(double value, boolean isValueX)
                 {
-                    return "";
+                    return super.formatLabel(value, isValueX) + " mmHg";
                 }
-
             });
         }
         else
@@ -813,7 +808,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_imgResults3Checkbox.setImageResource(R.drawable.measurement_unchecked);
                 String result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(0)) + " mmHg";
                 m_txtResults1.setText(result);
-                m_ImageButtonGraph1.setVisibility(View.VISIBLE);
                 break;
 
             case 2:
@@ -824,8 +818,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_txtResults1.setText(result);
                 result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(1)) + " mmHg";
                 m_txtResults2.setText(result);
-                m_ImageButtonGraph1.setVisibility(View.VISIBLE);
-                m_ImageButtonGraph2.setVisibility(View.VISIBLE);
                 break;
 
             case 3:
@@ -838,9 +830,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_txtResults2.setText(result);
                 result = RoundAndTruncateDouble(PatientInfo.getInstance().get_LVEDP(2)) + " mmHg";
                 m_txtResults3.setText(result);
-                m_ImageButtonGraph1.setVisibility(View.VISIBLE);
-                m_ImageButtonGraph2.setVisibility(View.VISIBLE);
-                m_ImageButtonGraph3.setVisibility(View.VISIBLE);
 
 
                 float avg = (float) ((PatientInfo.getInstance().get_LVEDP(0) + PatientInfo.getInstance().get_LVEDP(1) + PatientInfo.getInstance().get_LVEDP(2)) / 3.0);
@@ -867,6 +856,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private void SetResultsViewComplete()
     {
         UpdateResults();
+        EnableChartIcons();
         m_lblBottomMessage.setText("");
         m_imgRestIcon.setVisibility(View.INVISIBLE);
         m_lblRest.setText("");
@@ -954,6 +944,42 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_pressure_error_running), getString(R.string.dlg_msg_pressure_error_running), "Try Again", "End Test", this, DLG_ID_PRESSURE_ERROR_RUNNING, this);
     }
 
+    private void EnableChartIcons()
+    {
+        m_ImageButtonGraph1.setVisibility(View.VISIBLE);
+        m_ImageButtonGraph2.setVisibility(View.VISIBLE);
+        m_ImageButtonGraph3.setVisibility(View.VISIBLE);
+        m_ImageButtonGraph1.setOnClickListener(new View.OnClickListener()
+        {
+            private boolean state;
+
+            @Override
+            public void onClick(View arg0)
+            {
+                state = PlotResults(state, m_GraphViewResults1, 0);
+            }
+        });
+        m_ImageButtonGraph2.setOnClickListener(new View.OnClickListener()
+        {
+            private boolean state;
+
+            @Override
+            public void onClick(View arg0)
+            {
+                state = PlotResults(state, m_GraphViewResults2, 1);
+            }
+        });
+        m_ImageButtonGraph3.setOnClickListener(new View.OnClickListener()
+        {
+            private boolean state;
+
+            @Override
+            public void onClick(View arg0)
+            {
+                state = PlotResults(state, m_GraphViewResults3, 2);
+            }
+        });
+    }
 
     private void TestingStateMachine(Testing_Events event)
     {
