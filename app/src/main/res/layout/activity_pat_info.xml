@@ -524,11 +524,12 @@
                     android:gravity="top|left"
                     android:inputType="text|textMultiLine"
                     android:textAppearance="@style/PatInfoValue"
+                    android:maxLength="256"
                     android:textColor="@null"/>
                 />
 
             </LinearLayout>
-
+6
             <ImageView
                 android:id="@+id/imageView4"
                 android:layout_width="match_parent"
