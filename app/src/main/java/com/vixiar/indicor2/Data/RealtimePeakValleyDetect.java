@@ -12,7 +12,7 @@ public class RealtimePeakValleyDetect
     private static final double P_TO_P_FILTER_CONST_OLD_VALUE = 0.9;
     private static final double LEVEL_TO_DROP_FOR_PEAK_VALID = 0.1;
     private static final double LEVEL_TO_INCREASE_FOR_VALLEY_VALID = 0.1;
-    private static final int DEFAULT_SAMPLES_NO_PEAK_LIMIT = 500;
+    private static final int DEFAULT_SAMPLES_NO_PEAK_LIMIT = 150;
     private static final int LIMIT_FOR_NO_PEAKS = 3;
     public static final int CYCLES_BEFORE_RESETTING_HYSTERESIS = 3;
     public static final double WAIT_TIME_AS_FACTOR_OF_PREVIOUS_PV_TIME = 0.5;
