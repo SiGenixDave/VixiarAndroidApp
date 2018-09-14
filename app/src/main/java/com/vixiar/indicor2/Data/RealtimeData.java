@@ -49,7 +49,7 @@ public class RealtimeData
         {
             // convert the a/d counts from the handheld to pressure in mmHg
             pressureCounts = (256 * (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
-            pressureValue = ((double) pressureCounts * (-0.0263)) + 48.96;
+            pressureValue = ((double) pressureCounts * (-0.0263)) + 46.726;
             if (pressureValue < 0.0)
             {
                 pressureValue = 0.0;
