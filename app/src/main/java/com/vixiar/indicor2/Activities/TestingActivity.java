@@ -785,7 +785,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 @Override
                 public String formatLabel(double value, boolean isValueX)
                 {
-                    return super.formatLabel(value, isValueX) + " mmHg";
+                    return "";
                 }
             });
         }
