@@ -98,25 +98,46 @@ public class PostProcessing
                 searchIndex--;
             }
         }
+
+        // if for some reason, vStart wasn't found...such as when testing with the simulator, just use
+        // the start test marker
+        if (!vStartFound)
+        {
+            vStart = tm.startIndex;
+        }
         return vStart;
     }
 
     public int FindVEnd(int testNumber, ArrayList<PPG_PressureDataPoint> dataSet)
     {
+        boolean vEndFound = false;
+        int vEndIndex = 0;
         TestMarkers tm;
         tm = PatientInfo.getInstance().GetTestMarkers(testNumber);
-        int endIndex = tm.endIndex;
-        int endLimit = endIndex + (10 * 50);  // 10 sec forward from T10--endIndex
-        double slope = 0.0;
-
-        for (; endIndex != endLimit; endIndex++)
-        {   // repeat loop until 10 sec forward from endIndex (T10)
-            if (dataSet.get(endIndex).m_pressure < 2.0)
-            {
-                return endIndex;
-            }
+        int searchingIndex = tm.endIndex;
+        int endLimitIndex = searchingIndex + (10 * 50);  // 10 sec forward from T10--endIndex
+        if (endLimitIndex > dataSet.size())
+        {
+            endLimitIndex = dataSet.size();
         }
-        return -1;
+
+        while (searchingIndex < endLimitIndex)
+        {   // repeat loop until 10 sec forward from endIndex (T10)
+            if (dataSet.get(searchingIndex).m_pressure < 2.0)
+            {
+                vEndFound = true;
+                vEndIndex = searchingIndex;
+            }
+            searchingIndex++;
+        }
+
+        // if for some reason, vEnd wasn't found...such as when testing with the simulator, just use
+        // the end test marker
+        if (!vEndFound)
+        {
+            vEndIndex = tm.endIndex;
+        }
+        return vEndIndex;
     }
 
     public int FindBaselineStart(int testNumber, ArrayList<PPG_PressureDataPoint> dataSet)
