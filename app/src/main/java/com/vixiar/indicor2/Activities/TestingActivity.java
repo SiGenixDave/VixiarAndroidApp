@@ -779,7 +779,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             graphView.getSecondScale().setMinY(0);
             graphView.getSecondScale().setMaxY(maxPressure + 5);
 
-            // add mmHg to the labels
+            // this will remove the labels
             graphView.getSecondScale().setLabelFormatter(new DefaultLabelFormatter()
             {
                 @Override
