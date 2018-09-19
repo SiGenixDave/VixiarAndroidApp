@@ -101,21 +101,46 @@ public class RealtimeData
 
     public boolean IsMovementDetected(int startIndex)
     {
+        // this function will do 2 things, one, verify that there's no clipping
+        // second, it will make sure that the number of zero crossings over the last 2 seconds aren't too high
+        // for zero crossings, zero is defined as the mean of the data over the past 2 seconds
         boolean isMovement = false;
+        boolean isAboveMean = false;
+        int zeroCrossings = 0;
 
         // make sure there is enough data collected based on the lookback window setting
         if ((m_filteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND))
         {
-            // get the standard deviation for the last 2 seconds
             int startCheckIndex = m_filteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND);
             int endCheckIndex = m_filteredData.size() - 1;
 
+            double mean = DataMath.getInstance().CalculateMean(startCheckIndex, endCheckIndex, m_filteredData);
+
             for (int i = startCheckIndex; i < endCheckIndex - 1; i++)
             {
-                if (m_filteredData.get(i).m_PPG > AppConstants.PPG_AMPLITUDE_LIMIT_FOR_MOVEMENT)
+                // see if there's any clipping
+                int dataPoint = m_filteredData.get(i).m_PPG;
+                if (dataPoint > AppConstants.PPG_AMPLITUDE_LIMIT_FOR_MOVEMENT)
                 {
                     isMovement = true;
                     break;
+                }
+
+                // now look for zero crossings
+                if (dataPoint > mean && !isAboveMean)
+                {
+                    zeroCrossings++;
+                    isAboveMean = true;
+                }
+                else if (dataPoint < mean && isAboveMean)
+                {
+                    zeroCrossings++;
+                    isAboveMean = false;
+                }
+
+                if (zeroCrossings >= 7)
+                {
+                    isMovement = true;
                 }
             }
         }
