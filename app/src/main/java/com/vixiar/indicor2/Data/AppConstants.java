@@ -17,4 +17,5 @@ public class AppConstants
     public static final double HF_NOISE_LIMIT = 0.4;
     public static final int SECONDS_BEFORE_T0_FOR_RESULTS_GRAPH = 20;
     public static final int LENGTH_OF_RESULTS_GRAPH = 50;
+    public static final int ZERO_CROSSING_IN_MOVEMENT_TIME_LIMIT = 14;
 }

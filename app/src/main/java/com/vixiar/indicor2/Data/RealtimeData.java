@@ -41,7 +41,14 @@ public class RealtimeData
         {
             // convert the a/d counts from the handheld to pressure in mmHg
             pressureCounts = (256 * (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
+
+            // remove a known offset from the counts that are sent from the handheld
+            pressureCounts -= 15;
+
+            // convert to mmHg
             pressureValue = (double) pressureCounts / 38.027506;
+
+            // make sure it's not negative
             if (pressureValue < 0.0)
             {
                 pressureValue = 0.0;
@@ -138,7 +145,7 @@ public class RealtimeData
                     isAboveMean = false;
                 }
 
-                if (zeroCrossings >= 7)
+                if (zeroCrossings > AppConstants.ZERO_CROSSING_IN_MOVEMENT_TIME_LIMIT)
                 {
                     isMovement = true;
                 }
