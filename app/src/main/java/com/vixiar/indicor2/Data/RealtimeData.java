@@ -46,7 +46,26 @@ public class RealtimeData
             pressureCounts -= 15;
 
             // convert to mmHg
-            pressureValue = (double) pressureCounts / 38.027506;
+
+            // the converstion depends on the version of the handheld
+            // if it's version is less than 0.5.0.0 then it's the old conversion
+            // otherwise, the new conversion
+            String handheldVersion = PatientInfo.getInstance().get_firmwareRevision();
+            String splitUp[] = handheldVersion.split("\\.", 4);
+            int version = Integer.parseInt(splitUp[1]);
+
+            if (version < 4)
+            {
+                pressureValue = ((double) pressureCounts * (-0.0263)) + 46.726;
+            }
+            else if (version == 4)
+            {
+                pressureValue = ((double) (pressureCounts + 15) * (-0.0263)) + 48.96;
+            }
+            else
+            {
+                pressureValue = (double) (pressureCounts - 15) / 38.027506;
+            }
 
             // make sure it's not negative
             if (pressureValue < 0.0)
