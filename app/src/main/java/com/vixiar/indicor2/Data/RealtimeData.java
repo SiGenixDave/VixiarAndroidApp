@@ -131,43 +131,23 @@ public class RealtimeData
         // second, it will make sure that the number of zero crossings over the last 2 seconds aren't too high
         // for zero crossings, zero is defined as the mean of the data over the past 2 seconds
         boolean isMovement = false;
-        boolean isAboveMean = false;
-        int zeroCrossings = 0;
 
         // make sure there is enough data collected based on the lookback window setting
         if ((m_filteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND))
         {
             int startCheckIndex = m_filteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND);
-            int endCheckIndex = m_filteredData.size() - 1;
+            int endCheckIndex = m_filteredData.size() - AppConstants.SAMPLES_PER_SECOND - 1;
 
             double mean = DataMath.getInstance().CalculateMean(startCheckIndex, endCheckIndex, m_filteredData);
+            double stdev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_filteredData);
+            double upperLimit = mean + (AppConstants.STDEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT * stdev);
+            double lowerLimit = mean - (AppConstants.STDEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT * stdev);
 
-            for (int i = startCheckIndex; i < endCheckIndex - 1; i++)
+            // see if the sample is within the limit
+            int dataPoint = m_filteredData.get(m_filteredData.size()-1).m_PPG;
+            if (dataPoint > upperLimit || dataPoint < lowerLimit)
             {
-                // see if there's any clipping
-                int dataPoint = m_filteredData.get(i).m_PPG;
-                if (dataPoint > AppConstants.PPG_AMPLITUDE_LIMIT_FOR_MOVEMENT)
-                {
-                    isMovement = true;
-                    break;
-                }
-
-                // now look for zero crossings
-                if (dataPoint > mean && !isAboveMean)
-                {
-                    zeroCrossings++;
-                    isAboveMean = true;
-                }
-                else if (dataPoint < mean && isAboveMean)
-                {
-                    zeroCrossings++;
-                    isAboveMean = false;
-                }
-
-                if (zeroCrossings > AppConstants.ZERO_CROSSING_IN_MOVEMENT_TIME_LIMIT)
-                {
-                    isMovement = true;
-                }
+                isMovement = true;
             }
         }
         else

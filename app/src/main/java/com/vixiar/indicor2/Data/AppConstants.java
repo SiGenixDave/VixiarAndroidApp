@@ -10,7 +10,6 @@ public class AppConstants
     public static final int SAMPLES_PER_SECOND = 50;
     public static final int MIN_STABLE_HR = 40;
     public static final int MAX_STABLE_HR = 120;
-    public static final int PPG_AMPLITUDE_LIMIT_FOR_MOVEMENT = 60000;
     public static final int LOOKBACK_SECONDS_FOR_FLATLINE = 2;
     public static final int LOOKBACK_SECONDS_FOR_MOVEMENT = 2;
     public static final double  SD_LIMIT_FOR_FLATLINE = 200.0;
@@ -18,4 +17,6 @@ public class AppConstants
     public static final int SECONDS_BEFORE_T0_FOR_RESULTS_GRAPH = 20;
     public static final int LENGTH_OF_RESULTS_GRAPH = 50;
     public static final int ZERO_CROSSING_IN_MOVEMENT_TIME_LIMIT = 14;
+    public static final double STDEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT = 3.5;
+    public static final double STDEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT = 2.5;
 }
