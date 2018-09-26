@@ -52,7 +52,13 @@ public class RealtimeData
             // otherwise, the new conversion
             String handheldVersion = PatientInfo.getInstance().get_firmwareRevision();
             String splitUp[] = handheldVersion.split("\\.", 4);
-            int version = Integer.parseInt(splitUp[1]);
+
+            // assume a default version of 4
+            int version = 4;
+            if (splitUp.length >= 3)
+            {
+                version = Integer.parseInt(splitUp[1]);
+            }
 
             if (version < 4)
             {
