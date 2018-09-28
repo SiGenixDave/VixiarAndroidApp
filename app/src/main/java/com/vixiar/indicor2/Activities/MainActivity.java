@@ -262,6 +262,11 @@ public class MainActivity extends Activity implements CustomDialogInterface
         }
     }
 
+    public void onVideoClick(View view)
+    {
+
+    }
+
     public void onStartClick(View view)
     {
         PatientInfo.getInstance().Initialize();
