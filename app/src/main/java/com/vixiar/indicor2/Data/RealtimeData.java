@@ -101,7 +101,7 @@ public class RealtimeData
 
     public int GetCurrentDataIndex()
     {
-        return m_rawData.size() - 1;
+        return m_rawData.size();
     }
 
 
