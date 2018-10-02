@@ -36,6 +36,12 @@ public class PatientInfo
     private String m_testDate;
     private String m_gender;
     private String m_notes;
+    private String m_questionnaire_1;
+    private String m_questionnaire_2;
+    private String m_questionnaire_3;
+    private String m_questionnaire_4;
+    private String m_questionnaire_5;
+    private String m_questionnaire_6;
     private RealtimeData rtd = new RealtimeData();
 
     private enum Algo { PVD, RMS }
@@ -84,6 +90,12 @@ public class PatientInfo
         m_testDate = "";
         m_gender = "";
         m_notes = "";
+        m_questionnaire_1 = "";
+        m_questionnaire_2 = "";
+        m_questionnaire_3 = "";
+        m_questionnaire_4 = "";
+        m_questionnaire_5 = "";
+        m_questionnaire_6 = "";
         Arrays.fill(m_aCalcEndPA, 0.0);
         Arrays.fill(m_aCalcEndPAR, 0.0);
         Arrays.fill(m_aCalcHRAvgRest, 0.0);
@@ -227,6 +239,16 @@ public class PatientInfo
     public void set_age_years(int m_age_years)
     {
         this.m_age_years = m_age_years;
+    }
+
+    public void set_questionnaire(String m_q1, String m_q2, String m_q3, String m_q4, String m_q5, String m_q6)
+    {
+        this.m_questionnaire_1 = m_q1;
+        this.m_questionnaire_2 = m_q2;
+        this.m_questionnaire_3 = m_q3;
+        this.m_questionnaire_4 = m_q4;
+        this.m_questionnaire_5 = m_q5;
+        this.m_questionnaire_6 = m_q6;
     }
 
     // test number is 0 relative
@@ -496,6 +518,60 @@ public class PatientInfo
         private int endIndex;
     }
 
+    private void ReacCachedPatientInfo(Context context)
+    {
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = "cache-patinfo.txt";
+        String filePath = baseDir + File.separator + fileName;
+        File file = new File(filePath);
+        if(file.exists())
+        {
+
+        }
+    }
+
+    public boolean CachePatientInfo(Context context)
+    {
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = "cache-patinfo.txt";
+        String filePath = baseDir + File.separator + fileName;
+        File file = new File(filePath);
+        if(!file.exists())
+        {
+            try
+            {
+                FileOutputStream fos = new FileOutputStream(file);
+                PrintWriter pw = new PrintWriter(fos);
+                WritePatInfoContents(pw);
+                file.setWritable(true);
+                pw.flush();
+                pw.close();
+                fos.close();
+
+                // now we need to force android to rescan the file system so the file will show up
+                // if you want to load it via usb
+                context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
+
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+                Log.i(TAG, "******* File not found. Did you"
+                        + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return true;
+    }
+
+    private boolean WritePatInfoContents(PrintWriter writer)
+    {
+
+    }
+
     public boolean SaveCSVFile(Context context)
     {
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -546,6 +622,12 @@ public class PatientInfo
         writer.println("Mean blood pressure, " + (2 * m_diastolicBloodPressure + m_systolicBloodPressure) / 3);
         writer.println("Height (in.), " + m_height_Inches);
         writer.println("Weight (lbs.), " + m_weight_lbs);
+        if(m_questionnaire_1 != "") writer.println("Questionnaire 1, " + m_questionnaire_1);
+        if(m_questionnaire_2 != "") writer.println("Questionnaire 2, " + m_questionnaire_2);
+        if(m_questionnaire_3 != "") writer.println("Questionnaire 3, " + m_questionnaire_3);
+        if(m_questionnaire_4 != "") writer.println("Questionnaire 4, " + m_questionnaire_4);
+        if(m_questionnaire_5 != "") writer.println("Questionnaire 5, " + m_questionnaire_5);
+        if(m_questionnaire_6 != "") writer.println("Questionnaire 6, " + m_questionnaire_6);
 
         // calculate some stuff for BMI
         double height_m = m_height_Inches * 0.0254;
@@ -604,7 +686,7 @@ public class PatientInfo
         writer.println("RMS Min PAR-VM, " + FormatDoubleForPrint(m_aRMSMinPAR_VM[0]) + ", " +
                 FormatDoubleForPrint(m_aRMSMinPAR_VM[1]) + ", " + FormatDoubleForPrint(m_aRMSMinPAR_VM[2]));
         writer.println("RMS LVEDP, " + FormatDoubleForPrint(m_aRMS_LVEDP[0]) + ", " +
-                FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " + FormatDoubleForPrint(m_aCalcLVEDP[2]));
+                FormatDoubleForPrint(m_aRMS_LVEDP[1]) + ", " + FormatDoubleForPrint(m_aRMS_LVEDP[2]));
 
         // print all of markers
         writer.println("Marker index, Type");

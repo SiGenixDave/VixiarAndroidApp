@@ -34,6 +34,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
     private static final boolean DEBUG = false;
+    private boolean SHOW_QUESTIONNAIRE = true;
 
     private EditText txtPatientID;
     private EditText txtAge;
@@ -732,8 +733,15 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         v.setTypeface(robotoTypeface);
     }
 
+    private boolean CheckShowQuestionnaire()
+    {
+        // TODO add a method here to check if questionnaire has been filled out today already
+        return true;
+    }
+
     private void InitializeHeaderAndFooter()
     {
+        SHOW_QUESTIONNAIRE = CheckShowQuestionnaire();
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().HideBatteryIcon(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
@@ -755,7 +763,9 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
             public void onClick(View view)
             {
                 PatientInfo.getInstance().getRealtimeData().ClearAllData();
-                Intent intent = new Intent(PatInfoActivity.this, TestingActivity.class);
+                Intent intent;
+                if(SHOW_QUESTIONNAIRE) intent = new Intent(PatInfoActivity.this, QuestionnaireActivity.class);
+                else intent = new Intent(PatInfoActivity.this, TestingActivity.class);
                 startActivity(intent);
             }
         });
