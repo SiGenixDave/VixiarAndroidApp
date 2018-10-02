@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
@@ -516,60 +518,6 @@ public class PatientInfo
     {
         private int startIndex;
         private int endIndex;
-    }
-
-    private void ReacCachedPatientInfo(Context context)
-    {
-        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String fileName = "cache-patinfo.txt";
-        String filePath = baseDir + File.separator + fileName;
-        File file = new File(filePath);
-        if(file.exists())
-        {
-
-        }
-    }
-
-    public boolean CachePatientInfo(Context context)
-    {
-        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String fileName = "cache-patinfo.txt";
-        String filePath = baseDir + File.separator + fileName;
-        File file = new File(filePath);
-        if(!file.exists())
-        {
-            try
-            {
-                FileOutputStream fos = new FileOutputStream(file);
-                PrintWriter pw = new PrintWriter(fos);
-                WritePatInfoContents(pw);
-                file.setWritable(true);
-                pw.flush();
-                pw.close();
-                fos.close();
-
-                // now we need to force android to rescan the file system so the file will show up
-                // if you want to load it via usb
-                context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
-
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-                Log.i(TAG, "******* File not found. Did you"
-                        + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-        return true;
-    }
-
-    private boolean WritePatInfoContents(PrintWriter writer)
-    {
-
     }
 
     public boolean SaveCSVFile(Context context)

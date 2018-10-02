@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -26,6 +28,13 @@ import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -604,6 +613,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
             }
         });
 
+        ReadCachedPatientInfo();
     }
 
     public void hideKeyBoard(View v)
@@ -651,6 +661,8 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
                     HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
                     HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
                     HeaderFooterControl.getInstance().SetBottomMessage(PatInfoActivity.this, getString(R.string.continue_practice_or_test));
+
+                    CachePatientInfo();
                 }
                 else
                 {
@@ -736,6 +748,99 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
     private boolean CheckShowQuestionnaire()
     {
         // TODO add a method here to check if questionnaire has been filled out today already
+        return true;
+    }
+
+    private void ReadCachedPatientInfo()
+    {
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = "cache-patinfo.txt";
+        String filePath = baseDir + File.separator + fileName;
+        File file = new File(filePath);
+        if(file.exists())
+        {
+            try
+            {
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                String line;
+                while((line = br.readLine()) != null) {
+                    if(line.contains("patid"))
+                    {
+                        String[] lines = line.split(":");
+                        txtPatientID.setText(lines[1].trim());
+                    }
+                    else if(line.contains("height"))
+                    {
+                        String[] lines = line.split(":");
+                        txtHeight.setText(lines[1].trim());
+                    }
+                    else if(line.contains("weight"))
+                    {
+                        String[] lines = line.split(":");
+                        txtWeight.setText(lines[1].trim());
+                    }
+                    else if(line.contains("age"))
+                    {
+                        String[] lines = line.split(":");
+                        txtAge.setText(lines[1].trim());
+                    }
+                    else if(line.contains("gender"))
+                    {
+                        String[] lines = line.split(":");
+                        txtGender.setText(lines[1].trim());
+                    }
+                }
+                br.close();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+                Log.i(TAG, "******* Could not read cache file ********");
+            }
+        }
+        else
+        {
+            System.out.println("No cache file found");
+        }
+    }
+
+    public void CachePatientInfo()
+    {
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = "cache-patinfo.txt";
+        String filePath = baseDir + File.separator + fileName;
+        File file = new File(filePath);
+
+        try
+        {
+            FileOutputStream fos = new FileOutputStream(file);
+            PrintWriter pw = new PrintWriter(fos);
+            WritePatInfoContents(pw);
+            file.setWritable(true);
+            pw.flush();
+            pw.close();
+            fos.close();
+
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "******* File not found. Did you"
+                    + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean WritePatInfoContents(PrintWriter writer)
+    {
+        writer.println("patid: " + txtPatientID.getText());
+        writer.println("height: " + txtHeight.getText());
+        writer.println("weight: " + txtWeight.getText());
+        writer.println("age: " + txtAge.getText());
+        writer.println("gender: " + txtGender.getText());
         return true;
     }
 
