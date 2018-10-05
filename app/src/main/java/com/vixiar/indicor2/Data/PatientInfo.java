@@ -431,7 +431,7 @@ public class PatientInfo
         writer.println("Time (sec.), PPG (5Hz filter), Pressure (mmHg)");
         for (int i = 0; i < rtd.GetFilteredData().size(); i++)
         {
-            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetRawData().get(i).m_pressure));
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetFilteredData().get(i).m_pressure));
             t += 0.02;
         }
 
