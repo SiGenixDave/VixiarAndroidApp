@@ -3,6 +3,7 @@ package com.vixiar.indicor2.Application;
 import android.app.Application;
 import android.content.Context;
 
+import com.bugsnag.android.Bugsnag;
 import com.vixiar.indicor2.Upload_Interface.UploadServiceInterface;
 
 /**
@@ -15,6 +16,7 @@ public class NavigatorApplication extends Application
 
     public void onCreate() {
         super.onCreate();
+        Bugsnag.init(this);
         m_context = getApplicationContext();
 
         UploadServiceInterface.getInstance().initialize(this);

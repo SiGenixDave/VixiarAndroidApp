@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+
     <application
         android:name=".Application.NavigatorApplication"
         android:allowBackup="true"
@@ -55,6 +56,11 @@
             android:label="@string/title_activity_pdfview" />
         <activity android:name=".Activities.VideoActivity">
         </activity>
+
+        <meta-data
+            android:name="com.bugsnag.android.API_KEY"
+            android:value="afcbfc7c2207e28248b12b75e30472bc"/>
+
     </application>
 
 </manifest>
