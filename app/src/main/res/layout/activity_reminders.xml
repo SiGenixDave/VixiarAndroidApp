@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:paddingStart="10dp"
             android:paddingBottom="30dp"
-            android:text="@string/title_activity_reminders"
+            android:text="@string/reminders_header"
             android:textAppearance="@style/ReminderTitle"/>
 
 
