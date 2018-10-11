@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
@@ -37,13 +36,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class PatInfoActivity extends Activity implements CustomDialogInterface, IndicorBLEServiceInterfaceCallbacks
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
     private static final boolean DEBUG = false;
-    private boolean SHOW_QUESTIONNAIRE = true;
 
     private EditText txtPatientID;
     private EditText txtAge;
@@ -745,11 +746,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         v.setTypeface(robotoTypeface);
     }
 
-    private boolean CheckShowQuestionnaire()
-    {
-        // TODO add a method here to check if questionnaire has been filled out today already
-        return true;
-    }
+    // ***** STTR ONLY - Patient info caching in order to avoid patients entering info continuously ***** //
 
     private void ReadCachedPatientInfo()
     {
@@ -844,9 +841,54 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         return true;
     }
 
+
+    // ***** STTR ONLY - Questionnaire caching info so we show questionnaire once a day ***** //
+
+    private boolean CheckShowQuestionnaire()
+    {
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = "cache-questionnaireinfo.txt";
+        String filePath = baseDir + File.separator + fileName;
+        File file = new File(filePath);
+        if(file.exists())
+        {
+            try
+            {
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                String line;
+                while((line = br.readLine()) != null) {
+                    System.out.println(line);
+                    if(line.contains(GetCurrentDate()))
+                    {
+                        return false;
+                    }
+                }
+                br.close();
+                return true;
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+                Log.i(TAG, "******* Could not read cache file ********");
+                return true;
+            }
+        }
+        else
+        {
+            System.out.println("No cache file found");
+            return true;
+        }
+    }
+
+    private String GetCurrentDate()
+    {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Date date = new Date();
+        return simpleDateFormat.format(date);
+    }
+
     private void InitializeHeaderAndFooter()
     {
-        SHOW_QUESTIONNAIRE = CheckShowQuestionnaire();
         HeaderFooterControl.getInstance().SetTypefaces(this);
         HeaderFooterControl.getInstance().HideBatteryIcon(this);
         HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
@@ -869,7 +911,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
             {
                 PatientInfo.getInstance().getRealtimeData().ClearAllData();
                 Intent intent;
-                if(SHOW_QUESTIONNAIRE) intent = new Intent(PatInfoActivity.this, QuestionnaireActivity.class);
+                if(CheckShowQuestionnaire()) intent = new Intent(PatInfoActivity.this, QuestionnaireActivity.class);
                 else intent = new Intent(PatInfoActivity.this, TestingActivity.class);
                 startActivity(intent);
             }

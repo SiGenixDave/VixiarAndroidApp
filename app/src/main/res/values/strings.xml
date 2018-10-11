@@ -179,6 +179,7 @@
         <item>JHU Diuresis Study</item>
         <item>JHU Nephrology Study</item>
         <item>Vixiar Testing</item>
+        <item>JHU STTR Trial</item>
     </string-array>
 
     <string-array name="pref_study_location_list_values">
@@ -187,6 +188,7 @@
         <item>JHU-Diuresis</item>
         <item>JHU-Nephrology</item>
         <item>Vixiar_Internal-Testing</item>
+        <item>Vixiar_STTR_Trial</item>
     </string-array>
     <string name="title_activity_pdfview">PDFViewActivity</string>
 

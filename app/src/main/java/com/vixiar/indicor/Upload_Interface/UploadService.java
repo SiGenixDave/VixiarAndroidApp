@@ -185,7 +185,7 @@ public class UploadService extends Service
                         // get the patient id for this file
                         String patientID = GetPatientIDFromCSVFile(filePath);
 
-                        if (patientID != null)
+                        if (patientID != null && !filePath.endsWith(".txt"))
                         {
                             if (UploadFileToDropbox(filePath, GetDropboxDirectory(patientID)) == true)
                             {

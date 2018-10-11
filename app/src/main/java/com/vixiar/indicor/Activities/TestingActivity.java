@@ -1041,7 +1041,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     }
                     else
                     {
-                        // disconect from the handheld
+                        // disconnect from the handheld
                         IndicorBLEServiceInterface.getInstance().DisconnectFromIndicor();
 
                         // pause the upload service so it doesn't try to send a partial file

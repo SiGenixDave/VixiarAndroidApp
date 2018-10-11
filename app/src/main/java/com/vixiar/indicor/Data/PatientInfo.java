@@ -570,12 +570,12 @@ public class PatientInfo
         writer.println("Mean blood pressure, " + (2 * m_diastolicBloodPressure + m_systolicBloodPressure) / 3);
         writer.println("Height (in.), " + m_height_Inches);
         writer.println("Weight (lbs.), " + m_weight_lbs);
-        if(m_questionnaire_1 != "") writer.println("Questionnaire 1, " + m_questionnaire_1);
-        if(m_questionnaire_2 != "") writer.println("Questionnaire 2, " + m_questionnaire_2);
-        if(m_questionnaire_3 != "") writer.println("Questionnaire 3, " + m_questionnaire_3);
-        if(m_questionnaire_4 != "") writer.println("Questionnaire 4, " + m_questionnaire_4);
-        if(m_questionnaire_5 != "") writer.println("Questionnaire 5, " + m_questionnaire_5);
-        if(m_questionnaire_6 != "") writer.println("Questionnaire 6, " + m_questionnaire_6);
+        if(m_questionnaire_1 != "" || m_questionnaire_1 != null) writer.println("Questionnaire 1, " + m_questionnaire_1);
+        if(m_questionnaire_2 != "" || m_questionnaire_2 != null) writer.println("Questionnaire 2, " + m_questionnaire_2);
+        if(m_questionnaire_3 != "" || m_questionnaire_3 != null) writer.println("Questionnaire 3, " + m_questionnaire_3);
+        if(m_questionnaire_4 != "" || m_questionnaire_4 != null) writer.println("Questionnaire 4, " + m_questionnaire_4);
+        if(m_questionnaire_5 != "" || m_questionnaire_5 != null) writer.println("Questionnaire 5, " + m_questionnaire_5);
+        if(m_questionnaire_6 != "" || m_questionnaire_6 != null) writer.println("Questionnaire 6, " + m_questionnaire_6);
 
         // calculate some stuff for BMI
         double height_m = m_height_Inches * 0.0254;

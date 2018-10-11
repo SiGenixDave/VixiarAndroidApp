@@ -153,6 +153,10 @@ public class MainActivity extends Activity implements CustomDialogInterface
         {
             PatientInfo.getInstance().set_studyLocation("JHU Nephrology Study");
         }
+        else if (siteFolder.equals("Vixiar_STTR_Trial"))
+        {
+            PatientInfo.getInstance().set_studyLocation("JHU STTR Trial");
+        }
         else
         {
             PatientInfo.getInstance().set_studyLocation("Vixiar Testing");

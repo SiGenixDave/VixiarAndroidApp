@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
+import android.util.Log;
 import android.widget.TextView;
 import android.view.View;
 import android.content.Intent;
@@ -16,8 +17,19 @@ import com.vixiar.indicor.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor.Data.PatientInfo;
 import com.vixiar.indicor.R;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class QuestionnaireActivity extends Activity implements CustomDialogInterface
 {
+    private final static String TAG = QuestionnaireActivity.class.getSimpleName();
+
     RadioGroup radioQ1;
     RadioGroup radioQ2;
     RadioGroup radioQ3;
@@ -148,6 +160,7 @@ public class QuestionnaireActivity extends Activity implements CustomDialogInter
                 PatientInfo.getInstance().set_questionnaire(radioQ1Button.getText().toString(), radioQ2Button.getText().toString(),
                         radioQ3Button.getText().toString(), radioQ4Button.getText().toString(), radioQ5Button.getText().toString(),
                         radioQ6Button.getText().toString());
+                CacheQuestionnaireDate();
                 Intent intent = new Intent(QuestionnaireActivity.this, TestingActivity.class);
                 startActivity(intent);
             }
@@ -162,6 +175,43 @@ public class QuestionnaireActivity extends Activity implements CustomDialogInter
             }
         });
 
+    }
+
+    private void CacheQuestionnaireDate()
+    {
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = "cache-questionnaireinfo.txt";
+        String filePath = baseDir + File.separator + fileName;
+        File file = new File(filePath);
+
+        try
+        {
+            FileOutputStream fos = new FileOutputStream(file, true);
+            PrintWriter pw = new PrintWriter(fos);
+            pw.println(GetCurrentDate());
+            file.setWritable(true);
+            pw.flush();
+            pw.close();
+            fos.close();
+
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "******* File not found. Did you"
+                    + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private String GetCurrentDate()
+    {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Date date = new Date();
+        return simpleDateFormat.format(date);
     }
 
 
