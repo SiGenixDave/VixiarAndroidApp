@@ -237,7 +237,7 @@ public class HeartRateInfo
                 RealtimePeakValleyDetect.eSlopeZero.PEAK, RealtimePeakValleyDetect.getInstance().GetPeaksAndValleys());
 
         // if numBeatsToAverage is set to -1, the user wants to calculate the HR using all of the beats
-        if (numHeartBeatsToAverage == -1)
+        if (numHeartBeatsToAverage == -1 && peaks.size() > 0)
         {
             int startIndex = peaks.get(0);
             int endIndex = peaks.get(peaks.size() - 1);
