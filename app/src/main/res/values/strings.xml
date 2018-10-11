@@ -198,6 +198,14 @@
     <string name="question_4">Did you wake up short of breath last night? </string>
     <string name="question_5">Did you sleep in a chair or propped up with pillows, more than usual last night?</string>
     <string name="question_6">Compared to yesterday, would you say you are feeling about the same, better, worse, or much worse?</string>
+    <string name="title_activity_reminders">Reminders for Completing Tests</string>
+    <string name="reminder1">•	Sit in a chair and lean back.  Do not lean forward.</string>
+    <string name="reminder2">•	Hang the hand with the sensor off the armrest.</string>
+    <string name="reminder3">•	Do not cross or raise your legs.</string>
+    <string name="reminder4">•	Try not to move during testing.</string>
+    <string name="reminder5">•	Take a normal breath in before exhaling for the Valsalva.</string>
+    <string name="reminder6">•	Do not move or take the sensor off your finger until you see the final results screen.</string>
+    <string name="reminder7">•	Press the home icon to send your test results.</string>
 
 
 </resources>

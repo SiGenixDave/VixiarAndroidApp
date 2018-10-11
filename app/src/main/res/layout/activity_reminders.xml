@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLinearLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:foregroundGravity="bottom"
+    android:gravity="center_horizontal"
+    android:keepScreenOn="true"
+    android:orientation="vertical">
+
+    <include layout="@layout/top_bar_layout" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="1"
+        android:gravity="left"
+        android:orientation="vertical"
+        android:paddingLeft="30dp"
+        android:paddingTop="50dp"
+        android:paddingRight="30dp">
+
+        <TextView
+            android:id="@+id/lblR1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingBottom="30dp"
+            android:text="@string/title_activity_reminders"
+            android:textAppearance="@style/ReminderTitle"/>
+
+
+        <TextView
+            android:id="@+id/lblR2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingBottom="20dp"
+            android:text="@string/reminder1"
+            android:textAppearance="@style/ReminderText"/>
+
+        <TextView
+            android:id="@+id/lblR3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingBottom="20dp"
+            android:text="@string/reminder2"
+            android:textAppearance="@style/ReminderText"/>
+
+        <TextView
+            android:id="@+id/lblR4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingBottom="20dp"
+            android:text="@string/reminder3"
+            android:textAppearance="@style/ReminderText"/>
+
+        <TextView
+            android:id="@+id/lblR5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingBottom="20dp"
+            android:text="@string/reminder4"
+            android:textAppearance="@style/ReminderText" />
+
+        <TextView
+            android:id="@+id/lblR6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingBottom="20dp"
+            android:text="@string/reminder5"
+            android:textAppearance="@style/ReminderText"/>
+
+        <TextView
+            android:id="@+id/lblR7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingBottom="20dp"
+            android:text="@string/reminder6"
+            android:textAppearance="@style/ReminderText"/>
+
+        <TextView
+            android:id="@+id/lblR8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:text="@string/reminder7"
+            android:textAppearance="@style/ReminderText"/>
+
+
+    </LinearLayout>
+
+
+    <include layout="@layout/bottom_bar_layout" />
+
+
+</android.widget.LinearLayout>

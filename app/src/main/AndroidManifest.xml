@@ -53,7 +53,10 @@
         <activity
             android:name=".Activities.PDFViewActivity"
             android:label="@string/title_activity_pdfview" />
-        <activity android:name=".Activities.QuestionnaireActivity"></activity>
+        <activity android:name=".Activities.QuestionnaireActivity" />
+        <activity
+            android:name="com.vixiar.indicor2.Reminders"
+            android:label="@string/title_activity_reminders"></activity>
     </application>
 
 </manifest>
