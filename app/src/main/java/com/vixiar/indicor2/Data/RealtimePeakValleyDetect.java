@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static com.vixiar.indicor2.Data.RealtimePeakValleyDetect.ePVDStates.VALIDATING_PEAK;
+
 public class RealtimePeakValleyDetect
 {
     // //////////////////////////////////////////////////////////////////////////
@@ -56,7 +58,7 @@ public class RealtimePeakValleyDetect
     // processing cycle
     private ePVDStates m_DetectFirst;
     // Determines whether a peak or valley is being detected
-    private ePVDStates m_State;
+    private ePVDStates m_State = VALIDATING_PEAK;
     // Current highest value while detecting a peak
     private int m_CurrentHighestSample;
     // Current lowest value while detecting a valley
@@ -172,7 +174,7 @@ public class RealtimePeakValleyDetect
         m_lowestValley = 65535;
 
         // Default value of
-        this.m_DetectFirst = ePVDStates.VALIDATING_PEAK;
+        this.m_DetectFirst = VALIDATING_PEAK;
         if (!detectPeakFirst)
         {
             this.m_DetectFirst = ePVDStates.VALIDATING_VALLEY;
@@ -357,7 +359,7 @@ public class RealtimePeakValleyDetect
                         {
                             m_ValleysIndexes.add(m_LastPotentialValleyIndex);
                         }
-                        m_State = ePVDStates.VALIDATING_PEAK;
+                        m_State = VALIDATING_PEAK;
 
                         // Reset the data index 1 increment behind the valley
                         m_DataIndex = m_LastPotentialValleyIndex - 1;
@@ -400,7 +402,7 @@ public class RealtimePeakValleyDetect
                 // if too much time has elapsed without seeing a peak, reset the hysteresis and the detection state
                 m_PeakHysteresisLevel = m_defaultDeltaPeak;
                 m_ValleyHysteresisLevel = m_defaultDeltaValley;
-                m_State = ePVDStates.VALIDATING_PEAK;
+                m_State = VALIDATING_PEAK;
                 m_lastPVCount = 0;
                 m_samplesWithNoPeaks = 0;
                 //System.out.println();
