@@ -230,32 +230,31 @@ public class HeartRateInfo
 
     public double CalculateEndHeartRateStartingAt(int firstPeakIndex, int numHeartBeatsToAverage)
     {
-        double hr;
+        double hr = 0.0;
 
         // get all of the peaks from the first index till now
         List<Integer> peaks = BeatProcessing.getInstance().GetItemsBetween(firstPeakIndex, -1,
                 RealtimePeakValleyDetect.eSlopeZero.PEAK, RealtimePeakValleyDetect.getInstance().GetPeaksAndValleys());
 
-        // if numBeatsToAverage is set to -1, the user wants to calculate the HR using all of the beats
-        if (numHeartBeatsToAverage == -1 && peaks.size() > 0)
+        // first make sure there are enough peaks to do a calculation
+        if (peaks.size() > 1)
         {
-            int startIndex = peaks.get(0);
-            int endIndex = peaks.get(peaks.size() - 1);
-            hr = HeartRate(startIndex, endIndex, peaks.size() - 1);
-        }
-        else
-        {
-            // see if there are enough peaks
-            if (peaks.size() > numHeartBeatsToAverage)
+            // if numBeatsToAverage is set to -1, the user wants to calculate the HR using all of the beats
+            if (numHeartBeatsToAverage == -1)
             {
-                int startIndex = peaks.get(peaks.size() - (numHeartBeatsToAverage + 1));
+                int startIndex = peaks.get(0);
                 int endIndex = peaks.get(peaks.size() - 1);
-                hr = HeartRate(startIndex, endIndex, numHeartBeatsToAverage);
+                hr = HeartRate(startIndex, endIndex, peaks.size() - 1);
             }
             else
             {
-                // indicat that there's not enough peaks yet
-                hr = 0.0;
+                // see if there are enough peaks
+                if (peaks.size() > numHeartBeatsToAverage)
+                {
+                    int startIndex = peaks.get(peaks.size() - (numHeartBeatsToAverage + 1));
+                    int endIndex = peaks.get(peaks.size() - 1);
+                    hr = HeartRate(startIndex, endIndex, numHeartBeatsToAverage);
+                }
             }
         }
         return hr;
