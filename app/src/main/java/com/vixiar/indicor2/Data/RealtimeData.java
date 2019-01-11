@@ -14,6 +14,7 @@ public class RealtimeData
     private ArrayList<PPG_PressureDataPoint> m_rawData = new ArrayList<PPG_PressureDataPoint>();
     private ArrayList<PPG_PressureDataPoint> m_filteredData = new ArrayList<PPG_PressureDataPoint>();
     private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
+    private ArrayList<Integer> m_rawPDData = new ArrayList<>();
     private I_FIRFilterTap PPGTaps = new PPG_FIRFilterTaps();
     private I_FIRFilterTap PressureTaps = new Pressure_FIRFilterTaps();
     private FIRFilter m_PPGFIRFilter = new FIRFilter(PPGTaps.GetTaps());
@@ -30,13 +31,30 @@ public class RealtimeData
         m_markers.clear();
     }
 
-    public void AppendNewSample(byte[] new_data)
+    public void AppendNewPDSample(byte[] new_data)
+    {
+        int pd_level = 0;
+
+        pd_level = (256 * (new_data[1] & 0xFF)) + (new_data[2] & 0xFF);
+        m_rawPDData.add(pd_level);
+
+        pd_level = (256 * (new_data[3] & 0xFF)) + (new_data[4] & 0xFF);
+        m_rawPDData.add(pd_level);
+
+        pd_level = (256 * (new_data[5] & 0xFF)) + (new_data[6] & 0xFF);
+        m_rawPDData.add(pd_level);
+
+        pd_level = (256 * (new_data[7] & 0xFF)) + (new_data[8] & 0xFF);
+        m_rawPDData.add(pd_level);
+    }
+
+    public void AppendNewPressurePPGSample(byte[] new_data)
     {
         // extract the m_rawData...the first byte is the sequence number
         // followed by two bytes of PPG then pressure repetitively
-        double pressureValue;
-        int pressureCounts;
-        int ppgValue;
+        double pressureValue = 0.0;
+        int pressureCounts = 0;
+        int ppgValue = 0;
         for (int i = 1; i < new_data.length; i += 4)
         {
             // convert the a/d counts from the handheld to pressure in mmHg
@@ -46,8 +64,7 @@ public class RealtimeData
             pressureCounts -= 15;
 
             // convert to mmHg
-
-            // the converstion depends on the version of the handheld
+            // the conversion depends on the version of the handheld
             // if it's version is less than 0.5.0.0 then it's the old conversion
             // otherwise, the new conversion
             String handheldVersion = PatientInfo.getInstance().get_firmwareRevision();
