@@ -80,6 +80,12 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, level);
     }
 
+    @Override
+    public void iLEDLevelRead(int level)
+    {
+
+    }
+
     public void iRestart()
     {
         IndicorBLEServiceInterface.getInstance().ConnectToIndicor();
@@ -99,6 +105,12 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
     {
         int currentIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
         pvg.setBallPressure((float) PatientInfo.getInstance().getRealtimeData().GetRawData().get(currentIndex - 1).m_pressure);
+    }
+
+    @Override
+    public void iPDDataNotification()
+    {
+
     }
 
     private void ExitToMainActivity()
