@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.NavigableMap;
 
 import static com.vixiar.indicor2.Data.AppConstants.LENGTH_OF_RESULTS_GRAPH;
 import static com.vixiar.indicor2.Data.AppConstants.SAMPLES_PER_SECOND;
@@ -47,6 +48,7 @@ public class PatientInfo
     // Constants
     private final int NUM_TESTS = 3;
     private double[] m_aCalcLVEDP = new double[NUM_TESTS];
+    private int[] m_aLEDDriveLevels = new int[NUM_TESTS];
 
     public static PatientInfo getInstance()
     {
@@ -99,6 +101,11 @@ public class PatientInfo
         this.m_firmwareVersion = m_firmwareVersion;
     }
 
+    public int[] get_LEDDriveLevels()
+    {
+        return m_aLEDDriveLevels;
+    }
+
     public double get_LVEDP(int testNumber)
     {
         if (testNumber <= NUM_TESTS)
@@ -149,6 +156,32 @@ public class PatientInfo
     public void set_notes(String m_notes)
     {
         this.m_notes = m_notes;
+
+        // parse the notes for the LED drive levels
+        String noWhitespaceNotes = m_notes.replaceAll("\\s","");
+        String values[] = noWhitespaceNotes.split(",");
+
+        for (int i = 0; i < NUM_TESTS; i++)
+        {
+            int value;
+            try
+            {
+                value = Integer.parseInt(values[i]);
+                if (value < 0)
+                {
+                    value = 0;
+                }
+                if (value > 100)
+                {
+                    value = 100;
+                }
+            }
+            catch (Exception e)
+            {
+                value = 0;
+            }
+            m_aLEDDriveLevels[i] = value;
+        }
     }
 
     public RealtimeData getRealtimeData()
