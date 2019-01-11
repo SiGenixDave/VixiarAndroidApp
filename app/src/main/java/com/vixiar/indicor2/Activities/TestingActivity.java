@@ -23,7 +23,7 @@ import com.vixiar.indicor2.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor2.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor2.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor2.CustomDialog.CustomDialogInterface;
-import com.vixiar.indicor2.Data.PPGDataCalibrate;
+import com.vixiar.indicor2.Data.PPGGraphScaling;
 import com.vixiar.indicor2.Data.PPG_PressureDataPoint;
 import com.vixiar.indicor2.Data.PatientInfo;
 import com.vixiar.indicor2.Data.RealtimeDataMarker;
@@ -47,7 +47,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private int m_nLastDataIndex = 0;
     private static Double m_nPPGGraphLastX = 0.0;
     private int m_nCountdownSecLeft;
-    private int m_nTestNumber;
+    private int m_nOneRelativeTestNumber;                  // number of test that's running (1 relative)
     private int m_baselineStartIndex = 0;
     private boolean m_bIsConnected;
 
@@ -86,14 +86,24 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private GraphView m_GraphViewResults2;
     private GraphView m_GraphViewResults3;
 
-    private PPGDataCalibrate m_PPPGDataCalibrate = new PPGDataCalibrate();
+    private PPGGraphScaling m_PPPGGraphAutoScaling = new PPGGraphScaling();
 
     Typeface m_robotoLightTypeface;
     Typeface m_robotoRegularTypeface;
 
     private enum Testing_State
     {
-        BASELINE_NOT_CONNECTED, BASELINE, BASELINE_WITH_ERROR_DIALOG_DISPLAYING, BASELINE_GOOD_5SEC_COUNTDOWN, VALSALVA_WAIT_FOR_PRESSURE, VALSALVA, LOADING_RESULTS, RESULTS, COMPLETE, PRESSURE_ERROR,
+        BASELINE_NOT_CONNECTED,
+        BASELINE_WAIT_FOR_PPG_SETTLE,
+        BASELINE,
+        BASELINE_WITH_ERROR_DIALOG_DISPLAYING,
+        BASELINE_GOOD_5SEC_COUNTDOWN,
+        VALSALVA_WAIT_FOR_PRESSURE,
+        VALSALVA,
+        LOADING_RESULTS,
+        RESULTS,
+        COMPLETE,
+        PRESSURE_ERROR,
     }
 
     private Testing_State m_testingState;
@@ -101,13 +111,18 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private enum Testing_Events
     {
-        EVT_ONESHOT_TIMER_TIMEOUT, EVT_CONNECTED, EVT_PERIODIC_TIMER_TICK, EVT_VALSALVA_PRESSURE_UPDATE, EVT_PPG_FLATLINING, EVT_PPG_IS_CLIPPING,
+        EVT_ONESHOT_TIMER_TIMEOUT,
+        EVT_CONNECTED,
+        EVT_PERIODIC_TIMER_TICK,
+        EVT_VALSALVA_PRESSURE_UPDATE,
+        EVT_PPG_FLATLINING,
+        EVT_PPG_IS_CLIPPING,
     }
 
     // Timer stuff
     private GenericTimer m_oneShotTimer;
     private GenericTimer m_periodicTimer;
-    private GenericTimer m_ppgcalTimer;
+    private GenericTimer m_ppgGraphScalingTimer;
     private GenericTimer m_pressureOutTimer;
 
     private final int ONESHOT_TIMER_ID = 1;
@@ -124,7 +139,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int DLG_ID_PPG_HF_NOISE = 7;
 
     // Timing constants
-    private final int PPGCAL_TIME_MS = 2000;
+    private final int PPGGRAPH_AUTOSCALE_TIME_MS = 2000;
+    private final int BASELINE_DELAY_AFTER_PPGLED_ADJUST_MS = 4000;
     private final int BASELINE_TIME_MS = 15000;
     private final int AFTER_STABLE_DELAY_SECONDS = 5;
     private final int VALSALVA_WAIT_FOR_PRESSURE_TIMEOUT_MS = 5000;
@@ -177,10 +193,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
                 // Update the y scaling on the chart ony for first stability check, use the
                 // saved y axis scaled values for the remaining 2 tests
-                if (m_PPPGDataCalibrate.Complete(7, 7))
+                if (m_PPPGGraphAutoScaling.Complete(7, 7))
                 {
-                    double yMaxScaling = m_PPPGDataCalibrate.getYMaxChartScale();
-                    double yMinScaling = m_PPPGDataCalibrate.getYMinChartScale();
+                    double yMaxScaling = m_PPPGGraphAutoScaling.getYMaxChartScale();
+                    double yMinScaling = m_PPPGGraphAutoScaling.getYMinChartScale();
 
                     m_chartPPG.getViewport().setMaxY(yMaxScaling);
                     m_chartPPG.getViewport().setMinY(yMinScaling);
@@ -191,7 +207,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 else
                 {
                     // Restart the timer because the cal hasn't occurred yet
-                    m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
+                    m_ppgGraphScalingTimer.Start(this, PPGGRAPH_AUTOSCALE_TIME_MS, true);
                 }
                 break;
 
@@ -282,9 +298,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         {
             m_periodicTimer.Cancel();
         }
-        if (m_ppgcalTimer != null)
+        if (m_ppgGraphScalingTimer != null)
         {
-            m_ppgcalTimer.Cancel();
+            m_ppgGraphScalingTimer.Cancel();
         }
         if (m_pressureOutTimer != null)
         {
@@ -304,7 +320,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case BASELINE_WITH_ERROR_DIALOG_DISPLAYING:
                 break;
 
-            case BASELINE:
+            case BASELINE_WAIT_FOR_PPG_SETTLE:
                 // update the PPG chart
                 int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size();
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
@@ -317,6 +333,23 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 // update the heart rate on the screen
                 double BPM = PatientInfo.getInstance().getRealtimeData().GetCurrentHeartRate(m_baselineStartIndex);
                 String sTemp = "HR = " + String.valueOf((int) BPM) + " BPM";
+                m_txtHeartRate.setText(sTemp);
+
+                break;
+
+            case BASELINE:
+                // update the PPG chart
+                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size();
+                for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
+                {
+                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG), true, 500);
+                    m_nPPGGraphLastX += 0.02;
+                }
+                m_nLastDataIndex = currentDataIndex;
+
+                // update the heart rate on the screen
+                BPM = PatientInfo.getInstance().getRealtimeData().GetCurrentHeartRate(m_baselineStartIndex);
+                sTemp = "HR = " + String.valueOf((int) BPM) + " BPM";
                 m_txtHeartRate.setText(sTemp);
 
                 // see if there is a flatline signal
@@ -345,10 +378,22 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     }
 
     @Override
+    public void iPDDataNotification()
+    {
+
+    }
+
+    @Override
     public void iBatteryLevelRead(int level)
     {
         Log.i(TAG, "Bat. level = " + level);
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, level);
+    }
+
+    @Override
+    public void iLEDLevelRead(int level)
+    {
+
     }
 
     @Override
@@ -421,7 +466,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         // stop any running timers
         m_periodicTimer.Cancel();
         m_oneShotTimer.Cancel();
-        m_ppgcalTimer.Cancel();
+        m_ppgGraphScalingTimer.Cancel();
         m_pressureOutTimer.Cancel();
 
         // disconnect from the handheld
@@ -492,7 +537,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private String GetMeasurementScreenTitle()
     {
-        return getString(R.string.measurement) + " " + String.valueOf(m_nTestNumber) + "/3";
+        return getString(R.string.measurement) + " " + String.valueOf(m_nOneRelativeTestNumber) + "/3";
     }
 
     private void UserRequestingToCancel()
@@ -534,8 +579,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
 
-        m_PPPGDataCalibrate.Start();
-        m_ppgcalTimer.Start(this, PPGCAL_TIME_MS, true);
+        m_PPPGGraphAutoScaling.Start();
+        m_ppgGraphScalingTimer.Start(this, PPGGRAPH_AUTOSCALE_TIME_MS, true);
 
     }
 
@@ -604,7 +649,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_graphPressure.SetGraphActiveMode(m_graphPressure.INACTIVE);
         m_lblTimeRemaining.setVisibility(View.INVISIBLE);
         m_lblBottomCountdownNumber.setVisibility(View.INVISIBLE);
-        if (m_nTestNumber < 3)
+        if (m_nOneRelativeTestNumber < 3)
         {
             m_lblBottomMessage.setText(R.string.loading_results);
         }
@@ -664,7 +709,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         HeaderFooterControl.getInstance().SetTypefaces(this, this);
         HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.results));
 
-        if (m_nTestNumber < 3)
+        if (m_nOneRelativeTestNumber < 3)
         {
             HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
             HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
@@ -800,7 +845,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private void UpdateResults()
     {
         // mark the correct number of check boxes
-        switch (m_nTestNumber)
+        switch (m_nOneRelativeTestNumber)
         {
             case 1:
                 m_imgResults1Checkbox.setImageResource(R.drawable.measurement_checked);
@@ -913,7 +958,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
     private void InitTest()
     {
-        m_nTestNumber = 1;
+        m_nOneRelativeTestNumber = 1;
         PatientInfo.getInstance().set_testDateTime(getDateTime());
 
         SwitchToStabilityView();
@@ -921,7 +966,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
         m_oneShotTimer = new GenericTimer(ONESHOT_TIMER_ID);
         m_periodicTimer = new GenericTimer(PERIODIC_TIMER_ID);
-        m_ppgcalTimer = new GenericTimer(PPG_CAL_TIMER_ID);
+        m_ppgGraphScalingTimer = new GenericTimer(PPG_CAL_TIMER_ID);
         m_pressureOutTimer = new GenericTimer(PRESSURE_OUT_TIMER_ID);
 
         m_testingState = Testing_State.BASELINE_NOT_CONNECTED;
@@ -981,6 +1026,17 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         });
     }
 
+    private void AdjustLEDBrightness(int zeroRelativeTestNumber)
+    {
+        int level = PatientInfo.getInstance().get_LEDDriveLevels()[zeroRelativeTestNumber];
+
+        // set the LED drive level based on what the user put in the notes field
+        if (level != 0 && level <= 100)
+        {
+            IndicorBLEServiceInterface.getInstance().SetLEDPWMValue(level);
+        }
+    }
+
     private void TestingStateMachine(Testing_Events event)
     {
         switch (m_testingState)
@@ -989,10 +1045,23 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: BASELINE_NOT_CONNECTED");
                 if (event == Testing_Events.EVT_CONNECTED)
                 {
+                    AdjustLEDBrightness(m_nOneRelativeTestNumber - 1);
                     ActivateBaselineView();
+                    // redo the timer that was setup in the last function
+                    m_oneShotTimer.Cancel();
+                    m_oneShotTimer.Start(this, BASELINE_DELAY_AFTER_PPGLED_ADJUST_MS, true);
+                    m_testingState = Testing_State.BASELINE_WAIT_FOR_PPG_SETTLE;
+                    m_baselineStartIndex = PatientInfo.getInstance().getRealtimeData().GetCurrentDataIndex();
+                }
+                break;
+
+            case BASELINE_WAIT_FOR_PPG_SETTLE:
+                if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
+                {
+                    m_oneShotTimer.Cancel();
+                    m_oneShotTimer.Start(this, BASELINE_TIME_MS, true);
 
                     m_testingState = Testing_State.BASELINE;
-                    m_baselineStartIndex = PatientInfo.getInstance().getRealtimeData().GetCurrentDataIndex();
                 }
                 break;
 
@@ -1144,7 +1213,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             m_pressureOutTimer.Cancel();
                             SetupLoadingResultsView();
                             m_testingState = Testing_State.LOADING_RESULTS;
-                            if (m_nTestNumber < 3)
+                            if (m_nOneRelativeTestNumber < 3)
                             {
                                 m_oneShotTimer.Start(this, VALSALVA_LOADING_RESULTS_DELAY_MS, true);
                             }
@@ -1161,8 +1230,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: LOADING_RESULTS");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    PatientInfo.getInstance().CalculateResults(m_nTestNumber - 1);
-                    if (m_nTestNumber < 3)
+                    PatientInfo.getInstance().CalculateResults(m_nOneRelativeTestNumber - 1);
+                    if (m_nOneRelativeTestNumber < 3)
                     {
                         SwitchToResultsView();
                         UpdateResults();
@@ -1170,6 +1239,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         m_testingState = Testing_State.RESULTS;
                         m_nCountdownSecLeft = NEXT_TEST_DELAY_SECONDS;
                         UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+
+                        // adjust the LED for the next test
+                        AdjustLEDBrightness(m_nOneRelativeTestNumber - 1);
                     }
                     else
                     {
@@ -1205,9 +1277,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         {
                             // starting next test
                             m_periodicTimer.Cancel();
-                            m_nTestNumber++;
+                            m_nOneRelativeTestNumber++;
+
                             SwitchToStabilityView();
                             ActivateBaselineView();
+                            m_baselineStartIndex = PatientInfo.getInstance().getRealtimeData().GetCurrentDataIndex();
                             m_testingState = Testing_State.BASELINE;
                         }
                         else
