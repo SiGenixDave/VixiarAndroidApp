@@ -352,6 +352,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 sTemp = "HR = " + String.valueOf((int) BPM) + " BPM";
                 m_txtHeartRate.setText(sTemp);
 
+/*
                 // see if there is a flatline signal
                 if (PatientInfo.getInstance().getRealtimeData().IsPPGSignalFlatlining(m_baselineStartIndex))
                 {
@@ -363,6 +364,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 {
                     TestingStateMachine(Testing_Events.EVT_PPG_IS_CLIPPING);
                 }
+*/
                 break;
 
             case VALSALVA_WAIT_FOR_PRESSURE:
@@ -1069,6 +1071,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: BASELINE");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
+/*
                     // baseline is over, now check the signal for a good heart rate before proceeding
                     if (!PatientInfo.getInstance().getRealtimeData().WasHeartRateInRange(m_baselineStartIndex))
                     {
@@ -1082,6 +1085,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     else
+*/
                     {
                         SwitchToTestingView();
                         InactivateTestingView();
