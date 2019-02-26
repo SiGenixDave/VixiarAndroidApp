@@ -17,7 +17,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import com.vixiar.indicor2.Activities.GenericTimer;
-import com.vixiar.indicor2.Activities.TestingActivity;
 import com.vixiar.indicor2.Activities.TimerCallback;
 import com.vixiar.indicor2.Application.NavigatorApplication;
 import com.vixiar.indicor2.CustomDialog.CustomAlertDialog;
@@ -71,8 +70,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private int m_expectedRTDataSequnceNumber;
     private boolean m_bFirstSequenceNumber;
 
-    private int m_expectedPDDataSequnceNumber;
-    private boolean m_bFirstPDSequenceNumber;
+    private String m_handheldFirmwareRevision;
 
     private final ArrayList<ScanResult> m_ScanList = new ArrayList<ScanResult>()
     {
@@ -82,8 +80,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private final static int BATTERY_READ_TIMER_ID = 3;
     private final static int CONNECTION_TIMEOUT_TIMER_ID = 10;
     private final static int BATTERY_READ_TIME_MS = 30000;
-    private final GenericTimer m_updateBatteryTimer = new GenericTimer(BATTERY_READ_TIMER_ID);
-    private final GenericTimer m_connectionTimeoutTimer = new GenericTimer(CONNECTION_TIMEOUT_TIMER_ID);
+    private GenericTimer m_updateBatteryTimer = new GenericTimer(BATTERY_READ_TIMER_ID);
+    private GenericTimer m_connectionTimeoutTimer = new GenericTimer(CONNECTION_TIMEOUT_TIMER_ID);
 
     private final int SCAN_TIME_MS = 5000;
     private final int CONNECTION_TIMEOUT_MS = SCAN_TIME_MS + 10000;
@@ -110,7 +108,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         STATE_REQUESTED_REVISION,
         STATE_REQUESTED_BATTERY,
         STATE_REQUESTED_RT_NOTIFICATION,
-        STATE_REQUESTED_PD_NOTIFICATION,
+        STATE_REQUESTED_CONNECTION_NOTIFICATION,
         STATE_OPERATIONAL
     }
 
@@ -127,15 +125,15 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         EVT_NOTIFICATION_WRITTEN,
         EVT_DISCONNECTED,
         EVT_AUTHENTICATION_ERROR,
-        EVT_CONNECTION_ERROR
+        EVT_CONNECTiON_ERROR
     }
 
     // list of errors
     public static final int ERROR_NO_DEVICES_FOUND = 1;
-    private static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
-    private static final int ERROR_AUTHENTICATION = 3;
+    public static final int ERROR_NO_PAIRED_DEVICES_FOUND = 2;
+    public static final int ERROR_AUTHENTICATION = 3;
     public static final int ERROR_CONNECTION_ERROR = 4;
-    private static final int ERROR_SEQUENCE_ERROR = 4;
+    public static final int ERROR_SEQUENCE_ERROR = 4;
 
     // Offsets to data in characteristics
     private final static int BATTERY_LEVEL_PCT_INDEX = 0;
@@ -414,36 +412,13 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             case STATE_REQUESTED_RT_NOTIFICATION:
                 if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
                 {
-                    m_bFirstPDSequenceNumber = true;
-
-                    // if this is a newer handheld, subscribe to the PD data notifications,
-                    // if not, we're done connecting
-                    if (m_VixiarHHBLEService.SubscribeToPDDataNotification(true))
-                    {
-                        m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_PD_NOTIFICATION;
-                        Log.i(TAG, "STATE_REQUESTED_PD_NOTIFICATION");
-                    }
-                    else
-                    {
-                        m_IndicorConnectionState = IndicorConnection_State.STATE_OPERATIONAL;
-
-                        // remove the dialog showing the connection progress bar
-                        if (m_connectionDialog != null)
-                        {
-                            m_connectionDialog.cancel();
-                        }
-
-                        // stop the connection timeout timer
-                        m_connectionTimeoutTimer.Cancel();
-
-                        // tell the activity the everything is good to go
-                        m_CallbackInterface.iFullyConnected();
-                        Log.i(TAG, "STATE_OPERATIONAL");
-                    }
+                    m_VixiarHHBLEService.SubscribeToConnectionNotification(true);
+                    m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_CONNECTION_NOTIFICATION;
+                    Log.i(TAG, "STATE_REQUESTED_CONNECTION_NOTIFICATION");
                 }
                 break;
 
-            case STATE_REQUESTED_PD_NOTIFICATION:
+            case STATE_REQUESTED_CONNECTION_NOTIFICATION:
                 if (event == Connection_Event.EVT_NOTIFICATION_WRITTEN)
                 {
                     m_IndicorConnectionState = IndicorConnection_State.STATE_OPERATIONAL;
@@ -595,7 +570,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     // if this is the first message, we don't care what the sequence number is, but we need to know what to expect next time
                     m_bFirstSequenceNumber = false;
                     m_expectedRTDataSequnceNumber = (receivedSequenceNumber + 1) % 256;
-                    PatientInfo.getInstance().getRealtimeData().AppendNewPressurePPGSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
+                    PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
                     m_CallbackInterface.iRealtimeDataNotification();
                 }
                 else if (receivedSequenceNumber != m_expectedRTDataSequnceNumber)
@@ -620,40 +595,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     // everything is ok
 
                     m_expectedRTDataSequnceNumber = (m_expectedRTDataSequnceNumber + 1) % 256;
-                    PatientInfo.getInstance().getRealtimeData().AppendNewPressurePPGSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
+                    PatientInfo.getInstance().getRealtimeData().AppendNewSample(arg1.getByteArrayExtra(IndicorBLEService.RT_DATA_RECEIVED));
                     m_CallbackInterface.iRealtimeDataNotification();
-                }
-            }
-            else if (arg1.hasExtra(IndicorBLEService.PD_DATA_RECEIVED))
-            {
-                // make sure the sequence number is right
-                int receivedSequenceNumber = (arg1.getByteArrayExtra(IndicorBLEService.PD_DATA_RECEIVED)[0] & 0xFF);
-                if (m_bFirstPDSequenceNumber)
-                {
-                    // if this is the first message, we don't care what the sequence number is, but we need to know what to expect next time
-                    m_bFirstPDSequenceNumber = false;
-                    m_expectedPDDataSequnceNumber = (receivedSequenceNumber + 1) % 256;
-                    PatientInfo.getInstance().getRealtimeData().AppendNewPDSample(arg1.getByteArrayExtra(IndicorBLEService.PD_DATA_RECEIVED));
-                    m_CallbackInterface.iPDDataNotification();
-                }
-                else if (receivedSequenceNumber != m_expectedPDDataSequnceNumber)
-                {
-                    CleanupFromConnectionLoss();
-                    // the sequence number is wrong
-                    Log.e(TAG, "Sequence number in PDdata is wrong, expected " + m_expectedPDDataSequnceNumber + " received " + receivedSequenceNumber);
-
-                    m_VixiarHHBLEService.DisconnectFromIndicor();
-
-                    // show a dialog
-                    CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 1, m_ActivityContext.getString(R.string.dlg_title_sequence_error), m_ActivityContext.getString(R.string.dlg_msg_sequence_error), "Ok", null, m_ActivityContext, DLG_ID_SEQUENCE_ERROR, IndicorBLEServiceInterface.this);
-                }
-                else
-                {
-                    // everything is ok
-
-                    m_expectedPDDataSequnceNumber = (m_expectedPDDataSequnceNumber + 1) % 256;
-                    PatientInfo.getInstance().getRealtimeData().AppendNewPDSample(arg1.getByteArrayExtra(IndicorBLEService.PD_DATA_RECEIVED));
-                    m_CallbackInterface.iPDDataNotification();
                 }
             }
             else if (arg1.hasExtra(IndicorBLEService.AUTHENTICATION_ERROR))
@@ -670,7 +613,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             else if (arg1.hasExtra(IndicorBLEService.CONNECTION_ERROR))
             {
                 CleanupFromConnectionLoss();
-                ConnectionStateMachine(Connection_Event.EVT_CONNECTION_ERROR);
+                ConnectionStateMachine(Connection_Event.EVT_CONNECTiON_ERROR);
 
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
                         m_ActivityContext.getString(R.string.dlg_title_connection_problem),

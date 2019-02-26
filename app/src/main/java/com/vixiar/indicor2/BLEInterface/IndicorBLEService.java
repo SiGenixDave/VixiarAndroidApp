@@ -53,7 +53,6 @@ public class IndicorBLEService extends Service implements TimerCallback
     final static String CONNECTION_ERROR = "connection_error";
     final static String NOTIFICATION_WRITTEN = "notification_written";
     final static String RT_DATA_RECEIVED = "rt_data";
-    final static String PD_DATA_RECEIVED = "pd_data";
     final static String BATTERY_LEVEL_RECEIVED = "batt_level";
     final static String LED_PWM_RECEIVED = "led_pwm_level";
     final static String REVISION_INFO_RECEIVED = "revision_info";
@@ -67,7 +66,6 @@ public class IndicorBLEService extends Service implements TimerCallback
     private final static String EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID = "B4A5C92C-30A6-4DCB-BB8B-02D3CC4AD835";
     private final static String PPG_DRIVE_CHARACTERISTIC_UUID = "D45680E8-5B7C-41D6-8B98-5D08346AD7C4";
     private final static String TEST_OVERRIDE_CHARACTERISTIC_UUID = "08DC9247-1418-45E0-9C58-C35677A6E077";
-    private final static String PD_DATA_CHARACTERISTIC_UUID = "7B00F79C-948B-4C48-80E4-03A16177A95F";
 
     private final static String CCCD_UUID = "00002902-0000-1000-8000-00805f9b34fb";
     private final static String VIXIAR_REALTIME_SERVICE_UUID = "83638348-96D8-455A-8451-0630BCD02558";
@@ -80,7 +78,6 @@ public class IndicorBLEService extends Service implements TimerCallback
 
     // Bluetooth characteristics that we need to read/write
     private static BluetoothGattCharacteristic m_RTDataCharacteristic;
-    private static BluetoothGattCharacteristic m_PDDataCharacteristic;
     private static BluetoothGattCharacteristic m_BatteryLevelCharacteristic;
     private static BluetoothGattCharacteristic m_RevisionInfoCharacteristic;
     private static BluetoothGattCharacteristic m_ExternalConnectionsCharacteristic;
@@ -88,7 +85,6 @@ public class IndicorBLEService extends Service implements TimerCallback
     private static BluetoothGattCharacteristic m_TestOverrideCharacteristic;
 
     private static BluetoothGattDescriptor m_RTNotificationCCCD;
-    private static BluetoothGattDescriptor m_PDNotificationCCCD;
     private static BluetoothGattDescriptor m_ExternalConnectionNotificationCCCD;
 
     private final IBinder m_Binder = new LocalBinder();
@@ -176,23 +172,15 @@ public class IndicorBLEService extends Service implements TimerCallback
             m_ExternalConnectionsCharacteristic = mService.getCharacteristic(UUID.fromString(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID));
             m_RevisionInfoCharacteristic = mService.getCharacteristic(UUID.fromString(REVISION_INFO_CHARACTERISTIC_UUID));
             m_TestOverrideCharacteristic = mService.getCharacteristic(UUID.fromString(TEST_OVERRIDE_CHARACTERISTIC_UUID));
-            m_PDDataCharacteristic = mService.getCharacteristic(UUID.fromString(PD_DATA_CHARACTERISTIC_UUID));
 
             // Get the descriptors
             m_RTNotificationCCCD = m_RTDataCharacteristic.getDescriptor(UUID.fromString(CCCD_UUID));
             m_ExternalConnectionNotificationCCCD = m_ExternalConnectionsCharacteristic.getDescriptor(UUID.fromString(CCCD_UUID));
 
-            // make sure the PD Data characteristic is supported...it won't be in older handhelds
-            if (m_PDDataCharacteristic != null)
-            {
-                m_PDNotificationCCCD = m_PDDataCharacteristic.getDescriptor(UUID.fromString(CCCD_UUID));
-            }
-            else
-            {
-                m_PDNotificationCCCD = null;
-            }
-
-            if (m_RTDataCharacteristic == null || m_BatteryLevelCharacteristic == null || m_PPGDriveCharacteristic == null || m_ExternalConnectionsCharacteristic == null || m_RevisionInfoCharacteristic == null || m_RTNotificationCCCD == null || m_ExternalConnectionNotificationCCCD == null || m_TestOverrideCharacteristic == null)
+            if (m_RTDataCharacteristic == null || m_BatteryLevelCharacteristic == null ||
+                    m_PPGDriveCharacteristic == null || m_ExternalConnectionsCharacteristic == null ||
+                    m_RevisionInfoCharacteristic == null || m_RTNotificationCCCD == null ||
+                    m_ExternalConnectionNotificationCCCD == null)
             {
                 Log.i(TAG, "characteristic came back as null");
             }
@@ -258,10 +246,6 @@ public class IndicorBLEService extends Service implements TimerCallback
             else if (uuid.toUpperCase().equals(EXTERNAL_CONNECTIONS_CHARACTERISTIC_UUID))
             {
                 SendDataToConnectionClass(EXTERNAL_CONNECTION_INFO_RECEIVED, characteristic.getValue());
-            }
-            else if (uuid.toUpperCase().equals(PD_DATA_CHARACTERISTIC_UUID))
-            {
-                SendDataToConnectionClass(PD_DATA_RECEIVED, characteristic.getValue());
             }
         }
     };
@@ -433,31 +417,6 @@ public class IndicorBLEService extends Service implements TimerCallback
             int RT_DATA_TIMEOUT_MS = 2000;
             m_realTimeDataTimeoutTimer.Start(this, RT_DATA_TIMEOUT_MS, true);
         }
-    }
-
-
-    // returns true if the caller should wait for the notification to be set
-    // if it returns false, there's no reason to wait because the handheld doesn't support this
-    public boolean SubscribeToPDDataNotification(boolean value)
-    {
-        boolean bRet = false;
-
-        if (m_RTDataCharacteristic != null && m_BluetoothGatt != null && m_PDNotificationCCCD != null)
-        {
-            // see if the device supports PD data notifications and if so, subscribe
-            if (m_PDDataCharacteristic != null)
-            {
-                // Set notifications locally in the CCCD
-                m_BluetoothGatt.setCharacteristicNotification(m_PDDataCharacteristic, value);
-
-                // Write Notification value to the device
-                m_PDNotificationCCCD.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                m_BluetoothGatt.writeDescriptor(m_PDNotificationCCCD);
-
-                bRet = true;
-            }
-        }
-        return bRet;
     }
 
     public void SubscribeToConnectionNotification(boolean value)

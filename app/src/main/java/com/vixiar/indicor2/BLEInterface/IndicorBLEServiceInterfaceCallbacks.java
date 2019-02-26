@@ -8,7 +8,6 @@ public interface IndicorBLEServiceInterfaceCallbacks
 {
     void iError(int e);
     void iRealtimeDataNotification();
-    void iPDDataNotification();
     void iFullyConnected();
     void iDisconnected();
     void iBatteryLevelRead(int level);
