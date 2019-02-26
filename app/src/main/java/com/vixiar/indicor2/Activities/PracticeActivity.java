@@ -107,12 +107,6 @@ public class PracticeActivity extends Activity implements IndicorBLEServiceInter
         pvg.setBallPressure((float) PatientInfo.getInstance().getRealtimeData().GetRawData().get(currentIndex - 1).m_pressure);
     }
 
-    @Override
-    public void iPDDataNotification()
-    {
-
-    }
-
     private void ExitToMainActivity()
     {
         // disconnect from the handheld
