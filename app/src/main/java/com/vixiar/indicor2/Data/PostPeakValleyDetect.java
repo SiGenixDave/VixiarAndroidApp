@@ -43,9 +43,9 @@ public class PostPeakValleyDetect
 
         int currentIndex = 0;
 
-        while (currentIndex < PatientInfo.getInstance().getRealtimeData().GetFilteredData().size())
+        while (currentIndex < PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData().size())
         {
-            int currentSample = PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(currentIndex).m_PPG;
+            int currentSample = PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData().get(currentIndex).m_PPG;
             dADT = UpdateADT(currentHeartRate, currentIndex, lastMaxIndex, lastMinIndex, SAMPLING_FREQUENCY, K);
 
             switch (ePPDSTate)
@@ -126,7 +126,7 @@ public class PostPeakValleyDetect
 
     // This is the peak detection algorithm by Dr. Harry Silber which he implemented in an excel spreadsheet.
     // This code mimics the algorithm from the spreadsheet : Auto-Analyzer-2018-08-04.xlsx
-    public PeaksAndValleys HarrySilberPeakDetection(int testNumber, ArrayList<PPG_PressureDataPoint> dataSet, boolean detectPostVMPeaksAndValleys)
+    public PeaksAndValleys HarrySilberPeakDetection(int testNumber, ArrayList<RealtimeDataSample> dataSet, boolean detectPostVMPeaksAndValleys)
     {
         PeaksAndValleys pvBaseline, pvValsalva, pvPostValsalva;
         PeaksAndValleys allPV = new PeaksAndValleys();
@@ -160,7 +160,59 @@ public class PostPeakValleyDetect
         return allPV;
     }
 
-    private PeaksAndValleys DetectPeaksAndValleysForRegionHarryMethod(int startIndex, int endIndex, double scaleFactor, ArrayList<PPG_PressureDataPoint> dataSet, eHarryPeakDetectionType detectionType)
+    private final int NUM_COUNTS_TO_LOOK_AHEAD = 10;
+
+    public PeaksAndValleys TransferPeaksAndValleysToOtherData(PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSetApplyPeaks)
+    {
+        PeaksAndValleys pvOut = new PeaksAndValleys();
+        pvOut.valleys = new ArrayList<>();
+        pvOut.peaks = new ArrayList<>();
+
+        // loop through the peaks and see if the data has better ones
+        for (int i = 0; i < pvIn.peaks.size(); i++)
+        {
+            int peakLocation = pvIn.peaks.get(i);
+            int peakValue = dataSetApplyPeaks.get(peakLocation).m_PPG;
+            int maxPeakValue = peakValue;
+            int maxPeakLocation = peakLocation;
+
+            // look up to 5 samples ahead for a possible higher peak
+            for (int x = 0; x < NUM_COUNTS_TO_LOOK_AHEAD; x++)
+            {
+                int newPoint = dataSetApplyPeaks.get(peakLocation + x).m_PPG;
+                if (newPoint > maxPeakValue)
+                {
+                    maxPeakValue = newPoint;
+                    maxPeakLocation = peakLocation + x;
+                }
+            }
+            pvOut.peaks.add(maxPeakLocation);
+        }
+
+        // loop through the valleys and see if the data has better ones
+        for (int i = 0; i < pvIn.valleys.size(); i++)
+        {
+            int valleyLocation = pvIn.valleys.get(i);
+            int valleyValue = dataSetApplyPeaks.get(valleyLocation).m_PPG;
+            int minValleyValue = valleyValue;
+            int minValleyLocation = valleyLocation;
+
+            // look up to 5 samples ahead for a possible higher peak
+            for (int x = 0; x < NUM_COUNTS_TO_LOOK_AHEAD; x++)
+            {
+                int newPoint = dataSetApplyPeaks.get(valleyLocation + x).m_PPG;
+                if (newPoint < minValleyValue)
+                {
+                    minValleyValue = newPoint;
+                    minValleyLocation = valleyLocation + x;
+                }
+            }
+            pvOut.valleys.add(minValleyLocation);
+        }
+        return pvOut;
+    }
+
+    private PeaksAndValleys DetectPeaksAndValleysForRegionHarryMethod(int startIndex, int endIndex, double scaleFactor, ArrayList<RealtimeDataSample> dataSet, eHarryPeakDetectionType detectionType)
     {
         PeaksAndValleys pv = new PeaksAndValleys();
         pv.peaks = new ArrayList<>();
@@ -287,12 +339,19 @@ public class PostPeakValleyDetect
             int lowestValley = Integer.MAX_VALUE;
             int lowestValleyLocation = 0;
 
-            for (int j = pv.peaks.get(i); j < pv.peaks.get(i + 1); j++)
+            for (int j = pv.peaks.get(i + 1); j > pv.peaks.get(i); j--)
             {
+                // continue until the data starts rising which means we've reached the lowest
+                // point immediately before a peak
                 if (dataSet.get(j).m_PPG < lowestValley)
                 {
                     lowestValley = dataSet.get(j).m_PPG;
                     lowestValleyLocation = j;
+                }
+                else
+                {
+                    // here because the data is starting to rise
+                    break;
                 }
             }
             pv.valleys.add(lowestValleyLocation);
@@ -302,11 +361,13 @@ public class PostPeakValleyDetect
 
     public enum ePostPeakDetection
     {
-        LOOKING_FOR_PEAK, LOOKING_FOR_VALLEY
+        LOOKING_FOR_PEAK,
+        LOOKING_FOR_VALLEY
     }
 
     public enum eHarryPeakDetectionType
     {
-        BASELINE, NON_BASELINE
+        BASELINE,
+        NON_BASELINE
     }
 }
