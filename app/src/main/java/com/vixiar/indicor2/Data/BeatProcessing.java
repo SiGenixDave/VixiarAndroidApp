@@ -17,7 +17,7 @@ public class BeatProcessing
     // return the peaks and valleys that are contained within the two indices
     // the first item after the startIndex will be a peak
     // and the last item will be the last valley that is followed by a peak which is before the endIndex
-    public PeaksAndValleys GetPeakAndValleyIndicesInRangeHarryMethod(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
+    public PeaksAndValleys GetPeakAndValleyIndicesInRangeHarryMethod(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
     {
         PeaksAndValleys pv = new PeaksAndValleys();
 
@@ -164,6 +164,8 @@ public class BeatProcessing
         return dataTransitionIndex;
     }
 
+
+
     // returns the current number of peaks detected between indices
     public List<Integer> GetItemsBetween(int startIndex, int endIndex, RealtimePeakValleyDetect.eSlopeZero type, PeaksAndValleys pv)
     {
@@ -210,7 +212,7 @@ public class BeatProcessing
         return pv.valleys.size();
     }
 
-    public double GetMinPAAvg3(int startIndex, int endIndex, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetMinPAAvg3(int startIndex, int endIndex, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
     {
         double minPA = -1.0;
 
@@ -239,7 +241,7 @@ public class BeatProcessing
         return minPA;
     }
 
-    public double GetPh1PAAvg3(int ph1PAPeakIndex, int vStartIndex, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetPh1PAAvg3(int ph1PAPeakIndex, int vStartIndex, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
     {
         double ph1PAAvg3;
 
@@ -260,7 +262,7 @@ public class BeatProcessing
         return ph1PAAvg3;
     }
 
-    public double GetPh4PAAvg3(int ph4PAPeakIndex, int vEndIndex, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetPh4PAAvg3(int ph4PAPeakIndex, int vEndIndex, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
     {
         double ph4PAAvg3;
 
@@ -294,7 +296,7 @@ public class BeatProcessing
 
     // Returns the root mean square between "startIndex" and "endIndex"
     // -1.0 is returned if "startIndex" or "endIndex" are out of bounds
-    public double GetRMSInRange(int startIndex, int endIndex, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetRMSInRange(int startIndex, int endIndex, ArrayList<RealtimeDataSample> dataSet)
     {
         // 1. find number of PPG values between start and end indices
         int numValues = endIndex - startIndex;
@@ -337,7 +339,7 @@ public class BeatProcessing
     }
 
     // Returns the minimum root mean square in X seconds window between "startIndex" and "endIndex"
-    public double GetMinRMS(int startIndex, int endIndex, int secondsWindow, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetMinRMS(int startIndex, int endIndex, int secondsWindow, ArrayList<RealtimeDataSample> dataSet)
     {
         double minRMSValue = Double.MAX_VALUE;
         int startMarker = startIndex;
@@ -356,7 +358,7 @@ public class BeatProcessing
         return minRMSValue;
     }
 
-    public ValueAndLocation GetEndPA(int endIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
+    public ValueAndLocation GetEndPA(int endIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
     {
         ValueAndLocation vl = new ValueAndLocation();
 
@@ -368,12 +370,12 @@ public class BeatProcessing
 
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeHarryMethod(startIndex, endIndex, pvIn, dataSet);
 
-        if (pv.peaks.size() > 0 && pv.valleys.size() > 0)
+        if (GetNumBeatsInPVList(pv) > 0)
         {
-            double endPA = dataSet.get(pv.peaks.get(pv.peaks.size() - 1)).m_PPG - dataSet.get(pv.valleys.get(pv.valleys.size() - 1)).m_PPG;
+            double endPA = GetPAOfBeat(pv, GetNumBeatsInPVList(pv) - 1, dataSet);
 
             vl.value = endPA;
-            vl.location = pv.peaks.get(pv.peaks.size() - 1);
+            vl.location = GetPeakIndexOfBeat(pv, GetNumBeatsInPVList(pv) - 1);
         }
         return vl;
     }
@@ -383,15 +385,16 @@ public class BeatProcessing
     // "last" sample indexes. If "last" = -1, then all of the peaks and valleys collected from "first"
     // until when this method is called will be used.
     // the location returned will be the peak of the minPA pulse cycle
-    public ValueAndLocation GetMinPAInRange(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
+    public ValueAndLocation GetMinPAInRange(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
     {
         ValueAndLocation vl = new ValueAndLocation();
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeHarryMethod(startIndex, endIndex, pvIn, dataSet);
 
+        int numBeats = GetNumBeatsInPVList(pv);
+
         // Verify that there is at least 1 peak and 1 valley
-        if ((pv.valleys.size() == 0) || (pv.peaks.size() == 0))
+        if (numBeats == 0)
         {
-            System.out.println("Error in " + getCurrentMethodName());
             vl.value = -1.0;
             vl.location = -1;
             return vl;
@@ -399,107 +402,56 @@ public class BeatProcessing
 
         // Set the minimum peak to valley amplitude the maximum value so that the first comparison will be the initial
         // minimum peak to valley amplitude
-        double minPeakToValley = Double.MAX_VALUE;
+        double minValleyToPeak = Double.MAX_VALUE;
 
-        int nPeakIndex = 0;
-        int nValleyIndex = 0;
-        int peak, valley;
-
-        // Verify the respective indexes don't exceed the array sizes
-        while ((nPeakIndex < pv.peaks.size()) && (nValleyIndex < pv.valleys.size()))
-        {
-            peak = pv.peaks.get(nPeakIndex);
-            valley = pv.valleys.get(nValleyIndex);
-
-            // Verify valley occurs after peak; just comparing sample times here
-            int diff = valley - peak;
-            if (diff > 0)
-            {
-                // Now get the PPG data at the two points in time
-                int peakData = dataSet.get(peak).m_PPG;
-                int valleyData = dataSet.get(valley).m_PPG;
-                // Calculate the
-                int diffData = peakData - valleyData;
-                if (diffData < minPeakToValley)
+        // loop through all the beats
+        for (int i = 0; i < numBeats; i++)
                 {
-                    minPeakToValley = diffData;
-                    vl.location = peak;
-                }
-            }
-            else
+            System.out.println("Calling from GetMinPAInRange");
+            int currentPA = GetPAOfBeat(pv, i, dataSet);
+            if (currentPA < minValleyToPeak)
             {
-                System.out.println("Error in " + getCurrentMethodName());
-                vl.value = -2.0;
-                vl.location = -1;
-                return vl;
+                minValleyToPeak = currentPA;
+                vl.location =  GetPeakIndexOfBeat(pv, i);
             }
-
-            // Prepare to get the next set of data
-            nPeakIndex++;
-            nValleyIndex++;
         }
-        vl.value = minPeakToValley;
+        vl.value = minValleyToPeak;
         return vl;
     }
 
     // Method calculates and returns the peak to valley amplitude of a maximum peak seen between "first" and
     // "last" sample indexes. If "last" = -1, then all of the peaks and valleys collected from "first"
     // until when this method is called will be used.
-    public ValueAndLocation GetMaxPAInRange(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
+    public ValueAndLocation GetMaxPAInRange(int startIndex, int endIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
     {
         ValueAndLocation vl = new ValueAndLocation();
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeHarryMethod(startIndex, endIndex, pvIn, dataSet);
 
+        int numBeats = GetNumBeatsInPVList(pv);
+
         // Verify that there is at least 1 peak and 1 valley
-        if ((pv.valleys.size() == 0) || (pv.peaks.size() == 0))
+        if (numBeats == 0)
         {
-            System.out.println("Error in " + getCurrentMethodName());
             vl.value = -1.0;
+            vl.location = -1;
             return vl;
         }
 
-        // Set the max peak to valley amplitude the min value so that the first comparison will be the initial
-        // max peak to valley amplitude
-        double maxAmplitude = Double.MIN_VALUE;
+        // Set the minimum peak to valley amplitude the maximum value so that the first comparison will be the initial
+        // minimum peak to valley amplitude
+        double maxValleyToPeak = Double.MAX_VALUE;
 
-        int nPeakIndex = 0;
-        int nValleyIndex = 0;
-        int peak, valley;
-
-        // Verify the respective indexes don't exceed the array sizes
-        while ((nPeakIndex < pv.peaks.size()) && (nValleyIndex < pv.valleys.size()))
+        // loop through all the beats
+        for (int i = 0; i < numBeats; i++)
         {
-            peak = pv.peaks.get(nPeakIndex);
-            valley = pv.valleys.get(nValleyIndex);
-
-            // Verify valley occurs after peak; just comparing sample times here
-            int diff = valley - peak;
-            if (diff > 0)
+            int currentPA = GetPAOfBeat(pv, i, dataSet);
+            if (currentPA > maxValleyToPeak)
             {
-                // Now get the PPG data at the two points in time
-                int peakAmplitude = dataSet.get(peak).m_PPG;
-                int valleyAmplitude = dataSet.get(valley).m_PPG;
-
-                // Calculate the amplitude
-                int amplitude = peakAmplitude - valleyAmplitude;
-                if (amplitude > maxAmplitude)
-                {
-                    maxAmplitude = amplitude;
-                    vl.location = peak;
+                maxValleyToPeak = currentPA;
+                vl.location =  GetPeakIndexOfBeat(pv, i);
                 }
             }
-            else
-            {
-                System.out.println("Error in " + getCurrentMethodName());
-                vl.value = -2.0;
-                return vl;
-            }
-
-            // Prepare to get the next set of data
-            nPeakIndex++;
-            nValleyIndex++;
-        }
-        vl.value = maxAmplitude;
+        vl.value = maxValleyToPeak;
         return vl;
     }
 
@@ -514,61 +466,31 @@ public class BeatProcessing
     // Method calculates and returns the peak to valley amplitude average seen between "first" and
     // "last" sample indexes. If "last" = -1, then all of the peaks and valleys collected from "first"
     // until when this method is called will be used.
-    public double GetAvgPAInRange(int firstIndex, int lastIndex, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetAvgPAInRange(int firstIndex, int lastIndex, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
     {
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeHarryMethod(firstIndex, lastIndex, pvIn, dataSet);
 
-        int numPeaks = pv.peaks.size();
-        int numValleys = pv.valleys.size();
+        int beatCount = GetNumBeatsInPVList(pv);
 
-        if ((numPeaks == 0) || (numValleys == 0))
+        if (beatCount == 0)
         {
             System.out.println("Error in " + getCurrentMethodName());
             return -1.0;
         }
 
-        int peakHandle = 0;
-        int valleyHandle = 0;
-        int peakIndex = pv.peaks.get(peakHandle);
-        int valleyIndex = pv.valleys.get(valleyHandle);
-
-        if (valleyIndex < peakIndex)
+        int PATotal = 0;
+        for (int j = 0; j < beatCount; j++)
         {
-            valleyHandle++;
+            System.out.println("Calling from GetAvgPAInRange");
+            PATotal += GetPAOfBeat(pv, j, dataSet);
         }
 
-        double pulseAmplitudeSum = 0.0;
-        int peakToValleysCount = 0;
-
-        while ((peakHandle < numPeaks) && (valleyHandle < numValleys))
-        {
-            peakIndex = pv.peaks.get(peakHandle);
-            valleyIndex = pv.valleys.get(valleyHandle);
-            // Verify valley occurs after peak
-            int diff = valleyIndex - peakIndex;
-            if (diff > 0)
-            {
-                // Now get the PPG data at the two points in time
-                int peakData = dataSet.get(peakIndex).m_PPG;
-                int valleyData = dataSet.get(valleyIndex).m_PPG;
-                int diffData = peakData - valleyData;
-                pulseAmplitudeSum += diffData;
-                peakToValleysCount++;
-            }
-            else
-            {
-                System.out.println("Error in " + getCurrentMethodName());
-                return -2.0;
-            }
-            peakHandle++;
-            valleyHandle++;
-        }
-        return pulseAmplitudeSum / peakToValleysCount;
+        return PATotal / beatCount;
     }
 
     // Returns the average heart rage from "endIndex" looking back in time "numBeats" heart beats
     // -1.0 is returned if there are were no heart beats detected from "endIndex" looking back
-    public double GetAvgHRHistorical(int endIndex, int numBeats, PeaksAndValleys pv, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetAvgHRHistorical(int endIndex, int numBeats, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
     {
         if (endIndex < 0)
         {
@@ -616,26 +538,26 @@ public class BeatProcessing
         return heartBeatAvg;
     }
 
-    public double GetAvgPAHistorical(int endIndex, int numBeatsOfHistory, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetAvgPAHistorical(int endIndex, int numBeatsOfHistory, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
     {
         int startIndex = GetIndexOfNthPriorPeak(numBeatsOfHistory, endIndex, pvIn);
 
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeCompleteMethod(startIndex, endIndex, pvIn);
-        int nTotal = 0;
 
-        if (pv.peaks.size() < numBeatsOfHistory || pv.valleys.size() < numBeatsOfHistory)
+        int nTotal = 0;
+        if (GetNumBeatsInPVList(pv) < numBeatsOfHistory)
         {
             System.out.println("Error in " + getCurrentMethodName());
             return -1.0;
         }
         for (int j = 0; j < numBeatsOfHistory; j++)
         {
-            nTotal += dataSet.get(pv.peaks.get(j)).m_PPG - dataSet.get(pv.valleys.get(j)).m_PPG;
+            nTotal += GetPAOfBeat(pv, j, dataSet);
         }
         return nTotal / numBeatsOfHistory;
     }
 
-    public double GetAvgPAFuture(int startIndex, int numBeatsOfFuture, PeaksAndValleys pvIn, ArrayList<PPG_PressureDataPoint> dataSet)
+    public double GetAvgPAFuture(int startIndex, int numBeatsOfFuture, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
     {
         int endIndex = startIndex;
 
@@ -649,15 +571,14 @@ public class BeatProcessing
             }
         }
 
-
         PeaksAndValleys pv = GetPeakAndValleyIndicesInRangeCompleteMethod(startIndex, endIndex, pvIn);
 
-        if (pv.peaks.size() >= numBeatsOfFuture && pv.valleys.size() >= numBeatsOfFuture)
+        if (GetNumBeatsInPVList(pv) >= numBeatsOfFuture)
         {
             int nTotal = 0;
             for (int j = 0; j < numBeatsOfFuture; j++)
             {
-                nTotal += dataSet.get(pv.peaks.get(j)).m_PPG - dataSet.get(pv.valleys.get(j)).m_PPG;
+                nTotal += GetPAOfBeat(pv, j, dataSet);
             }
             return nTotal / numBeatsOfFuture;
         }
@@ -693,4 +614,233 @@ public class BeatProcessing
     {
         return Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName();
     }
+
+    public int GetNumBeatsInPVList(PeaksAndValleys pvIn)
+    {
+        // return number of valley to peak transitions are in the list
+        int numBeats = 0;
+
+        // get the location of the first peak and valley
+        int firstPeakLocation = pvIn.peaks.get(0);
+        int firstValleyLocation = pvIn.valleys.get(0);
+
+        if (firstValleyLocation < firstPeakLocation)
+        {
+            // the number of beats will be the number of peaks
+            numBeats = pvIn.peaks.size();
+        }
+        else
+        {
+            // the number of beats will be the number of peaks - 1
+            numBeats = pvIn.peaks.size() - 1;
+        }
+        return numBeats;
+    }
+
+    public int GetPeakIndexOfBeat(PeaksAndValleys pvIn, int beatNum)
+    {
+        // get the location of the first peak and valley
+        int firstPeakLocation = pvIn.peaks.get(0);
+        int firstValleyLocation = pvIn.valleys.get(0);
+        int startingValley = -1;
+
+        // if the valley is first, the starting valley is that one
+        if (firstValleyLocation < firstPeakLocation)
+        {
+            startingValley = firstPeakLocation;
+        }
+        else
+        {
+            // otherwise it's the second one
+            if (pvIn.valleys.size() > 1)
+            {
+                startingValley = pvIn.valleys.get(1);
+            }
+        }
+
+        int peakLocation = -1;
+
+        // see if we have a starting valley, and there are enough valleys, we can do the calculation
+        if (startingValley == firstValleyLocation)
+        {
+            // the list starts with a valley, there must be beatnum+1 peaks in order to do the calc
+            if (pvIn.peaks.size() >= beatNum + 1)
+            {
+                peakLocation = pvIn.peaks.get(beatNum);
+            }
+        }
+        else
+        {
+            // the list starts with a peak, there must be beatnum+2 peaks in order to do the calc
+            if (pvIn.peaks.size() >= beatNum + 2)
+            {
+                peakLocation = pvIn.peaks.get(beatNum + 1);
+            }
+        }
+
+        return peakLocation;
+    }
+
+    // gets the PA (valley to peak) of the beat (0 relative) in the list of peaks and valleys
+    public int GetPAOfBeatNoOffset(PeaksAndValleys pvIn, int beatNum, ArrayList<RealtimeDataSample> dataSet)
+    {
+        int returnPA = -1;
+
+        // get the location of the first peak and valley
+        int firstPeakLocation = pvIn.peaks.get(0);
+        int firstValleyLocation = pvIn.valleys.get(0);
+        int startingValley = -1;
+
+        // if the valley is first, the starting valley is that one
+        if (firstValleyLocation < firstPeakLocation)
+        {
+            startingValley = firstPeakLocation;
+        }
+        else
+        {
+            // otherwise it's the second one
+            if (pvIn.valleys.size() > 1)
+            {
+                startingValley = pvIn.valleys.get(1);
+            }
+        }
+
+        int valleyLocation = -1;
+        int peakLocation = -1;
+        int valleyAmplitude;
+        int peakAmplitude;
+
+        // see if we have a starting valley, and there are enough valleys, we can do the calculation
+        if (startingValley == firstValleyLocation)
+        {
+            // the list starts with a valley, there must be beatnum+1 peaks in order to do the calc
+            if (pvIn.peaks.size() >= beatNum + 1)
+            {
+                valleyLocation = pvIn.valleys.get(beatNum);
+                peakLocation = pvIn.peaks.get(beatNum);
+            }
+        }
+        else
+        {
+            // the list starts with a peak, there must be beatnum+2 peaks in order to do the calc
+            if (pvIn.peaks.size() >= beatNum + 2)
+            {
+                valleyLocation = pvIn.valleys.get(beatNum);
+                peakLocation = pvIn.peaks.get(beatNum + 1);
+            }
+        }
+        if (peakLocation != -1 && valleyLocation != -1)
+        {
+            valleyAmplitude = dataSet.get(valleyLocation).m_PPG;
+            peakAmplitude = dataSet.get(peakLocation).m_PPG;
+
+            returnPA = peakAmplitude - valleyAmplitude;
+        }
+
+        return returnPA;
+    }
+
+    // gets the PA (valley to peak) of the beat (0 relative) in the list of peaks and valleys and uses a line drawn from
+    // the current valley to the next valley as the baseline
+    public int GetPAOfBeat(PeaksAndValleys pvIn, int beatNum, ArrayList<RealtimeDataSample> dataSet)
+    {
+        int returnPA = -1;
+
+        // get the location of the first peak and valley
+        int firstPeakLocation = pvIn.peaks.get(0);
+        int firstValleyLocation = pvIn.valleys.get(0);
+
+        int valleyLocation = -1;
+        int peakLocation = -1;
+        int secondValleyLocation = -1;
+        int secondValleyAmplitude;
+        int valleyAmplitude;
+        int peakAmplitude;
+
+        // see if we have a starting valley, and there are enough valleys, we can do the calculation
+        if (firstValleyLocation < firstPeakLocation)
+        {
+            // the list starts with a valley, there must be beatnum+1 peaks in order to do the calc
+            if (pvIn.peaks.size() >= beatNum + 1)
+            {
+                valleyLocation = pvIn.valleys.get(beatNum);
+                peakLocation = pvIn.peaks.get(beatNum);
+            }
+            else
+            {
+                System.out.println("Starting with valley, not enough peaks @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
+            }
+        }
+        else
+        {
+            // the list starts with a peak, there must be beatnum+2 peaks in order to do the calc
+            if (pvIn.peaks.size() >= beatNum + 2)
+            {
+                valleyLocation = pvIn.valleys.get(beatNum);
+                peakLocation = pvIn.peaks.get(beatNum + 1);
+            }
+            else
+            {
+                System.out.println("Starting with peak, not enough peaks @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
+            }
+        }
+
+        // see if there's enough valleys to to the interpolated calculation
+        if (pvIn.valleys.size() >= beatNum + 2)
+        {
+            secondValleyLocation = pvIn.valleys.get(beatNum + 1);
+        }
+        else
+        {
+            System.out.println("Not enough valleys to interpolate @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
+        }
+
+        // see if we can do the interpolated calculation
+        if (secondValleyLocation != -1)
+        {
+            secondValleyAmplitude = dataSet.get(secondValleyLocation).m_PPG;
+
+            if (peakLocation != -1 && valleyLocation != -1)
+            {
+                valleyAmplitude = dataSet.get(valleyLocation).m_PPG;
+                peakAmplitude = dataSet.get(peakLocation).m_PPG;
+
+                // calculate the slope between the first and second valleys
+                double slope = (secondValleyAmplitude - valleyAmplitude) / (secondValleyLocation - valleyLocation);
+
+                // calculate the time (counts) from the valley to the peak
+                int dT = peakLocation - valleyLocation;
+
+                // calculate the contribution that the slope in valley-valley has on the amplitude
+                int offset = (int)((double)dT * slope);
+
+                //System.out.println();
+                //System.out.println("PA without offset = " + (peakAmplitude-valleyAmplitude) + " at " + (valleyLocation*0.02));
+                //System.out.println("PA with offset = " + (peakAmplitude-valleyAmplitude-offset));
+
+                // save the location of the interpolated valley for plotting
+                ValueAndLocation vl = new ValueAndLocation();
+                vl.location = peakLocation;
+                vl.value = valleyAmplitude + offset;
+                PatientInfo.getInstance().getRealtimeData().m_InterpolatedValleys.add(vl);
+
+                System.out.println("Int-Valley Loc = " + valleyLocation*0.02 + " Beat num = " + beatNum);
+                returnPA = peakAmplitude - valleyAmplitude - offset;
+            }
+        }
+        else
+        {
+            // do the normal PA calculation
+            if (peakLocation != -1 && valleyLocation != -1)
+            {
+                valleyAmplitude = dataSet.get(valleyLocation).m_PPG;
+                peakAmplitude = dataSet.get(peakLocation).m_PPG;
+                System.out.println("Reg-Valley Loc = " + valleyLocation*0.02 + " Beat num = " + beatNum);
+                returnPA = peakAmplitude - valleyAmplitude;
+            }
+        }
+
+        return returnPA;
+    }
+
 }
