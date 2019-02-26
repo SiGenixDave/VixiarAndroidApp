@@ -32,7 +32,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
 {
     // TAG is used for informational messages
     private final static String TAG = PatInfoActivity.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean TESTING = false;
 
     private EditText txtPatientID;
     private EditText txtAge;
@@ -64,12 +64,6 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
     final int SYSTOLIC_MIN = 90;
 
     @Override
-    public void iPDDataNotification()
-    {
-
-    }
-
-    @Override
     public void iLEDLevelRead(int level)
     {
 
@@ -93,7 +87,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         InitializeHeaderAndFooter();
         initializeControls();
 
-        if (DEBUG)
+        if (TESTING)
         {
             HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
             HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
@@ -652,7 +646,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         @Override
         public void afterTextChanged(Editable s)
         {
-            if (!DEBUG)
+            if (!TESTING)
             {
                  if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
                         txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
