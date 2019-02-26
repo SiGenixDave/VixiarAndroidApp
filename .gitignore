@@ -9,3 +9,4 @@
 /captures
 .externalNativeBuild
 /app/app-release.apk
+/.idea/gradle.xml
