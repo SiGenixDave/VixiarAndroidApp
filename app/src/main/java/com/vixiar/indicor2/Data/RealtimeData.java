@@ -11,50 +11,39 @@ import java.util.*;
 
 public class RealtimeData
 {
-    private ArrayList<PPG_PressureDataPoint> m_rawData = new ArrayList<PPG_PressureDataPoint>();
-    private ArrayList<PPG_PressureDataPoint> m_filteredData = new ArrayList<PPG_PressureDataPoint>();
+    private ArrayList<RealtimeDataSample> m_rawData = new ArrayList<RealtimeDataSample>();
+    private ArrayList<RealtimeDataSample> m_HPLPfilteredData = new ArrayList<RealtimeDataSample>();
+    private ArrayList<RealtimeDataSample> m_HPfilteredData = new ArrayList<RealtimeDataSample>();
+    private ArrayList<RealtimeDataSample> m_LPfilteredData = new ArrayList<RealtimeDataSample>();
     private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
-    private ArrayList<Integer> m_rawPDData = new ArrayList<>();
+    public ArrayList<ValueAndLocation> m_InterpolatedValleys = new ArrayList<>();
     private I_FIRFilterTap PPGTaps = new PPG_FIRFilterTaps();
     private I_FIRFilterTap PressureTaps = new Pressure_FIRFilterTaps();
     private FIRFilter m_PPGFIRFilter = new FIRFilter(PPGTaps.GetTaps());
     private FIRFilter m_PressureFIRFilter = new FIRFilter(PressureTaps.GetTaps());
+    private BiquadFilter bq1 = new BiquadFilter();
+    private BiquadFilter bq2 = new BiquadFilter();
 
     public void Initialize()
     {
         RealtimePeakValleyDetect.getInstance().Initialize(5000, 5000, false);
-        //HeartRateInfo.getInstance().InitializeValidation(50.0, 4, 5.0, 40.0, 150.0, 20.0);
-        m_PPGFIRFilter.Initialize();
-        m_PressureFIRFilter.Initialize();
         m_rawData.clear();
-        m_filteredData.clear();
+        m_HPLPfilteredData.clear();
+        m_HPfilteredData.clear();
+        m_LPfilteredData.clear();
         m_markers.clear();
+        m_InterpolatedValleys.clear();
+        m_PressureFIRFilter.Initialize();
+        m_PPGFIRFilter.Initialize();
     }
 
-    public void AppendNewPDSample(byte[] new_data)
-    {
-        int pd_level = 0;
-
-        pd_level = (256 * (new_data[1] & 0xFF)) + (new_data[2] & 0xFF);
-        m_rawPDData.add(pd_level);
-
-        pd_level = (256 * (new_data[3] & 0xFF)) + (new_data[4] & 0xFF);
-        m_rawPDData.add(pd_level);
-
-        pd_level = (256 * (new_data[5] & 0xFF)) + (new_data[6] & 0xFF);
-        m_rawPDData.add(pd_level);
-
-        pd_level = (256 * (new_data[7] & 0xFF)) + (new_data[8] & 0xFF);
-        m_rawPDData.add(pd_level);
-    }
-
-    public void AppendNewPressurePPGSample(byte[] new_data)
+    public void AppendNewSample(byte[] new_data)
     {
         // extract the m_rawData...the first byte is the sequence number
         // followed by two bytes of PPG then pressure repetitively
-        double pressureValue = 0.0;
+        double pressureMMHg = 0.0;
         int pressureCounts = 0;
-        int ppgValue = 0;
+        int ppgCounts = 0;
         for (int i = 1; i < new_data.length; i += 4)
         {
             // convert the a/d counts from the handheld to pressure in mmHg
@@ -79,38 +68,56 @@ public class RealtimeData
 
             if (version < 4)
             {
-                pressureValue = ((double) pressureCounts * (-0.0263)) + 46.726;
+                pressureMMHg = ((double) pressureCounts * (-0.0263)) + 46.726;
             }
             else if (version == 4)
             {
-                pressureValue = ((double) (pressureCounts + 15) * (-0.0263)) + 48.96;
+                pressureMMHg = ((double) (pressureCounts + 15) * (-0.0263)) + 48.96;
             }
             else
             {
-                pressureValue = (double) (pressureCounts - 15) / 38.027506;
+                pressureMMHg = (double) (pressureCounts - 15) / 38.027506;
             }
 
             // make sure it's not negative
-            if (pressureValue < 0.0)
+            if (pressureMMHg < 0.0)
             {
-                pressureValue = 0.0;
+                pressureMMHg = 0.0;
             }
 
-            ppgValue = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
+            ppgCounts = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
 
-            // add the raw data to the list
-            PPG_PressureDataPoint pd = new PPG_PressureDataPoint(ppgValue, pressureValue);
-            m_rawData.add(pd);
+            RealtimeDataSample pdIn = new RealtimeDataSample(ppgCounts, pressureMMHg);
+            pdIn.m_PPG = 65535-pdIn.m_PPG;
+            m_rawData.add(pdIn);
 
-            // filter the sample and store it in the filtered array
-            m_PPGFIRFilter.PutSample(ppgValue);
+            // apply the FIR filter to the PPG
+            m_PPGFIRFilter.PutSample(pdIn.m_PPG);
             int ppgFiltered = (int) m_PPGFIRFilter.GetOutput();
-            m_PressureFIRFilter.PutSample(pressureValue);
-            double pressureFiltered = m_PressureFIRFilter.GetOutput();
-            pd = new PPG_PressureDataPoint(ppgFiltered, pressureFiltered);
-            m_filteredData.add(pd);
 
-            RealtimePeakValleyDetect.getInstance().AddToDataArray(ppgFiltered);
+            // apply the FIR filter to the pressure
+            // this filter just delays the pressure by the same amount as the PPG filter delays the PPG
+            m_PressureFIRFilter.PutSample(pressureMMHg);
+            double pressureFiltered = m_PressureFIRFilter.GetOutput();
+
+            // put the filtered data back into a structure to be stored
+            RealtimeDataSample pdLPFiltered = new RealtimeDataSample(ppgFiltered, pressureFiltered);
+            m_LPfilteredData.add(pdLPFiltered);
+
+            // apply the highpass filter
+            double HPOut = bq1.filter(pdLPFiltered.m_PPG);
+
+            // save the HP-LP filtered data to a different structure
+            RealtimeDataSample pdHPLPFiltered = new RealtimeDataSample((int)HPOut, pressureFiltered);
+            m_HPLPfilteredData.add(pdHPLPFiltered);
+
+            // save the HP filtered data
+            double HPOut2 = bq2.filter(pdIn.m_PPG);
+            RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int)HPOut2, pdIn.m_pressure);
+            m_HPfilteredData.add(pdHPFiltered);
+
+            // let the PV detect use the HPLP filtered data
+            RealtimePeakValleyDetect.getInstance().AddToDataArray((int)HPOut);
         }
 
         RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
@@ -127,13 +134,13 @@ public class RealtimeData
         boolean isFlatlining = false;
 
         // make sure there is enough data collected based on the lookback window setting
-        if ((m_filteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_FLATLINE * AppConstants.SAMPLES_PER_SECOND))
+        if ((m_HPLPfilteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_FLATLINE * AppConstants.SAMPLES_PER_SECOND))
         {
             // get the standard deviation for the last 2 seconds
-            int startCheckIndex = m_filteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_FLATLINE * AppConstants.SAMPLES_PER_SECOND);
-            int endCheckIndex = m_filteredData.size() - 1;
+            int startCheckIndex = m_HPLPfilteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_FLATLINE * AppConstants.SAMPLES_PER_SECOND);
+            int endCheckIndex = m_HPLPfilteredData.size() - 1;
 
-            double stDev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_filteredData);
+            double stDev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_HPLPfilteredData);
             if (stDev < AppConstants.SD_LIMIT_FOR_FLATLINE)
             {
                 isFlatlining = true;
@@ -156,18 +163,18 @@ public class RealtimeData
         boolean isMovement = false;
 
         // make sure there is enough data collected based on the lookback window setting
-        if ((m_filteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND))
+        if ((m_LPfilteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND))
         {
-            int startCheckIndex = m_filteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND);
-            int endCheckIndex = m_filteredData.size() - AppConstants.SAMPLES_PER_SECOND - 1;
+            int startCheckIndex = m_LPfilteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND);
+            int endCheckIndex = m_LPfilteredData.size() - AppConstants.SAMPLES_PER_SECOND - 1;
 
-            double mean = DataMath.getInstance().CalculateMean(startCheckIndex, endCheckIndex, m_filteredData);
-            double stdev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_filteredData);
+            double mean = DataMath.getInstance().CalculateMean(startCheckIndex, endCheckIndex, m_LPfilteredData);
+            double stdev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_LPfilteredData);
             double upperLimit = mean + (AppConstants.STDEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT * stdev);
             double lowerLimit = mean - (AppConstants.STDEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT * stdev);
 
             // see if the sample is within the limit
-            int dataPoint = m_filteredData.get(m_filteredData.size()-1).m_PPG;
+            int dataPoint = m_LPfilteredData.get(m_LPfilteredData.size()-1).m_PPG;
             if (dataPoint > upperLimit || dataPoint < lowerLimit)
             {
                 isMovement = true;
@@ -195,15 +202,15 @@ public class RealtimeData
         List<Double> ratioList = new ArrayList<>();
 
         // first, there must be at least 3 seconds (+ 2 samples) of data before we even start
-        if (m_filteredData.size() > (AppConstants.SAMPLES_PER_SECOND * 3) + 2)
+        if (m_HPLPfilteredData.size() > (AppConstants.SAMPLES_PER_SECOND * 3) + 2)
         {
             // start at the start of baseline plus 3 seconds
             int startingRangeIndex = startIndex + (AppConstants.SAMPLES_PER_SECOND * 3);
-            int endingRangeIndex = m_filteredData.size() - 3;
+            int endingRangeIndex = m_HPLPfilteredData.size() - 3;
             for (int i = startingRangeIndex; i < endingRangeIndex; i++)
             {
-                double localPointsStdev = DataMath.getInstance().CalculateStdev(i-2, i + 2, m_filteredData);
-                double localSecondsStdev = DataMath.getInstance().CalculateStdev(i - (AppConstants.SAMPLES_PER_SECOND * 3), i, m_filteredData);
+                double localPointsStdev = DataMath.getInstance().CalculateStdev(i-2, i + 2, m_HPLPfilteredData);
+                double localSecondsStdev = DataMath.getInstance().CalculateStdev(i - (AppConstants.SAMPLES_PER_SECOND * 3), i, m_HPLPfilteredData);
 
                 if (localSecondsStdev != 0.0)
                 {
@@ -264,30 +271,30 @@ public class RealtimeData
         return m_markers;
     }
 
-    public List<Integer> GetFilteredPPGData()
-    {
-        List<Integer> retData = new ArrayList<>();
-        for (int i = 0; i < m_filteredData.size(); i++)
-        {
-            retData.add(m_filteredData.get(i).m_PPG);
-        }
-        return retData;
-    }
-
     public void CreateMarker(RealtimeDataMarker.Marker_Type type, int index)
     {
         RealtimeDataMarker marker = new RealtimeDataMarker(type, index);
         m_markers.add(marker);
     }
 
-    public ArrayList<PPG_PressureDataPoint> GetRawData()
+    public ArrayList<RealtimeDataSample> GetRawData()
     {
         return m_rawData;
     }
 
-    public ArrayList<PPG_PressureDataPoint> GetFilteredData()
+    public ArrayList<RealtimeDataSample> GetHPLPFilteredData()
     {
-        return m_filteredData;
+        return m_HPLPfilteredData;
+    }
+
+    public ArrayList<RealtimeDataSample> GetLPFilteredData()
+    {
+        return m_LPfilteredData;
+    }
+
+    public ArrayList<RealtimeDataSample> GetHPFilteredData()
+    {
+        return m_HPfilteredData;
     }
 
     public void ClearAllData()
@@ -301,25 +308,37 @@ public class RealtimeData
 
     public void AppendNewFileSample(Double PPGSample, Double pressureSample)
     {
-        PPG_PressureDataPoint pd = new PPG_PressureDataPoint(PPGSample.intValue(), pressureSample.intValue());
-        m_rawData.add(pd);
+        RealtimeDataSample pdIn = new RealtimeDataSample(PPGSample.intValue(), pressureSample.intValue());
+        pdIn.m_PPG = 65535-pdIn.m_PPG;
+        m_rawData.add(pdIn);
 
-        // filter the sample and store it in the filtered array
-        m_PPGFIRFilter.PutSample(PPGSample);
+        // apply the FIR filter to the PPG
+        m_PPGFIRFilter.PutSample(pdIn.m_PPG);
         int ppgFiltered = (int) m_PPGFIRFilter.GetOutput();
 
-        RealtimePeakValleyDetect.getInstance().AddToDataArray(ppgFiltered);
-
-        // filter the pressure sample
+        // apply the FIR filter to the pressure
+        // this filter just delays the pressure by the same amount as the PPG filter delays the PPG
         m_PressureFIRFilter.PutSample(pressureSample);
         double pressureFiltered = m_PressureFIRFilter.GetOutput();
 
-        pd = new PPG_PressureDataPoint(ppgFiltered, pressureFiltered);
+        // put the filtered data back into a structure to be stored
+        RealtimeDataSample pdLPFiltered = new RealtimeDataSample(ppgFiltered, pressureFiltered);
+        m_LPfilteredData.add(pdLPFiltered);
 
-        m_filteredData.add(pd);
+        // apply the highpass filter
+        double HPOut = bq1.filter(pdLPFiltered.m_PPG);
 
-        RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
+        // save the HP-LP filtered data to a different structure
+        RealtimeDataSample pdHPLPFiltered = new RealtimeDataSample((int)HPOut, pressureFiltered);
+        m_HPLPfilteredData.add(pdHPLPFiltered);
 
+        // save the HP filtered data
+        double HPOut2 = bq2.filter(pdIn.m_PPG);
+        RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int)HPOut2, pdIn.m_pressure);
+        m_HPfilteredData.add(pdHPFiltered);
+
+        // let the PV detect use the HPLP filtered data
+        RealtimePeakValleyDetect.getInstance().AddToDataArray((int)HPOut);
     }
 
 }
