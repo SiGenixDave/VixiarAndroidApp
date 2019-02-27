@@ -150,7 +150,7 @@ public class PostPeakValleyDetect
         if (detectPostVMPeaksAndValleys)
         {
             // Find the post Valsalva peaks and valleys
-            int postVMStart = vEnd + (int)(SAMPLES_PER_SECOND * 2.5);
+            int postVMStart = vEnd + (int) (SAMPLES_PER_SECOND * 2.5);
             int postVMEnd = postVMStart + (SAMPLES_PER_SECOND * 10);
             pvPostValsalva = DetectPeaksAndValleysForRegionHarryMethod(postVMStart, postVMEnd, POST_VALSALVA_SCALE_FACTOR, dataSet, eHarryPeakDetectionType.NON_BASELINE);
             allPV.peaks.addAll(pvPostValsalva.peaks);
@@ -176,14 +176,18 @@ public class PostPeakValleyDetect
             int maxPeakValue = peakValue;
             int maxPeakLocation = peakLocation;
 
-            // look up to 5 samples ahead for a possible higher peak
+            // look ahead for a possible higher peak
             for (int x = 0; x < NUM_COUNTS_TO_LOOK_AHEAD; x++)
             {
-                int newPoint = dataSetApplyPeaks.get(peakLocation + x).m_PPG;
-                if (newPoint > maxPeakValue)
+                // make sure there's enough data in the new list
+                if (dataSetApplyPeaks.size() > peakLocation + x)
                 {
-                    maxPeakValue = newPoint;
-                    maxPeakLocation = peakLocation + x;
+                    int newPoint = dataSetApplyPeaks.get(peakLocation + x).m_PPG;
+                    if (newPoint > maxPeakValue)
+                    {
+                        maxPeakValue = newPoint;
+                        maxPeakLocation = peakLocation + x;
+                    }
                 }
             }
             pvOut.peaks.add(maxPeakLocation);
@@ -278,8 +282,7 @@ public class PostPeakValleyDetect
         for (currentIndex = 0; currentIndex < potentialPeaks.size() - 1; currentIndex++)
         {
             // if there's a gap of 3 or less in the peak locations, add the values of the points in between
-            if (potentialPeaks.get(currentIndex + 1).location - potentialPeaks.get(currentIndex).location > 1 &&
-                    potentialPeaks.get(currentIndex + 1).location - potentialPeaks.get(currentIndex).location <= 3)
+            if (potentialPeaks.get(currentIndex + 1).location - potentialPeaks.get(currentIndex).location > 1 && potentialPeaks.get(currentIndex + 1).location - potentialPeaks.get(currentIndex).location <= 3)
             {
                 // add the ones into the list where the locations were skipped
                 for (int i = 0; i < (potentialPeaks.get(currentIndex + 1).location - potentialPeaks.get(currentIndex).location); i++)
@@ -306,7 +309,7 @@ public class PostPeakValleyDetect
                 {
                     if (potentialPeaks.get(tempIndex).value > maxValue)
                     {
-                        maxValue = (int)potentialPeaks.get(tempIndex).value;
+                        maxValue = (int) potentialPeaks.get(tempIndex).value;
                         maxLocation = potentialPeaks.get(tempIndex).location;
                         foundOne = true;
                     }
@@ -314,7 +317,7 @@ public class PostPeakValleyDetect
                     // checked as a possible max
                     if (potentialPeaks.get(tempIndex + 1).value > maxValue)
                     {
-                        maxValue = (int)potentialPeaks.get(tempIndex + 1).value;
+                        maxValue = (int) potentialPeaks.get(tempIndex + 1).value;
                         maxLocation = potentialPeaks.get(tempIndex + 1).location;
                         foundOne = true;
                     }
