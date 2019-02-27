@@ -510,12 +510,12 @@ public class PostProcessing
                 // Median VM pressure
                 m_aMedianVM_pressure[testNumber] = CalculateMedianPressure(t0Index, t10Index, dataSet);
                 PrintResultToConsole("Median VM pressure", testNumber, m_aMedianVM_pressure[testNumber]);
-
+*/
                 // 44 DPR-3.3.44
                 // BL HR - avg
                 m_aBLHR_Avg[testNumber] = HeartRateInfo.getInstance().GetAvgHRInRange(baselineStartIndex, baselineEndIndex, pv, dataSet);
                 PrintResultToConsole("BL HR - avg", testNumber, m_aBLHR_Avg[testNumber]);
-
+/*
                 // 45 DPR-3.3.45
                 // Ph2 HR - avg
                 m_aPh2HR_Avg[testNumber] = HeartRateInfo.getInstance().GetAvgHRInRange(t0Index, t10Index, pv, dataSet);
