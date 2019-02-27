@@ -148,8 +148,8 @@
     <string name="dlg_title_ppg_flatline">PULSE NOT DETECTED</string>
     <string name="dlg_msg_ppg_flatline">Not detecting a pulse signal.  Ensure the sensor is completely on and has good contact with the finger.  Do you wish to try again? &end_test_warning1;</string>
 
-    <string name="dlg_title_ppg_clipping">MOVEMENT DETECTED</string>
-    <string name="dlg_msg_ppg_clipping">Detecting movement and/or pressure on the sensor.  Ensure the patient is still with the finger sensor hanging free.  Do you wish to try again? &end_test_warning1;</string>
+    <string name="dlg_title_movement_detected">MOVEMENT DETECTED</string>
+    <string name="dlg_msg_movement_detected">Detecting movement and/or pressure on the sensor.  Ensure the patient is still with the finger sensor hanging free.  Do you wish to try again? &end_test_warning1;</string>
 
     <string name="dlg_title_ppg_hf_noise">MOVEMENT DETECTED</string>
     <string name="dlg_msg_ppg_hf_noise">Detecting signal interference.  Do you wish to try again? &end_test_warning1;</string>
