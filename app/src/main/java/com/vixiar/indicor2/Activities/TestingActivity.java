@@ -24,9 +24,9 @@ import com.vixiar.indicor2.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor2.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor2.CustomDialog.CustomDialogInterface;
 import com.vixiar.indicor2.Data.PPGGraphScaling;
-import com.vixiar.indicor2.Data.PPG_PressureDataPoint;
 import com.vixiar.indicor2.Data.PatientInfo;
 import com.vixiar.indicor2.Data.RealtimeDataMarker;
+import com.vixiar.indicor2.Data.RealtimeDataSample;
 import com.vixiar.indicor2.Graphics.TestPressureGraph;
 import com.vixiar.indicor2.R;
 import com.vixiar.indicor2.Upload_Interface.UploadServiceInterface;
@@ -116,7 +116,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         EVT_PERIODIC_TIMER_TICK,
         EVT_VALSALVA_PRESSURE_UPDATE,
         EVT_PPG_FLATLINING,
-        EVT_PPG_IS_CLIPPING,
+        EVT_MOVEMENT_DETECTED,
     }
 
     // Timer stuff
@@ -322,10 +322,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case BASELINE_WAIT_FOR_PPG_SETTLE:
                 // update the PPG chart
-                int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size();
+                int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().size();
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
-                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG), true, 500);
+                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().get(i).m_PPG), true, 500);
                     m_nPPGGraphLastX += 0.02;
                 }
                 m_nLastDataIndex = currentDataIndex;
@@ -339,10 +339,10 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case BASELINE:
                 // update the PPG chart
-                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size();
+                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().size();
                 for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
                 {
-                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i).m_PPG), true, 500);
+                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().get(i).m_PPG), true, 500);
                     m_nPPGGraphLastX += 0.02;
                 }
                 m_nLastDataIndex = currentDataIndex;
@@ -352,37 +352,29 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 sTemp = "HR = " + String.valueOf((int) BPM) + " BPM";
                 m_txtHeartRate.setText(sTemp);
 
-/*
                 // see if there is a flatline signal
-                if (PatientInfo.getInstance().getRealtimeData().IsPPGSignalFlatlining(m_baselineStartIndex))
+                if (PatientInfo.getInstance().getRealtimeData().TestForFlatlining(m_baselineStartIndex))
                 {
                     TestingStateMachine(Testing_Events.EVT_PPG_FLATLINING);
                 }
 
                 // see if there is clipping in the ppg
-                if (PatientInfo.getInstance().getRealtimeData().IsMovementDetected(m_baselineStartIndex))
+                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex))
                 {
-                    TestingStateMachine(Testing_Events.EVT_PPG_IS_CLIPPING);
+                    TestingStateMachine(Testing_Events.EVT_MOVEMENT_DETECTED);
                 }
-*/
                 break;
 
             case VALSALVA_WAIT_FOR_PRESSURE:
             case VALSALVA:
                 // update the ball
-                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size() - 1;
-                m_nCurrentPressure = PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(currentDataIndex).m_pressure;
+                currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().size() - 1;
+                m_nCurrentPressure = PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().get(currentDataIndex).m_pressure;
                 m_graphPressure.setBallPressure(m_nCurrentPressure);
 
                 TestingStateMachine(Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE);
                 break;
         }
-    }
-
-    @Override
-    public void iPDDataNotification()
-    {
-
     }
 
     @Override
@@ -755,7 +747,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             // clear any data in the chart
             graphView.removeAllSeries();
 
-            ArrayList<PPG_PressureDataPoint> plotData = PatientInfo.getInstance().GetSummaryChartData(index);
+            ArrayList<RealtimeDataSample> plotData = PatientInfo.getInstance().GetSummaryChartData(index);
 
             int minPPG = 65535;
             int maxPPG = 0;
@@ -1048,6 +1040,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 if (event == Testing_Events.EVT_CONNECTED)
                 {
                     AdjustLEDBrightness(m_nOneRelativeTestNumber - 1);
+                    PatientInfo.getInstance().set_startTestBatteryLevel(IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
                     ActivateBaselineView();
                     // redo the timer that was setup in the last function
                     m_oneShotTimer.Cancel();
@@ -1071,21 +1064,19 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: BASELINE");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-/*
                     // baseline is over, now check the signal for a good heart rate before proceeding
-                    if (!PatientInfo.getInstance().getRealtimeData().WasHeartRateInRange(m_baselineStartIndex))
+                    if (!PatientInfo.getInstance().getRealtimeData().TestForHeartRateInRange(m_baselineStartIndex))
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_hr_out_of_range), getString(R.string.dlg_msg_hr_out_of_range), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // baseline is over, now check the signal for high frequency noise before proceeding
-                    else if (PatientInfo.getInstance().getRealtimeData().DidPPGSignalContainHighFrequencyNoise(m_baselineStartIndex))
+                    else if (PatientInfo.getInstance().getRealtimeData().TestForHighFrequencyNoise(m_baselineStartIndex))
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_hf_noise), getString(R.string.dlg_msg_ppg_hf_noise), "Yes", "End Test", this, DLG_ID_PPG_HF_NOISE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     else
-*/
                     {
                         SwitchToTestingView();
                         InactivateTestingView();
@@ -1104,11 +1095,11 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                 }
-                else if (event == Testing_Events.EVT_PPG_IS_CLIPPING)
+                else if (event == Testing_Events.EVT_MOVEMENT_DETECTED)
                 {
                     if (m_bIsConnected)
                     {
-                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_clipping), getString(R.string.dlg_msg_ppg_clipping), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                 }
@@ -1256,7 +1247,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         UploadServiceInterface.getInstance().PauseUpload();
 
                         // save the csv file
-                        PatientInfo.getInstance().SaveCSVFile(this);
+                        PatientInfo.getInstance().SaveCSVFileAndroid(this);
 
                         UploadServiceInterface.getInstance().ResumeUpload();
                         SwitchToResultsView();
