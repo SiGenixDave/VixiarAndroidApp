@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import com.vixiar.indicor2.BLEInterface.IndicorBLEService;
+import com.vixiar.indicor2.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor2.BuildConfig;
 
 import java.io.File;
@@ -14,7 +16,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.NavigableMap;
 
 import static com.vixiar.indicor2.Data.AppConstants.LENGTH_OF_RESULTS_GRAPH;
 import static com.vixiar.indicor2.Data.AppConstants.SAMPLES_PER_SECOND;
@@ -35,6 +36,7 @@ public class PatientInfo
     private int m_height_Inches;
     private int m_weight_lbs;
     private int m_age_years;
+    private int m_startTestBatteryLevel;
     private String m_applicationVersion;
     private String m_studyLocation;
     private String m_handheldSerialNumber;
@@ -67,8 +69,14 @@ public class PatientInfo
         m_testDateTime = "";
         m_gender = "";
         m_notes = "";
+        m_startTestBatteryLevel = 0;
         Arrays.fill(m_aCalcLVEDP, 0.0);
         rtd.Initialize();
+    }
+
+    public void set_startTestBatteryLevel(int level)
+    {
+        this.m_startTestBatteryLevel = level;
     }
 
     public String get_studyLocation()
@@ -253,8 +261,23 @@ public class PatientInfo
     public boolean CalculateResults(int testNumber)
     {
         // run Harry's peak detection
-        PeaksAndValleys pv = PostPeakValleyDetect.getInstance().HarrySilberPeakDetection(testNumber, PatientInfo.getInstance().getRealtimeData().GetFilteredData(), false);
-        PostProcessing.getInstance().CalculatePostProcessingResults(testNumber, pv, PatientInfo.getInstance().getRealtimeData().GetFilteredData(), false);
+        PeaksAndValleys pv = PostPeakValleyDetect.getInstance().HarrySilberPeakDetection(testNumber, PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData(), false);
+        // pv contains the peak and valley locations in the filtered data
+        // the peaks and valleys don't necessarily line up with the raw data peaks and valleys
+        // this function will search around the potential peak and valley and find the true one
+
+        // shift the peaks and valleys to correspond to the raw data
+        for (int x = 0; x < pv.peaks.size(); x++)
+        {
+            pv.peaks.set(x, pv.peaks.get(x) - 7);
+        }
+        for (int x = 0; x < pv.valleys.size(); x++)
+        {
+            pv.valleys.set(x, pv.valleys.get(x) - 7);
+        }
+        PeaksAndValleys pvRaw = PostPeakValleyDetect.getInstance().TransferPeaksAndValleysToOtherData(pv, PatientInfo.getInstance().getRealtimeData().GetRawData());
+
+        PostProcessing.getInstance().CalculatePostProcessingResults(testNumber, pvRaw, PatientInfo.getInstance().getRealtimeData().GetRawData(), false);
 
         m_aCalcLVEDP[testNumber] = PostProcessing.getInstance().getLVEDP(testNumber, m_height_Inches, m_diastolicBloodPressure, m_systolicBloodPressure, m_age_years);
 
@@ -264,9 +287,9 @@ public class PatientInfo
     // returns an array of PPG and pressure values for 30 seconds wih the center being the
     // start of the Valsalva maneuver
     // testNumber is 0 relative
-    public ArrayList<PPG_PressureDataPoint> GetSummaryChartData(int testNumber)
+    public ArrayList<RealtimeDataSample> GetSummaryChartData(int testNumber)
     {
-        ArrayList<PPG_PressureDataPoint> results = new ArrayList<>();
+        ArrayList<RealtimeDataSample> results = new ArrayList<>();
 
         TestMarkers tm = GetTestMarkers(testNumber);
 
@@ -285,15 +308,15 @@ public class PatientInfo
 
         int endIndex = startIndex + (SAMPLES_PER_SECOND * LENGTH_OF_RESULTS_GRAPH);
 
-        if (endIndex >= PatientInfo.getInstance().getRealtimeData().GetFilteredData().size())
+        if (endIndex >= PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().size())
         {
-            endIndex = PatientInfo.getInstance().getRealtimeData().GetFilteredData().size();
+            endIndex = PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().size();
         }
 
         for (int i = startIndex; i < endIndex; i++)
         {
-            PPG_PressureDataPoint data;
-            data = PatientInfo.getInstance().getRealtimeData().GetFilteredData().get(i);
+            RealtimeDataSample data;
+            data = PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().get(i);
             results.add(data);
         }
 
@@ -344,7 +367,7 @@ public class PatientInfo
         return m;
     }
 
-    public boolean SaveCSVFile(Context context)
+    public boolean SaveCSVFileAndroid(Context context)
     {
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
         String fileName = m_patientId + "-" + m_testDateTime + ".csv";
@@ -355,7 +378,7 @@ public class PatientInfo
         {
             FileOutputStream fos = new FileOutputStream(file);
             PrintWriter pw = new PrintWriter(fos);
-            WriteCSVContents(pw);
+            WriteCSVContentsAndroid(pw);
             file.setWritable(true);
             pw.flush();
             pw.close();
@@ -376,7 +399,7 @@ public class PatientInfo
         return true;
     }
 
-    private boolean WriteCSVContents(PrintWriter writer)
+    private boolean WriteCSVContentsAndroid(PrintWriter writer)
     {
         writer.println("Test date time, " + m_testDateTime);
         writer.println("Application version, " + BuildConfig.VERSION_NAME);
@@ -443,6 +466,40 @@ public class PatientInfo
                 FormatDoubleForPrint(m_aCalcLVEDP[1]) + ", " +
                 FormatDoubleForPrint(m_aCalcLVEDP[2]));
 
+        // print the LED level for each test
+        // if the levels are 0, they weren't set, so print out the last level, which may be the default
+        int [] aActualLEDLevel = new int[3];
+        if (m_aLEDDriveLevels[0] == 0)
+        {
+            aActualLEDLevel[0] = 50;
+        }
+        else
+        {
+            aActualLEDLevel[0] = m_aLEDDriveLevels[0];
+        }
+        if (m_aLEDDriveLevels[1] == 0)
+        {
+            aActualLEDLevel[1] = aActualLEDLevel[0];
+        }
+        else
+        {
+            aActualLEDLevel[1] = m_aLEDDriveLevels[1];
+        }
+        if (m_aLEDDriveLevels[2] == 0)
+        {
+            aActualLEDLevel[2] = aActualLEDLevel[1];
+        }
+        else
+        {
+            aActualLEDLevel[2] = m_aLEDDriveLevels[2];
+        }
+        writer.println("PPG LED Level, " +
+                FormatDoubleForPrint(aActualLEDLevel[0]) + "%, " +
+                FormatDoubleForPrint(aActualLEDLevel[1]) + "%, " +
+                FormatDoubleForPrint(aActualLEDLevel[2]) + "%");
+
+        writer.println("Battery Level, " + IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel() + "%");
+
         // print all of markers
         writer.println("Marker index, Type");
         for (int i = 0; i < rtd.GetDataMarkers().size(); i++)
@@ -459,31 +516,23 @@ public class PatientInfo
             t += 0.02;
         }
 
-        // print all of the 5Hz filtered realtime data
+        // print all of the 5Hz and high-pass filtered realtime data
         t = 0.0;
         writer.println("Time (sec.), PPG (5Hz filter), Pressure (mmHg)");
-        for (int i = 0; i < rtd.GetFilteredData().size(); i++)
+        for (int i = 0; i < rtd.GetLPFilteredData().size(); i++)
         {
-            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetFilteredData().get(i).m_pressure));
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetLPFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetLPFilteredData().get(i).m_pressure));
             t += 0.02;
         }
 
-        // print all of the detected peaks
-        writer.println("Peak positions (sec), PPG");
-        for (int i = 0; i < PeakValleyDetect.getInstance().getPeaksIndexes().size(); i++)
+        // print all of the 5Hz and high-pass filtered realtime data
+        t = 0.0;
+        writer.println("Time (sec.), PPG (5Hz FIR + highpass filter), Pressure (mmHg)");
+        for (int i = 0; i < rtd.GetHPLPFilteredData().size(); i++)
         {
-            double pos = PeakValleyDetect.getInstance().getPeaksIndexes().get(i) * 0.02;
-            writer.println(FormatDoubleForPrint(pos) + ", " + rtd.GetFilteredData().get(PeakValleyDetect.getInstance().getPeaksIndexes().get(i)).m_PPG);
+            writer.println(FormatDoubleForPrint(t) + ", " + rtd.GetHPLPFilteredData().get(i).m_PPG + ", " + FormatDoubleForPrint(rtd.GetHPLPFilteredData().get(i).m_pressure));
+            t += 0.02;
         }
-
-        // print all of the detected valleys
-        writer.println("Valley positions (sec), PPG");
-        for (int i = 0; i < PeakValleyDetect.getInstance().getValleysIndexes().size(); i++)
-        {
-            double pos = PeakValleyDetect.getInstance().getValleysIndexes().get(i) * 0.02;
-            writer.println(FormatDoubleForPrint(pos) + ", " + rtd.GetFilteredData().get(PeakValleyDetect.getInstance().getValleysIndexes().get(i)).m_PPG);
-        }
-
         return true;
     }
 
