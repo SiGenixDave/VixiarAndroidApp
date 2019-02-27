@@ -2,7 +2,6 @@ package com.vixiar.indicor2.Data;//import android.util.Log;
 
 //import java.util.ArrayList;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -41,16 +40,16 @@ public class RealtimeData
     {
         // extract the m_rawData...the first byte is the sequence number
         // followed by two bytes of PPG then pressure repetitively
-        double pressureMMHg = 0.0;
-        int pressureCounts = 0;
-        int ppgCounts = 0;
+        double rawPressureMMHg = 0.0;
+        int rawPressureCounts = 0;
+        int rawPPGCounts = 0;
         for (int i = 1; i < new_data.length; i += 4)
         {
             // convert the a/d counts from the handheld to pressure in mmHg
-            pressureCounts = (256 * (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
+            rawPressureCounts = (256 * (new_data[i + 2] & 0xFF)) + (new_data[i + 3] & 0xFF);
 
             // remove a known offset from the counts that are sent from the handheld
-            pressureCounts -= 15;
+            rawPressureCounts -= 15;
 
             // convert to mmHg
             // the conversion depends on the version of the handheld
@@ -68,56 +67,58 @@ public class RealtimeData
 
             if (version < 4)
             {
-                pressureMMHg = ((double) pressureCounts * (-0.0263)) + 46.726;
+                rawPressureMMHg = ((double) rawPressureCounts * (-0.0263)) + 46.726;
             }
             else if (version == 4)
             {
-                pressureMMHg = ((double) (pressureCounts + 15) * (-0.0263)) + 48.96;
+                rawPressureMMHg = ((double) (rawPressureCounts + 15) * (-0.0263)) + 48.96;
             }
             else
             {
-                pressureMMHg = (double) (pressureCounts - 15) / 38.027506;
+                rawPressureMMHg = (double) (rawPressureCounts - 15) / 38.027506;
             }
 
             // make sure it's not negative
-            if (pressureMMHg < 0.0)
+            if (rawPressureMMHg < 0.0)
             {
-                pressureMMHg = 0.0;
+                rawPressureMMHg = 0.0;
             }
 
-            ppgCounts = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
+            rawPPGCounts = (256 * (new_data[i] & 0xFF)) + (new_data[i + 1] & 0xFF);
 
-            RealtimeDataSample pdIn = new RealtimeDataSample(ppgCounts, pressureMMHg);
-            pdIn.m_PPG = 65535-pdIn.m_PPG;
-            m_rawData.add(pdIn);
+            RealtimeDataSample rawDataSample = new RealtimeDataSample(rawPPGCounts, rawPressureMMHg);
+
+            // invert the PPG cause the hardware doesn't anymore
+            rawDataSample.m_PPG = 65535-rawDataSample.m_PPG;
+            m_rawData.add(rawDataSample);
 
             // apply the FIR filter to the PPG
-            m_PPGFIRFilter.PutSample(pdIn.m_PPG);
-            int ppgFiltered = (int) m_PPGFIRFilter.GetOutput();
+            m_PPGFIRFilter.PutSample(rawDataSample.m_PPG);
+            int ppgFIRFiltered = (int) m_PPGFIRFilter.GetOutput();
 
             // apply the FIR filter to the pressure
             // this filter just delays the pressure by the same amount as the PPG filter delays the PPG
-            m_PressureFIRFilter.PutSample(pressureMMHg);
-            double pressureFiltered = m_PressureFIRFilter.GetOutput();
+            m_PressureFIRFilter.PutSample(rawPressureMMHg);
+            double pressureFIRFiltered = m_PressureFIRFilter.GetOutput();
 
             // put the filtered data back into a structure to be stored
-            RealtimeDataSample pdLPFiltered = new RealtimeDataSample(ppgFiltered, pressureFiltered);
-            m_LPfilteredData.add(pdLPFiltered);
+            RealtimeDataSample FIRFilteredSample = new RealtimeDataSample(ppgFIRFiltered, pressureFIRFiltered);
+            m_LPfilteredData.add(FIRFilteredSample);
 
             // apply the highpass filter
-            double HPOut = bq1.filter(pdLPFiltered.m_PPG);
+            double ppgHPLPFiltered = bq1.filter(FIRFilteredSample.m_PPG);
 
             // save the HP-LP filtered data to a different structure
-            RealtimeDataSample pdHPLPFiltered = new RealtimeDataSample((int)HPOut, pressureFiltered);
-            m_HPLPfilteredData.add(pdHPLPFiltered);
+            RealtimeDataSample HPLPFilteredSample = new RealtimeDataSample((int)ppgHPLPFiltered, pressureFIRFiltered);
+            m_HPLPfilteredData.add(HPLPFilteredSample);
 
             // save the HP filtered data
-            double HPOut2 = bq2.filter(pdIn.m_PPG);
-            RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int)HPOut2, pdIn.m_pressure);
+            double ppgHPFiltered = bq2.filter(rawDataSample.m_PPG);
+            RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int)ppgHPFiltered, rawDataSample.m_pressure);
             m_HPfilteredData.add(pdHPFiltered);
 
             // let the PV detect use the HPLP filtered data
-            RealtimePeakValleyDetect.getInstance().AddToDataArray((int)HPOut);
+            RealtimePeakValleyDetect.getInstance().AddToDataArray((int)ppgHPLPFiltered);
         }
 
         RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
@@ -129,7 +130,7 @@ public class RealtimeData
     }
 
 
-    public boolean IsPPGSignalFlatlining(int startIndex)
+    public boolean TestForFlatlining(int startIndex)
     {
         boolean isFlatlining = false;
 
@@ -141,7 +142,7 @@ public class RealtimeData
             int endCheckIndex = m_HPLPfilteredData.size() - 1;
 
             double stDev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_HPLPfilteredData);
-            if (stDev < AppConstants.SD_LIMIT_FOR_FLATLINE)
+            if (stDev < AppConstants.PPG_LIMIT_FOR_FLATLINE)
             {
                 isFlatlining = true;
             }
@@ -155,7 +156,7 @@ public class RealtimeData
         return isFlatlining;
     }
 
-    public boolean IsMovementDetected(int startIndex)
+    public boolean TestForMovement(int startIndex)
     {
         // this function will do 2 things, one, verify that there's no clipping
         // second, it will make sure that the number of zero crossings over the last 2 seconds aren't too high
@@ -163,18 +164,18 @@ public class RealtimeData
         boolean isMovement = false;
 
         // make sure there is enough data collected based on the lookback window setting
-        if ((m_LPfilteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND))
+        if ((m_HPLPfilteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND))
         {
-            int startCheckIndex = m_LPfilteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND);
-            int endCheckIndex = m_LPfilteredData.size() - AppConstants.SAMPLES_PER_SECOND - 1;
+            int startCheckIndex = m_HPLPfilteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND);
+            int endCheckIndex = m_HPLPfilteredData.size() - AppConstants.SAMPLES_PER_SECOND - 1;
 
-            double mean = DataMath.getInstance().CalculateMean(startCheckIndex, endCheckIndex, m_LPfilteredData);
-            double stdev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_LPfilteredData);
-            double upperLimit = mean + (AppConstants.STDEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT * stdev);
-            double lowerLimit = mean - (AppConstants.STDEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT * stdev);
+            double mean = DataMath.getInstance().CalculateMean(startCheckIndex, endCheckIndex, m_HPLPfilteredData);
+            double stdev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_HPLPfilteredData);
+            double upperLimit = mean + (AppConstants.STD_DEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT * stdev);
+            double lowerLimit = mean - (AppConstants.STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT * stdev);
 
             // see if the sample is within the limit
-            int dataPoint = m_LPfilteredData.get(m_LPfilteredData.size()-1).m_PPG;
+            int dataPoint = m_HPLPfilteredData.get(m_HPLPfilteredData.size()-1).m_PPG;
             if (dataPoint > upperLimit || dataPoint < lowerLimit)
             {
                 isMovement = true;
@@ -190,7 +191,7 @@ public class RealtimeData
 
     }
 
-    public boolean DidPPGSignalContainHighFrequencyNoise(int startIndex)
+    public boolean TestForHighFrequencyNoise(int startIndex)
     {
         // in order to determine if there's high frequency noise, it's necessary to go through all of the
         // baseline data and take the standard deviation of 5 points with the sample of concern in the middle.
@@ -248,7 +249,7 @@ public class RealtimeData
         return hfNoiseDetected;
     }
 
-    public boolean WasHeartRateInRange(int startIndex)
+    public boolean TestForHeartRateInRange(int startIndex)
     {
         boolean isInRange = false;
 
@@ -299,6 +300,7 @@ public class RealtimeData
 
     public void ClearAllData()
     {
+        Initialize();
     }
 
     public ArrayList<RealtimeDataMarker> GetMarkers()
