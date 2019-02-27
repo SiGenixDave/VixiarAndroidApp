@@ -177,8 +177,7 @@
     <string name="title_activity_settings">Settings</string>
 
     <string name="dlg_title_low_battery">LOW BATTERY</string>
-    <string name="dlg_msg_low_battery">The battery level is very low on the handheld device.  Consider charging the
-        handheld before beginning a test to prevent loss of data.</string>
+    <string name="dlg_msg_low_battery">The battery level is very low on the handheld device.  Please charge the handheld device and then restart this test.</string>
 
     <!-- Strings related to Settings -->
     <string name="pref_title_study_location">Study location</string>

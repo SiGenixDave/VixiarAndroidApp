@@ -89,7 +89,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     private BluetoothDevice m_connectedDevice;
 
     // the low battery level msg will popup if battery is at or below this percentage
-    private final int BATTERY_LEVEL_LOW_FOR_TEST = 20;
+    private final int BATTERY_LEVEL_LOW_FOR_TEST = 30;
 
     // dialog ids handled here
     private final int DLG_ID_AUTHENTICATION_ERROR = 0;
@@ -134,6 +134,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     public static final int ERROR_AUTHENTICATION = 3;
     public static final int ERROR_CONNECTION_ERROR = 4;
     public static final int ERROR_SEQUENCE_ERROR = 4;
+    public static final int ERROR_BATTERY_TOO_LOW = 5;
 
     // Offsets to data in characteristics
     private final static int BATTERY_LEVEL_PCT_INDEX = 0;
@@ -500,18 +501,8 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 break;
 
             case DLG_ID_LOW_BATTERY:
-                // re start the connection timeout timer
-                m_connectionTimeoutTimer.Start(this, CONNECTION_TIMEOUT_MS, true);
-
-                // start the timer to update the battery level
-                m_updateBatteryTimer.Start(IndicorBLEServiceInterface.getInstance(), BATTERY_READ_TIME_MS, false);
-
-                m_bFirstSequenceNumber = true;
-
-                m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
-                m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
-                m_expectedRTDataSequnceNumber = 0;
-                Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
+                m_CallbackInterface.iError(ERROR_SEQUENCE_ERROR);
+                m_VixiarHHBLEService.DisconnectFromIndicor();
                 break;
         }
     }
