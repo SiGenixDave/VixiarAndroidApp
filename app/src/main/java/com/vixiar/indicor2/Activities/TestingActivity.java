@@ -27,6 +27,7 @@ import com.vixiar.indicor2.Data.PPGGraphScaling;
 import com.vixiar.indicor2.Data.PatientInfo;
 import com.vixiar.indicor2.Data.RealtimeDataMarker;
 import com.vixiar.indicor2.Data.RealtimeDataSample;
+import com.vixiar.indicor2.Data.RealtimePeakValleyDetect;
 import com.vixiar.indicor2.Graphics.TestPressureGraph;
 import com.vixiar.indicor2.R;
 import com.vixiar.indicor2.Upload_Interface.UploadServiceInterface;
