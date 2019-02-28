@@ -202,6 +202,8 @@ public class BeatProcessing
                 }
             }
         }
+        System.out.println("GIB: " + startIndex + ", " + endIndex + " numTrans = " + numTransitions + " result count = " + transitionIndexList.size());
+        System.out.println();
 
         return transitionIndexList;
     }
@@ -488,55 +490,6 @@ public class BeatProcessing
         return PATotal / beatCount;
     }
 
-    // Returns the average heart rage from "endIndex" looking back in time "numBeats" heart beats
-    // -1.0 is returned if there are were no heart beats detected from "endIndex" looking back
-    public double GetAvgHRHistorical(int endIndex, int numBeats, PeaksAndValleys pv, ArrayList<RealtimeDataSample> dataSet)
-    {
-        if (endIndex < 0)
-        {
-            endIndex = RealtimePeakValleyDetect.getInstance().AmountOfData() - 1;
-        }
-
-        boolean atLeastTwoPeaks = false;
-        int timeMarkerN;
-        int timeMarkerNPlus1 = endIndex;
-        double heartRateAvgSum = 0.0;
-        int numHeartbeats = 0;
-
-        // Check if there less peaks (heart beats) than requested to check
-        while (numBeats > 0)
-        {
-            timeMarkerN = GetPriorItem(timeMarkerNPlus1, RealtimePeakValleyDetect.eSlopeZero.PEAK, pv);
-
-            // timeMarkerN becomes equal to Integer.MAX_VALUE when there are no more historical peaks
-            if (timeMarkerN == Integer.MAX_VALUE)
-            {
-                break;
-            }
-
-            // Make sure we have at least 2 peaks before calculating heart rate
-            if (!atLeastTwoPeaks)
-            {
-                atLeastTwoPeaks = true;
-            }
-            else
-            {
-                double heartRate = HeartRateInfo.getInstance().HeartRate(timeMarkerN, timeMarkerNPlus1, 1);
-                heartRateAvgSum += heartRate;
-                numHeartbeats++;
-                numBeats--;
-            }
-            timeMarkerNPlus1 = timeMarkerN;
-        }
-
-        double heartBeatAvg = -1.0;
-        if (numHeartbeats > 0)
-        {
-            heartBeatAvg = heartRateAvgSum / numHeartbeats;
-        }
-
-        return heartBeatAvg;
-    }
 
     public double GetAvgPAHistorical(int endIndex, int numBeatsOfHistory, PeaksAndValleys pvIn, ArrayList<RealtimeDataSample> dataSet)
     {
