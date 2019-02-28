@@ -156,7 +156,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service)
         {
-            Log.i(TAG, "onServiceConnected");
+            //Log.i(TAG, "onServiceConnected");
             m_VixiarHHBLEService = ((IndicorBLEService.LocalBinder) service).getService();
             m_bServiceConnected = true;
             m_VixiarHHBLEService.Initialize();
@@ -166,7 +166,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
         @Override
         public void onServiceDisconnected(ComponentName componentName)
         {
-            Log.i(TAG, "onServiceDisconnected");
+            //Log.i(TAG, "onServiceDisconnected");
             m_VixiarHHBLEService = null;
             m_bServiceConnected = false;
         }
@@ -182,25 +182,25 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
     {
         if (m_bServiceConnected)
         {
-            Log.i(TAG, "Service already connected");
+            //Log.i(TAG, "Service already connected");
 
             // if the service is still connected to the handheld, everything is fine
             if (m_VixiarHHBLEService.AmConnectedToIndicor())
             {
-                Log.i(TAG, "Service thinks indicor is conneted");
+                //Log.i(TAG, "Service thinks indicor is conneted");
                 m_CallbackInterface.iFullyConnected();
             }
             // otherwise, start the connection process
             else
             {
-                Log.i(TAG, "Service thinks indicor is not connected");
+                //Log.i(TAG, "Service thinks indicor is not connected");
                 m_IndicorConnectionState = IndicorConnection_State.STATE_NOT_CONNECTED;
                 ConnectionStateMachine(Connection_Event.EVT_SERVICE_CONNECTED);
             }
         }
         else
         {
-            Log.i(TAG, "Service is not connected");
+            //Log.i(TAG, "Service is not connected");
 
             // Start the BLE Service
             Intent gattServiceIntent = new Intent(NavigatorApplication.getAppContext(), IndicorBLEService.class);
@@ -290,7 +290,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     // start the timer to wait for scan results
                     m_handler.postDelayed(m_ScanTimeoutRunnable, SCAN_TIME_MS);
 
-                    Log.i(TAG, "STATE_SCANNING");
+                    //Log.i(TAG, "STATE_SCANNING");
 
                     m_IndicorConnectionState = IndicorConnection_State.STATE_SCANNING;
 
@@ -333,7 +333,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                             m_VixiarHHBLEService.ConnectToSpecificIndicor(device);
                             m_IndicorConnectionState = IndicorConnection_State.STATE_WAITING_TO_CONNECT;
 
-                            Log.i(TAG, "STATE_WAITING_TO_CONNECT");
+                            //Log.i(TAG, "STATE_WAITING_TO_CONNECT");
                         }
                         else
                         {
@@ -357,7 +357,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     // save the device serial number in the patient info
                     PatientInfo.getInstance().set_handheldSerialNumber(m_connectedDevice.getName());
 
-                    Log.i(TAG, "STATE_SERVICES_READ");
+                    //Log.i(TAG, "STATE_SERVICES_READ");
                 }
                 break;
 
@@ -367,7 +367,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                     // get the battery level
                     m_VixiarHHBLEService.ReadRevisionInformation();
                     m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_REVISION;
-                    Log.i(TAG, "STATE_REQUESTED_REVISION");
+                    //Log.i(TAG, "STATE_REQUESTED_REVISION");
                 }
                 break;
 
@@ -376,7 +376,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 {
                     m_VixiarHHBLEService.ReadBatteryLevel();
                     m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_BATTERY;
-                    Log.i(TAG, "STATE_REQUESTED_BATTERY");
+                    //Log.i(TAG, "STATE_REQUESTED_BATTERY");
                 }
                 break;
 
@@ -405,7 +405,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
                         m_VixiarHHBLEService.SubscribeToRealtimeDataNotification(true);
                         m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_RT_NOTIFICATION;
-                        Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
+                        //Log.i(TAG, "STATE_REQUESTED_RT_NOTIFICATION");
                     }
                 }
                 break;
@@ -415,7 +415,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 {
                     m_VixiarHHBLEService.SubscribeToConnectionNotification(true);
                     m_IndicorConnectionState = IndicorConnection_State.STATE_REQUESTED_CONNECTION_NOTIFICATION;
-                    Log.i(TAG, "STATE_REQUESTED_CONNECTION_NOTIFICATION");
+                    //Log.i(TAG, "STATE_REQUESTED_CONNECTION_NOTIFICATION");
                 }
                 break;
 
@@ -435,7 +435,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
 
                     // tell the activity the everything is good to go
                     m_CallbackInterface.iFullyConnected();
-                    Log.i(TAG, "STATE_OPERATIONAL");
+                    //Log.i(TAG, "STATE_OPERATIONAL");
                 }
                 break;
 
@@ -568,7 +568,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 {
                     CleanupFromConnectionLoss();
                     // the sequence number is wrong
-                    Log.e(TAG, "Sequence number in RT data is wrong, expected " + m_expectedRTDataSequnceNumber + " received " + receivedSequenceNumber);
+                    //Log.e(TAG, "Sequence number in RT data is wrong, expected " + m_expectedRTDataSequnceNumber + " received " + receivedSequenceNumber);
 
                     m_VixiarHHBLEService.DisconnectFromIndicor();
 
@@ -641,7 +641,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
                 byte x[] = arg1.getByteArrayExtra(IndicorBLEService.LED_PWM_RECEIVED);
                 m_LEDLevel = x[LED_LEVEL_PCT_INDEX];
                 m_CallbackInterface.iLEDLevelRead(m_LEDLevel);
-                Log.i(TAG, "LED = " + m_LEDLevel);
+                //Log.i(TAG, "LED = " + m_LEDLevel);
                 m_CallbackInterface.iLEDLevelRead(m_LEDLevel);
             }
         }

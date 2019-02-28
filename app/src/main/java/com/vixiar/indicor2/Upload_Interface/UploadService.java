@@ -132,12 +132,12 @@ public class UploadService extends Service
                     {
                         if (IsNetworkAvailable())
                         {
-                            Log.i(TAG, "Network available");
+                            //Log.i(TAG, "Network available");
                             m_connected = ConnectToDropbox();
                         }
                         else
                         {
-                            Log.i(TAG, "Network not available");
+                            //Log.i(TAG, "Network not available");
                             m_connected = false;
                         }
                     }
@@ -150,7 +150,7 @@ public class UploadService extends Service
     {
         try
         {
-            Log.i(TAG, "Connecting to dropbox");
+            //Log.i(TAG, "Connecting to dropbox");
             DbxRequestConfig config = DbxRequestConfig.newBuilder("Indicor/1.0").build();
             m_dbxClient = new DbxClientV2(config, ACCESS_TOKEN);
             Log.i(TAG, "Connected to dropbox:" + m_dbxClient.users().getCurrentAccount().getName().getDisplayName());
@@ -177,10 +177,10 @@ public class UploadService extends Service
                 List<String> filePaths = GetFilesInPath(baseDirFile);
                 if (filePaths.size() != 0)
                 {
-                    Log.i(TAG, "Have files to upload.");
+                    //Log.i(TAG, "Have files to upload.");
                     for (String filePath : filePaths)
                     {
-                        Log.i(TAG, "uploading file " + filePath);
+                        //Log.i(TAG, "uploading file " + filePath);
 
                         // get the patient id for this file
                         String patientID = GetPatientIDFromCSVFile(filePath);
@@ -190,7 +190,7 @@ public class UploadService extends Service
                             if (UploadFileToDropbox(filePath, GetDropboxDirectory(patientID)) == true)
                             {
                                 // delete the file if the copy worked
-                                Log.i(TAG, "deleting file - " + filePath);
+                                //Log.i(TAG, "deleting file - " + filePath);
                                 DeleteFile(filePath);
                             }
                         }
@@ -198,13 +198,13 @@ public class UploadService extends Service
                 }
                 else
                 {
-                    Log.i(TAG, "No files to upload.");
+                    //Log.i(TAG, "No files to upload.");
                 }
             }
         }
         catch (DbxException | IOException e)
         {
-            Log.e(TAG, "Dropbox exception");
+            //Log.e(TAG, "Dropbox exception");
         }
     }
 
@@ -227,7 +227,7 @@ public class UploadService extends Service
             pathToUpload = "/vixiar-data/" + subFolder;
         }
 
-        Log.i(TAG, "Path to upload = " + pathToUpload);
+        //Log.i(TAG, "Path to upload = " + pathToUpload);
         CreateFolder(pathToUpload);
         return pathToUpload;
     }
@@ -312,9 +312,9 @@ public class UploadService extends Service
 
         if (IsNetworkAvailable())
         {
-            Log.i(TAG, "Have internet connection.");
+            //Log.i(TAG, "Have internet connection.");
             File file = new File(filePath);
-            Log.i(TAG, "Path: " + file.getCanonicalPath());
+            //Log.i(TAG, "Path: " + file.getCanonicalPath());
             try (InputStream in = new FileInputStream(filePath))
             {
                 String fileName = uploadPath + "/" + file.getName();
@@ -325,14 +325,14 @@ public class UploadService extends Service
             }
             catch (DbxException | IOException | InterruptedException e)
             {
-                Log.e(TAG, "Error uploading file");
+                //Log.e(TAG, "Error uploading file");
                 status = false;
             }
         }
         else
         {
             //set a service flag to false
-            Log.i(TAG, "No internet connection.");
+            //Log.i(TAG, "No internet connection.");
             status = false;
         }
         return status;
@@ -358,16 +358,16 @@ public class UploadService extends Service
         {
             if (err.errorValue.isPath() && err.errorValue.getPathValue().isConflict())
             {
-                Log.e(TAG, "Something already exists at the path.");
+                //Log.e(TAG, "Something already exists at the path.");
             }
             else
             {
-                Log.e(TAG, "Some other CreateFolderErrorException occurred..." + err.toString());
+                //Log.e(TAG, "Some other CreateFolderErrorException occurred..." + err.toString());
             }
         }
         catch (Exception err)
         {
-            Log.e(TAG, "Some other Exception occurred..." + err.toString());
+            //Log.e(TAG, "Some other Exception occurred..." + err.toString());
         }
     }
 
