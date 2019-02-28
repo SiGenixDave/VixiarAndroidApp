@@ -184,7 +184,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         et.setFocusableInTouchMode(true);
         et.requestFocus();
 
-        IndicorBLEServiceInterface.getInstance().initialize(this, this );
+        IndicorBLEServiceInterface.getInstance().initialize(this, this);
     }
 
     @Override
@@ -563,7 +563,11 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         } catch (InvocationTargetException e)
         {
             e.printStackTrace();
+        } catch (ArithmeticException e)
+        {
+            e.printStackTrace();
         }
+
 
         // make sure a touch anywhere in the area sets the focus to the edittext
         LinearLayout genderGroup = (LinearLayout) findViewById(R.id.genderGroup);
@@ -648,10 +652,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
         {
             if (!TESTING)
             {
-                 if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 &&
-                        txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 &&
-                        txtDiastolic.getText().toString().length() != 0 && txtSystolic.getText().toString().length() != 0 &&
-                        txtGender.getText().toString().length() != 0)
+                if (txtPatientID.getText().toString().length() != 0 && txtAge.getText().toString().length() != 0 && txtHeight.getText().toString().length() != 0 && txtWeight.getText().toString().length() != 0 && txtDiastolic.getText().toString().length() != 0 && txtSystolic.getText().toString().length() != 0 && txtGender.getText().toString().length() != 0)
                 {
                     HeaderFooterControl.getInstance().UnDimNextButton(PatInfoActivity.this);
                     HeaderFooterControl.getInstance().UnDimPracticeButton(PatInfoActivity.this);
@@ -781,11 +782,7 @@ public class PatInfoActivity extends Activity implements CustomDialogInterface, 
     public void HandleRequestToCancel()
     {
         // display the test cancel dialog
-        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,
-                getString(R.string.dlg_title_cancel_test),
-                getString(R.string.dlg_msg_cancel_test),
-                "Yes",
-                "No", PatInfoActivity.this , DLG_ID_CANCEL, PatInfoActivity.this);
+        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_cancel_test), getString(R.string.dlg_msg_cancel_test), "Yes", "No", PatInfoActivity.this, DLG_ID_CANCEL, PatInfoActivity.this);
     }
 
     @Override

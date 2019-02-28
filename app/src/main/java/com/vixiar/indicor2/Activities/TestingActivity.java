@@ -23,11 +23,9 @@ import com.vixiar.indicor2.BLEInterface.IndicorBLEServiceInterface;
 import com.vixiar.indicor2.BLEInterface.IndicorBLEServiceInterfaceCallbacks;
 import com.vixiar.indicor2.CustomDialog.CustomAlertDialog;
 import com.vixiar.indicor2.CustomDialog.CustomDialogInterface;
-import com.vixiar.indicor2.Data.PPGGraphScaling;
 import com.vixiar.indicor2.Data.PatientInfo;
 import com.vixiar.indicor2.Data.RealtimeDataMarker;
 import com.vixiar.indicor2.Data.RealtimeDataSample;
-import com.vixiar.indicor2.Data.RealtimePeakValleyDetect;
 import com.vixiar.indicor2.Graphics.TestPressureGraph;
 import com.vixiar.indicor2.R;
 import com.vixiar.indicor2.Upload_Interface.UploadServiceInterface;
@@ -86,8 +84,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private GraphView m_GraphViewResults1;
     private GraphView m_GraphViewResults2;
     private GraphView m_GraphViewResults3;
-
-    private PPGGraphScaling m_PPPGGraphAutoScaling = new PPGGraphScaling();
 
     Typeface m_robotoLightTypeface;
     Typeface m_robotoRegularTypeface;
@@ -188,28 +184,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case PERIODIC_TIMER_ID:
                 TestingStateMachine(Testing_Events.EVT_PERIODIC_TIMER_TICK);
-                break;
-
-            case PPG_CAL_TIMER_ID:
-
-                // Update the y scaling on the chart ony for first stability check, use the
-                // saved y axis scaled values for the remaining 2 tests
-                if (m_PPPGGraphAutoScaling.Complete(7, 7))
-                {
-                    double yMaxScaling = m_PPPGGraphAutoScaling.getYMaxChartScale();
-                    double yMinScaling = m_PPPGGraphAutoScaling.getYMinChartScale();
-
-                    m_chartPPG.getViewport().setMaxY(yMaxScaling);
-                    m_chartPPG.getViewport().setMinY(yMinScaling);
-
-                    m_chartPPG.getViewport().setYAxisBoundsManual(true);
-
-                }
-                else
-                {
-                    // Restart the timer because the cal hasn't occurred yet
-                    m_ppgGraphScalingTimer.Start(this, PPGGRAPH_AUTOSCALE_TIME_MS, true);
-                }
                 break;
 
             case PRESSURE_OUT_TIMER_ID:
@@ -324,10 +298,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case BASELINE_WAIT_FOR_PPG_SETTLE:
                 // update the PPG chart
                 int currentDataIndex = PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().size();
-                for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
+                if (currentDataIndex > 50)
                 {
-                    m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().get(i).m_PPG), true, 500);
-                    m_nPPGGraphLastX += 0.02;
+                    // don't display the first 50 points cause there's probably a spike in there that throws off the scaling
+                    for (int i = m_nLastDataIndex; i < currentDataIndex; i++)
+                    {
+                        m_seriesPPGData.appendData(new DataPoint(m_nPPGGraphLastX, PatientInfo.getInstance().getRealtimeData().GetLPFilteredData().get(i).m_PPG), true, 500);
+                        m_nPPGGraphLastX += 0.02;
+                    }
                 }
                 m_nLastDataIndex = currentDataIndex;
 
@@ -573,9 +551,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_oneShotTimer.Start(this, BASELINE_TIME_MS, true);
 
         HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
-
-        m_PPPGGraphAutoScaling.Start();
-        m_ppgGraphScalingTimer.Start(this, PPGGRAPH_AUTOSCALE_TIME_MS, true);
 
     }
 
