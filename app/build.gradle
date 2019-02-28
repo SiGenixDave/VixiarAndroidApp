@@ -8,7 +8,7 @@ android {
         minSdkVersion 25
         targetSdkVersion 26
         versionCode 312
-        versionName "3.00.A"
+        versionName "3.00.B"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
