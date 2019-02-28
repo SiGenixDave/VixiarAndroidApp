@@ -33,14 +33,6 @@ public class RealtimePeakValleyDetect
     private List<Integer> m_PeaksIndexes = new ArrayList<>();
     // Stores the indexes in "localData" where the valleys where detected
     private List<Integer> m_ValleysIndexes = new ArrayList<>();
-    // External code pumps data into the list via AddToDataArray(); ExecuteRealtimePeakDetection()
-    // pulls this data out and places into a local data list for processing
-    // after which the data in this list is removed. Separating data and
-    // local data allows multi-threading if desired to pump data into and
-    // process the data concurrently
-    private ConcurrentLinkedQueue<Integer> m_Data = new ConcurrentLinkedQueue<>();
-    // Stores the entire copy of data that was pumped into the data list
-    private List<Integer> m_LocalData = new ArrayList<>();
     // Amount of change from the max peak detected in order to begin "looking"
     // for the next valley. This value determines the max amount of noise
     // allowed on the high part of the wave
@@ -93,7 +85,7 @@ public class RealtimePeakValleyDetect
         PeaksAndValleys pv = new PeaksAndValleys();
         pv.peaks = m_PeaksIndexes;
         pv.valleys = m_ValleysIndexes;
-
+        System.out.println("Get Peaks and Valleys Returning " + pv.peaks.size() + " peaks and " + pv.valleys.size() + " valleys");
         return pv;
     }
 
@@ -166,8 +158,6 @@ public class RealtimePeakValleyDetect
 
         m_PeaksIndexes.clear();
         m_ValleysIndexes.clear();
-        m_Data.clear();
-        m_LocalData.clear();
 
         m_HysteresisAdjustPeakCount = 0;
         m_highestPeak = 0;
@@ -183,48 +173,15 @@ public class RealtimePeakValleyDetect
         m_State = m_DetectFirst;
     }
 
-    // returns the amount of data in the list currently being analyzed
-    public int AmountOfData()
-    {
-        return m_LocalData.size();
-    }
-
-    // returns the ADC value at the provided offset, -1 if boundary exceeded
-    public int GetData1(int offset)
-    {
-        if (offset >= AmountOfData())
-        {
-            return -1;
-        }
-        return m_LocalData.get(offset);
-    }
-
-
-    // Used to add data to the list that is to be copied locally and then
-    // processed
-    public void AddToDataArray(int data)
-    {
-        this.m_Data.add(data);
-    }
-
-
     // Called to copy all data from the list and then start processing it
     // locally
-    public void ExecuteRealtimePeakDetection()
+    public void ExecuteRealtimePeakDetection(ArrayList<RealtimeDataSample> data)
     {
-        // Get all of the real time data and populate locally
-        while (m_Data.size() != 0)
-        {
-            m_LocalData.add(m_Data.poll());
-            // remove each data item as its copied to the local list
-            m_Data.remove(0);
-        }
-
-        while (m_DataIndex < m_LocalData.size())
+        while (m_DataIndex < data.size())
         {
             // System.out.println(m_LocalData.size());
 
-            int currentSample = m_LocalData.get(m_DataIndex);
+            int currentSample = data.get(m_DataIndex).m_PPG;
             //System.out.println(m_DataIndex + ", " + currentSample);
 
             // Always keep running track of the max and min values no matter
@@ -269,11 +226,13 @@ public class RealtimePeakValleyDetect
                             // make sure this one is different than the last one
                             if (m_LastPotentialPeakIndex != m_PeaksIndexes.get(m_PeaksIndexes.size() - 1))
                             {
+                                System.out.println("Added peak 1 @ " + m_LastPotentialPeakIndex);
                                 m_PeaksIndexes.add(m_LastPotentialPeakIndex);
                             }
                         }
                         else
                         {
+                            System.out.println("Added peak 2 @ " + m_LastPotentialPeakIndex);
                             m_PeaksIndexes.add(m_LastPotentialPeakIndex);
                         }
                         m_State = ePVDStates.WAIT_BEFORE_LOOKING_FOR_VALLEY;
@@ -283,7 +242,7 @@ public class RealtimePeakValleyDetect
 
                         // store the current peak data in the valley in
                         // preparation for detecting a valley
-                        m_CurrentLowestSample = m_LocalData.get(m_LastPotentialPeakIndex);
+                        m_CurrentLowestSample = data.get(m_LastPotentialPeakIndex).m_PPG;
                         m_LastPotentialValleyIndex = m_LastPotentialPeakIndex;
 
                         // reset our peak detection counter
@@ -351,12 +310,14 @@ public class RealtimePeakValleyDetect
                                 // also make sure this valley is different than the last peak
                                 if (m_LastPotentialValleyIndex != m_PeaksIndexes.get(m_PeaksIndexes.size() - 1))
                                 {
+                                    System.out.println("Added valley 1 @ " + m_LastPotentialValleyIndex);
                                     m_ValleysIndexes.add(m_LastPotentialValleyIndex);
                                 }
                             }
                         }
                         else
                         {
+                            System.out.println("Added valley 2 @ " + m_LastPotentialValleyIndex);
                             m_ValleysIndexes.add(m_LastPotentialValleyIndex);
                         }
                         m_State = VALIDATING_PEAK;
@@ -366,7 +327,7 @@ public class RealtimePeakValleyDetect
 
                         // store the current valley data in the peak in
                         // preparation for detecting a valley
-                        m_CurrentHighestSample = m_LocalData.get(m_LastPotentialValleyIndex);
+                        m_CurrentHighestSample = data.get(m_LastPotentialValleyIndex).m_PPG;
                         m_LastPotentialPeakIndex = m_LastPotentialValleyIndex;
 
                         if (m_CurrentLowestSample < m_lowestValley)

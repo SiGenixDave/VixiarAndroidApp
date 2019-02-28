@@ -116,12 +116,9 @@ public class RealtimeData
             double ppgHPFiltered = bq2.filter(rawDataSample.m_PPG);
             RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int)ppgHPFiltered, rawDataSample.m_pressure);
             m_HPfilteredData.add(pdHPFiltered);
-
-            // let the PV detect use the HPLP filtered data
-            RealtimePeakValleyDetect.getInstance().AddToDataArray((int)ppgHPLPFiltered);
         }
 
-        RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection();
+        RealtimePeakValleyDetect.getInstance().ExecuteRealtimePeakDetection(m_HPLPfilteredData);
     }
 
     public int GetCurrentDataIndex()
@@ -338,9 +335,6 @@ public class RealtimeData
         double HPOut2 = bq2.filter(pdIn.m_PPG);
         RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int)HPOut2, pdIn.m_pressure);
         m_HPfilteredData.add(pdHPFiltered);
-
-        // let the PV detect use the HPLP filtered data
-        RealtimePeakValleyDetect.getInstance().AddToDataArray((int)HPOut);
     }
 
 }
