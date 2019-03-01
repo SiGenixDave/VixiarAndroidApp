@@ -546,13 +546,15 @@ public class PostProcessing
     }
 
 
-    public boolean SaveCSVFile(String fileName)
+    public boolean SaveCSVFileDesktopTool(String fileName)
     {
         filename = fileName;
         String baseDir = System.getProperty("user.home");
         String desktop = "/Desktop/Desktop Tool Output Data";
         String directoryName = baseDir + desktop;
         String filePath = directoryName + File.separator + fileName + ".csv";
+        String summaryFilePath = directoryName + File.separator + "PAR_comparisons.csv";
+        String PAFilePath = directoryName + File.separator + fileName + "_PA.csv";
 
         File directory = new File(directoryName);
         if (!directory.exists())
@@ -561,12 +563,65 @@ public class PostProcessing
         }
 
         File file = new File(filePath);
+        File summaryFile = new File(summaryFilePath);
+        File PAFile = new File(PAFilePath);
 
         try
         {
+            // append the summary stuff to the summary file
+            FileOutputStream fosSummary = new FileOutputStream(summaryFile, true);
+            PrintWriter pwsummary = new PrintWriter(fosSummary);
+            double fpar1 = PatientInfo.getInstance().get_fileMinPAR(0);
+            double fpar2 = PatientInfo.getInstance().get_fileMinPAR(1);
+            double fpar3 = PatientInfo.getInstance().get_fileMinPAR(2);
+            double calcpar1 = m_aMinPAR_PV_BL[0];
+            double calcpar2 = m_aMinPAR_PV_BL[1];
+            double calcpar3 = m_aMinPAR_PV_BL[2];
+            double difpar1 = calcpar1 - fpar1;
+            double difpar2 = calcpar2 - fpar2;
+            double difpar3 = calcpar3 - fpar3;
+            double pctpar1 = (difpar1 / Math.abs(fpar1)) * 100;
+            double pctpar2 = (difpar2 / Math.abs(fpar2)) * 100;
+            double pctpar3 = (difpar3 / Math.abs(fpar3)) * 100;
+            pwsummary.println("File, File MinPAR1, File MinPAR2, File MinPAR3, Calculated MinPAR1, Calculated MinPAR2, Calculated MinPAR3, " +
+                    "Difference MinPAR1, Difference MinPAR2, Difference MinPAR3, " +
+                    "Pct Diff MinPAR1, Pct Diff MinPAR2, Pct Diff MinPAR3");
+            pwsummary.println(filename + ", " +
+                            fpar1 + ", " +
+                            fpar2 + ", " +
+                            fpar3 + ", " +
+                            calcpar1 + ", " +
+                            calcpar2 + ", " +
+                            calcpar3 + ", " +
+                            difpar1 + ", " +
+                            difpar2 + ", " +
+                            difpar3 + ", " +
+                            pctpar1 + ", " +
+                            pctpar2 + ", " +
+                            pctpar3
+                    );
+            pwsummary.flush();
+            pwsummary.close();
+            fosSummary.close();
+
+            // write the PA stuff to the PA file
+            FileOutputStream fosPA = new FileOutputStream(PAFile, false);
+            PrintWriter pwPA = new PrintWriter(fosPA);
+
+            pwPA.println("Valley Location, PA");
+            for (int i = 0; i < PatientInfo.getInstance().getRealtimeData().GetCalculatedPAs().size(); i++)
+            {
+                pwPA.println(PatientInfo.getInstance().getRealtimeData().GetCalculatedPAs().get(i).location * 0.02 + ", " +
+                        PatientInfo.getInstance().getRealtimeData().GetCalculatedPAs().get(i).value);
+            }
+            pwPA.flush();
+            pwPA.close();
+            pwPA.close();
+
+            // now, write the normal output file
             FileOutputStream fos = new FileOutputStream(file);
             PrintWriter pw = new PrintWriter(fos);
-            WriteCSVContents(pw);
+            WriteCSVContentsDesktopTool(pw);
             file.setWritable(true);
             pw.flush();
             pw.close();
@@ -584,7 +639,7 @@ public class PostProcessing
         return true;
     }
 
-    private void WriteCSVContents(PrintWriter writer)
+    private void WriteCSVContentsDesktopTool(PrintWriter writer)
     {
         writer.println("Filename, " + filename + ", " + "Desktop Tool Software Version, " + desktopToolSoftwareVersion);
         writer.println("Subject ID, " + PatientInfo.getInstance().get_patientId() + ", Date, " + PatientInfo.getInstance().get_testDateTime());
@@ -637,8 +692,30 @@ public class PostProcessing
         PrintVal(writer, "Ph2 HR avg", m_aPh2HR_Avg);
         PrintVal(writer, "Ph2 HR min", m_aPh2HR_min);
         PrintVal(writer, "Ph2 PA avg", m_aPh2PA_avg);
+
+        // write the raw data and the filtered data now
+        int rawSize = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
+        int filteredSize = PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData().size();
+        int printSize;
+
+        if (rawSize < filteredSize)
+        {
+            printSize = rawSize;
+        }
+        else
+        {
+            printSize = filteredSize;
     }
 
+        writer.println("Time, Raw PPG Data, Filtered PPG Data");
+        for (int i = 0; i < printSize; i++)
+        {
+            writer.println(i * 0.01 + ", " +
+                    PatientInfo.getInstance().getRealtimeData().GetRawData().get(i).m_PPG + ", " +
+                    PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData().get(i).m_PPG);
+        }
+    }
+    
     private void PrintVal(PrintWriter writer, String label, double[] val)
     {
         double total = 0;

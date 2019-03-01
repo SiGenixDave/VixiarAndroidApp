@@ -30,6 +30,10 @@ public class PatientInfo
     private final static String TAG = PatientInfo.class.getSimpleName();
 
     private static final PatientInfo ourInstance = new PatientInfo();
+    // Constants
+    private static int SAMPLES_IN_TEN_SECONDS = (50 * 10);
+    // calculated data
+    private final int NUM_TESTS = 3;
     private String m_patientId;
     private int m_systolicBloodPressure;
     private int m_diastolicBloodPressure;
@@ -45,11 +49,17 @@ public class PatientInfo
     private String m_gender;
     private String m_notes;
     private RealtimeData rtd = new RealtimeData();
-
-
-    // Constants
-    private final int NUM_TESTS = 3;
+    private double[] m_aCalcPAAvgRest = new double[NUM_TESTS];
+    private double[] m_aCalcHRAvgRest = new double[NUM_TESTS];
+    private double[] m_aCalcPAAvgVM = new double[NUM_TESTS];
+    private double[] m_aCalcHRAvgVM = new double[NUM_TESTS];
+    private double[] m_aCalcMinPA = new double[NUM_TESTS];
+    private double[] m_aCalcEndPA = new double[NUM_TESTS];
+    private double[] m_aCalcMinPAR = new double[NUM_TESTS];
+    private double[] m_aCalcEndPAR = new double[NUM_TESTS];
+    private double[] m_aCalcMinHRVM = new double[NUM_TESTS];
     private double[] m_aCalcLVEDP = new double[NUM_TESTS];
+    private double[] m_aFileMinPAR = new double[NUM_TESTS];
     private int[] m_aLEDDriveLevels = new int[NUM_TESTS];
 
     public static PatientInfo getInstance()
@@ -71,6 +81,11 @@ public class PatientInfo
         m_notes = "";
         m_startTestBatteryLevel = 0;
         Arrays.fill(m_aCalcLVEDP, 0.0);
+        Arrays.fill(m_aCalcMinHRVM, 0.0);
+        Arrays.fill(m_aCalcMinPA, 0.0);
+        Arrays.fill(m_aCalcMinPAR, 0.0);
+        Arrays.fill(m_aCalcPAAvgRest, 0.0);
+        Arrays.fill(m_aCalcPAAvgVM, 0.0);
         rtd.Initialize();
     }
 
@@ -195,6 +210,26 @@ public class PatientInfo
     public RealtimeData getRealtimeData()
     {
         return rtd;
+    }
+
+    public void set_fileMinPAR(int testNumber, double minPAR)
+    {
+        if (testNumber < NUM_TESTS)
+        {
+            m_aFileMinPAR[testNumber] = minPAR;
+        }
+    }
+
+    public double get_fileMinPAR(int testNumber)
+    {
+        if (testNumber < NUM_TESTS)
+        {
+            return m_aFileMinPAR[testNumber];
+        }
+        else
+        {
+            return 0.0;
+        }
     }
 
     public String get_patientId()

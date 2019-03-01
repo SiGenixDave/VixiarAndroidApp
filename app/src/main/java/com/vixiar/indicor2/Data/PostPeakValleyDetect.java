@@ -150,9 +150,19 @@ public class PostPeakValleyDetect
         if (detectPostVMPeaksAndValleys)
         {
             // Find the post Valsalva peaks and valleys
-            int postVMStart = vEnd + (int) (SAMPLES_PER_SECOND * 2.5);
+        int postVMStart = vEnd + (int)(SAMPLES_PER_SECOND * 2.5);
             int postVMEnd = postVMStart + (SAMPLES_PER_SECOND * 10);
+        // make sure phase 4 end isn't past the end of the data
+        if (postVMEnd > dataSet.size() - 1)
+        {
+            postVMEnd = dataSet.size() - 1;
+        }
             pvPostValsalva = DetectPeaksAndValleysForRegionHarryMethod(postVMStart, postVMEnd, POST_VALSALVA_SCALE_FACTOR, dataSet, eHarryPeakDetectionType.NON_BASELINE);
+
+        allPV.peaks.addAll(pvBaseline.peaks);
+        allPV.valleys.addAll(pvBaseline.valleys);
+        allPV.peaks.addAll(pvValsalva.peaks);
+        allPV.valleys.addAll(pvValsalva.valleys);
             allPV.peaks.addAll(pvPostValsalva.peaks);
             allPV.valleys.addAll(pvPostValsalva.valleys);
         }
