@@ -792,6 +792,11 @@ public class BeatProcessing
                 returnPA = peakAmplitude - valleyAmplitude;
             }
         }
+        // save the location of the valley and the calculated PA
+        ValueAndLocation vlpa = new ValueAndLocation();
+        vlpa.location = valleyLocation;
+        vlpa.value = returnPA;
+        PatientInfo.getInstance().getRealtimeData().GetCalculatedPAs().add(vlpa);
 
         return returnPA;
     }

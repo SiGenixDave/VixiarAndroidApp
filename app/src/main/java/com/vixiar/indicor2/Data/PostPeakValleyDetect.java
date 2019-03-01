@@ -309,7 +309,7 @@ public class PostPeakValleyDetect
                 {
                     if (potentialPeaks.get(tempIndex).value > maxValue)
                     {
-                        maxValue = (int) potentialPeaks.get(tempIndex).value;
+                        maxValue = (int)potentialPeaks.get(tempIndex).value;
                         maxLocation = potentialPeaks.get(tempIndex).location;
                         foundOne = true;
                     }
@@ -317,7 +317,7 @@ public class PostPeakValleyDetect
                     // checked as a possible max
                     if (potentialPeaks.get(tempIndex + 1).value > maxValue)
                     {
-                        maxValue = (int) potentialPeaks.get(tempIndex + 1).value;
+                        maxValue = (int)potentialPeaks.get(tempIndex + 1).value;
                         maxLocation = potentialPeaks.get(tempIndex + 1).location;
                         foundOne = true;
                     }

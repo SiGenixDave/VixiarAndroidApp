@@ -16,6 +16,7 @@ public class RealtimeData
     private ArrayList<RealtimeDataSample> m_LPfilteredData = new ArrayList<RealtimeDataSample>();
     private ArrayList<RealtimeDataMarker> m_markers = new ArrayList<RealtimeDataMarker>();
     public ArrayList<ValueAndLocation> m_InterpolatedValleys = new ArrayList<>();
+    public ArrayList<ValueAndLocation> m_CalculatedPAs = new ArrayList<>();
     private I_FIRFilterTap PPGTaps = new PPG_FIRFilterTaps();
     private I_FIRFilterTap PressureTaps = new Pressure_FIRFilterTaps();
     private FIRFilter m_PPGFIRFilter = new FIRFilter(PPGTaps.GetTaps());
@@ -295,6 +296,8 @@ public class RealtimeData
         return m_HPfilteredData;
     }
 
+    public ArrayList<ValueAndLocation> GetCalculatedPAs() { return m_CalculatedPAs; }
+
     public void ClearAllData()
     {
         Initialize();
@@ -308,7 +311,7 @@ public class RealtimeData
     public void AppendNewFileSample(Double PPGSample, Double pressureSample)
     {
         RealtimeDataSample pdIn = new RealtimeDataSample(PPGSample.intValue(), pressureSample.intValue());
-        pdIn.m_PPG = 65535-pdIn.m_PPG;
+        //pdIn.m_PPG = 65535-pdIn.m_PPG;
         m_rawData.add(pdIn);
 
         // apply the FIR filter to the PPG
