@@ -197,6 +197,29 @@ public class RealtimeData
         // then those values are accumulated and the average of the 20 lowest values is computed...if this
         // average is greater than 0.4, there's high frequency noise present.
 
+/*
+        // first, we're going to create a new array of "filtered" data to use Harry's method
+        List<Integer> averagedData = new LinkedList<>();
+        // first, there must be at least 1.5 seconds of data before we even start
+        if (m_HPLPfilteredData.size() > (AppConstants.SAMPLES_PER_SECOND * 1.5))
+        {
+            for (int i = (int)(AppConstants.SAMPLES_PER_SECOND * 1.5); i < m_HPLPfilteredData.size(); i++)
+            {
+                // for each point take the average of the previous 1.5 seconds and the post 1.5 seconds
+                // and subtract that from the point...that becomes the new point
+                int sum = 0;
+                for (int j = i - (int)AppConstants.SAMPLES_PER_SECOND; i < AppConstants.SAMPLES_PER_SECOND * 3; j++)
+                {
+                    sum += m_HPLPfilteredData.get(j).m_PPG;
+                }
+                double average = sum / (AppConstants.SAMPLES_PER_SECOND * 3);
+                int newPoint = m_HPLPfilteredData.get(i).m_PPG - (int) average;
+                averagedData.add(newPoint);
+            }
+        }
+*/
+
+
         boolean hfNoiseDetected = false;
         List<Double> ratioList = new ArrayList<>();
 
