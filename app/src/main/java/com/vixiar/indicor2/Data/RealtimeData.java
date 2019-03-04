@@ -26,7 +26,7 @@ public class RealtimeData
 
     public void Initialize()
     {
-        RealtimePeakValleyDetect.getInstance().Initialize(5000, 5000, false);
+        RealtimePeakValleyDetect.getInstance().Initialize(500, 500, false);
         m_rawData.clear();
         m_HPLPfilteredData.clear();
         m_HPfilteredData.clear();
