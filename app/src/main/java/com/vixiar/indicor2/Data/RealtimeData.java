@@ -90,7 +90,7 @@ public class RealtimeData
             RealtimeDataSample rawDataSample = new RealtimeDataSample(rawPPGCounts, rawPressureMMHg);
 
             // invert the PPG cause the hardware doesn't anymore
-            rawDataSample.m_PPG = 65535-rawDataSample.m_PPG;
+            rawDataSample.m_PPG = 65535 - rawDataSample.m_PPG;
             m_rawData.add(rawDataSample);
 
             // apply the FIR filter to the PPG
@@ -110,12 +110,12 @@ public class RealtimeData
             double ppgHPLPFiltered = bq1.filter(FIRFilteredSample.m_PPG);
 
             // save the HP-LP filtered data to a different structure
-            RealtimeDataSample HPLPFilteredSample = new RealtimeDataSample((int)ppgHPLPFiltered, pressureFIRFiltered);
+            RealtimeDataSample HPLPFilteredSample = new RealtimeDataSample((int) ppgHPLPFiltered, pressureFIRFiltered);
             m_HPLPfilteredData.add(HPLPFilteredSample);
 
             // save the HP filtered data
             double ppgHPFiltered = bq2.filter(rawDataSample.m_PPG);
-            RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int)ppgHPFiltered, rawDataSample.m_pressure);
+            RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int) ppgHPFiltered, rawDataSample.m_pressure);
             m_HPfilteredData.add(pdHPFiltered);
         }
 
@@ -173,7 +173,7 @@ public class RealtimeData
             double lowerLimit = mean - (AppConstants.STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT * stdev);
 
             // see if the sample is within the limit
-            int dataPoint = m_HPLPfilteredData.get(m_HPLPfilteredData.size()-1).m_PPG;
+            int dataPoint = m_HPLPfilteredData.get(m_HPLPfilteredData.size() - 1).m_PPG;
             if (dataPoint > upperLimit || dataPoint < lowerLimit)
             {
                 isMovement = true;
@@ -189,6 +189,36 @@ public class RealtimeData
 
     }
 
+    public boolean TestForWeakPulse(int startIndex)
+    {
+        // this function will make sure the lowest PA during baseline was > 300 counts
+        boolean weakPulseDetected = false;
+
+
+        // calculate the peaks and valleys for the baseline range
+        int endIndex = PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData().size();
+        int startingIndex = endIndex - (AppConstants.SAMPLES_PER_SECOND * 10);
+
+        PeaksAndValleys pv = PostPeakValleyDetect.getInstance().DetectPeaksAndValleysForRegionHarryMethod(startingIndex, endIndex, AppConstants.BASELINE_SCALE_FACTOR, PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData(), PostPeakValleyDetect.eHarryPeakDetectionType.BASELINE);
+        // shift the peaks and valleys to correspond to the raw data
+        for (int x = 0; x < pv.peaks.size(); x++)
+        {
+            pv.peaks.set(x, pv.peaks.get(x) - 7);
+        }
+        for (int x = 0; x < pv.valleys.size(); x++)
+        {
+            pv.valleys.set(x, pv.valleys.get(x) - 7);
+        }
+        PeaksAndValleys pvRaw = PostPeakValleyDetect.getInstance().TransferPeaksAndValleysToOtherData(pv, PatientInfo.getInstance().getRealtimeData().GetRawData());
+        ValueAndLocation minPAvl = BeatProcessing.getInstance().GetMinPAInRange(startIndex, PatientInfo.getInstance().getRealtimeData().GetRawData().size(), pvRaw, PatientInfo.getInstance().getRealtimeData().GetRawData());
+        if(minPAvl.value < 300)
+        {
+            weakPulseDetected = true;
+        }
+
+        return weakPulseDetected;
+    }
+
     public boolean TestForHighFrequencyNoise(int startIndex)
     {
         // in order to determine if there's high frequency noise, it's necessary to go through all of the
@@ -197,7 +227,7 @@ public class RealtimeData
         // then those values are accumulated and the average of the 20 lowest values is computed...if this
         // average is greater than 0.4, there's high frequency noise present.
 
-/*
+/*      This code is supposed to do more HPF on the data...it was removed till we figure out a better way to do this
         // first, we're going to create a new array of "filtered" data to use Harry's method
         List<Integer> averagedData = new LinkedList<>();
         // first, there must be at least 1.5 seconds of data before we even start
@@ -218,8 +248,6 @@ public class RealtimeData
             }
         }
 */
-
-
         boolean hfNoiseDetected = false;
         List<Double> ratioList = new ArrayList<>();
 
@@ -231,7 +259,7 @@ public class RealtimeData
             int endingRangeIndex = m_HPLPfilteredData.size() - 3;
             for (int i = startingRangeIndex; i < endingRangeIndex; i++)
             {
-                double localPointsStdev = DataMath.getInstance().CalculateStdev(i-2, i + 2, m_HPLPfilteredData);
+                double localPointsStdev = DataMath.getInstance().CalculateStdev(i - 2, i + 2, m_HPLPfilteredData);
                 double localSecondsStdev = DataMath.getInstance().CalculateStdev(i - (AppConstants.SAMPLES_PER_SECOND * 3), i, m_HPLPfilteredData);
 
                 if (localSecondsStdev != 0.0)
@@ -274,7 +302,7 @@ public class RealtimeData
     {
         boolean isInRange = false;
 
-        double baselineHeartRate  = HeartRateInfo.getInstance().CalculateEndHeartRateStartingAt(startIndex, -1);
+        double baselineHeartRate = HeartRateInfo.getInstance().CalculateEndHeartRateStartingAt(startIndex, -1);
 
         if (baselineHeartRate >= AppConstants.MIN_STABLE_HR && baselineHeartRate <= AppConstants.MAX_STABLE_HR)
         {
@@ -319,7 +347,10 @@ public class RealtimeData
         return m_HPfilteredData;
     }
 
-    public ArrayList<ValueAndLocation> GetCalculatedPAs() { return m_CalculatedPAs; }
+    public ArrayList<ValueAndLocation> GetCalculatedPAs()
+    {
+        return m_CalculatedPAs;
+    }
 
     public void ClearAllData()
     {
@@ -354,12 +385,12 @@ public class RealtimeData
         double HPOut = bq1.filter(pdLPFiltered.m_PPG);
 
         // save the HP-LP filtered data to a different structure
-        RealtimeDataSample pdHPLPFiltered = new RealtimeDataSample((int)HPOut, pressureFiltered);
+        RealtimeDataSample pdHPLPFiltered = new RealtimeDataSample((int) HPOut, pressureFiltered);
         m_HPLPfilteredData.add(pdHPLPFiltered);
 
         // save the HP filtered data
         double HPOut2 = bq2.filter(pdIn.m_PPG);
-        RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int)HPOut2, pdIn.m_pressure);
+        RealtimeDataSample pdHPFiltered = new RealtimeDataSample((int) HPOut2, pdIn.m_pressure);
         m_HPfilteredData.add(pdHPFiltered);
     }
 

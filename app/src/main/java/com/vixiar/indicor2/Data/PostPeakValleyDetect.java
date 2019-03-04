@@ -226,7 +226,7 @@ public class PostPeakValleyDetect
         return pvOut;
     }
 
-    private PeaksAndValleys DetectPeaksAndValleysForRegionHarryMethod(int startIndex, int endIndex, double scaleFactor, ArrayList<RealtimeDataSample> dataSet, eHarryPeakDetectionType detectionType)
+    public PeaksAndValleys DetectPeaksAndValleysForRegionHarryMethod(int startIndex, int endIndex, double scaleFactor, ArrayList<RealtimeDataSample> dataSet, eHarryPeakDetectionType detectionType)
     {
         PeaksAndValleys pv = new PeaksAndValleys();
         pv.peaks = new ArrayList<>();

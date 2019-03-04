@@ -154,6 +154,9 @@
     <string name="dlg_title_ppg_hf_noise">MOVEMENT DETECTED</string>
     <string name="dlg_msg_ppg_hf_noise">Detecting signal interference.  Do you wish to try again? &end_test_warning1;</string>
 
+    <string name="dlg_title_ppg_weak_pulse">WEAK PULSE</string>
+    <string name="dlg_msg_ppg_weak_pulse">Detecting a weak pulse signal. Do you wish to try again? &end_test_warning1;</string>
+
     <string name="dlg_title_connection_problem">PROBLEM CONNECTING</string>
     <string name="dlg_msg_connection_problem">There was a problem connecting to the handheld device.
         Try restarting it and connecting again.</string>

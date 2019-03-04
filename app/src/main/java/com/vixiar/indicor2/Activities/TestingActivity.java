@@ -134,6 +134,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int DLG_ID_PPG_CLIPPING = 5;
     private final int DLG_ID_PPG_FLATLINE = 6;
     private final int DLG_ID_PPG_HF_NOISE = 7;
+    private final int DLG_ID_PPG_WEAK_PULSE = 8;
 
     // Timing constants
     private final int PPGGRAPH_AUTOSCALE_TIME_MS = 2000;
@@ -399,6 +400,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case DLG_ID_PPG_CLIPPING:
             case DLG_ID_PPG_FLATLINE:
             case DLG_ID_PPG_HF_NOISE:
+            case DLG_ID_PPG_WEAK_PULSE:
 
                 // this is the "Try again" button, we need to restart this test
                 SwitchToStabilityView();
@@ -1044,6 +1046,12 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     if (!PatientInfo.getInstance().getRealtimeData().TestForHeartRateInRange(m_baselineStartIndex))
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_hr_out_of_range), getString(R.string.dlg_msg_hr_out_of_range), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
+                    // baseline is over, now check the signal for a proper signal amplitude before proceeding
+                    else if (PatientInfo.getInstance().getRealtimeData().TestForWeakPulse(m_baselineStartIndex))
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_weak_pulse), getString(R.string.dlg_msg_ppg_weak_pulse), "Yes", "End Test", this, DLG_ID_PPG_WEAK_PULSE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // baseline is over, now check the signal for high frequency noise before proceeding
