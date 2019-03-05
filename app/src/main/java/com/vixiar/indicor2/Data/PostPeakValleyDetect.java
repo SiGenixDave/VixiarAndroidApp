@@ -214,11 +214,15 @@ public class PostPeakValleyDetect
             // look up to 5 samples ahead for a possible higher peak
             for (int x = 0; x < NUM_COUNTS_TO_LOOK_AHEAD; x++)
             {
-                int newPoint = dataSetApplyPeaks.get(valleyLocation + x).m_PPG;
-                if (newPoint < minValleyValue)
+                // make sure there's enough data in the new list
+                if (dataSetApplyPeaks.size() > valleyLocation + x)
                 {
-                    minValleyValue = newPoint;
-                    minValleyLocation = valleyLocation + x;
+                    int newPoint = dataSetApplyPeaks.get(valleyLocation + x).m_PPG;
+                    if (newPoint < minValleyValue)
+                    {
+                        minValleyValue = newPoint;
+                        minValleyLocation = valleyLocation + x;
+                    }
                 }
             }
             pvOut.valleys.add(minValleyLocation);
