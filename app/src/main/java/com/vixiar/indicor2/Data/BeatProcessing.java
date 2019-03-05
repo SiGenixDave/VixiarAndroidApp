@@ -165,7 +165,6 @@ public class BeatProcessing
     }
 
 
-
     // returns the current number of peaks detected between indices
     public List<Integer> GetItemsBetween(int startIndex, int endIndex, RealtimePeakValleyDetect.eSlopeZero type, PeaksAndValleys pv)
     {
@@ -202,8 +201,8 @@ public class BeatProcessing
                 }
             }
         }
-        System.out.println("GIB: " + startIndex + ", " + endIndex + " numTrans = " + numTransitions + " result count = " + transitionIndexList.size());
-        System.out.println();
+        //System.out.println("GIB: " + startIndex + ", " + endIndex + " numTrans = " + numTransitions + " result count = " + transitionIndexList.size());
+        //System.out.println();
 
         return transitionIndexList;
     }
@@ -281,8 +280,7 @@ public class BeatProcessing
             // then average with next 2 beats
             ph4PAAvg3 = GetAvgPAFuture(ph4PAPeakIndex, 3, pv, dataSet);
         }
-        else if ((ph4PAPeakIndex < vEndPlus12Point5Seconds) && (thisValleyIndex < vEndPlus12Point5Seconds)
-                && ((nextValleyIndex == -1) || (nextValleyIndex > vEndPlus12Point5Seconds)))
+        else if ((ph4PAPeakIndex < vEndPlus12Point5Seconds) && (thisValleyIndex < vEndPlus12Point5Seconds) && ((nextValleyIndex == -1) || (nextValleyIndex > vEndPlus12Point5Seconds)))
         {
             // if the Ph4 PA peak is the last beat before vEnd + 12.5 sec
             // then average with the previous 2 beats
@@ -408,13 +406,13 @@ public class BeatProcessing
 
         // loop through all the beats
         for (int i = 0; i < numBeats; i++)
-                {
-            System.out.println("Calling from GetMinPAInRange");
+        {
             int currentPA = GetPAOfBeat(pv, i, dataSet);
+            System.out.println("PA: " + currentPA);
             if (currentPA < minValleyToPeak)
             {
                 minValleyToPeak = currentPA;
-                vl.location =  GetPeakIndexOfBeat(pv, i);
+                vl.location = GetPeakIndexOfBeat(pv, i);
             }
         }
         vl.value = minValleyToPeak;
@@ -450,9 +448,9 @@ public class BeatProcessing
             if (currentPA > maxValleyToPeak)
             {
                 maxValleyToPeak = currentPA;
-                vl.location =  GetPeakIndexOfBeat(pv, i);
-                }
+                vl.location = GetPeakIndexOfBeat(pv, i);
             }
+        }
         vl.value = maxValleyToPeak;
         return vl;
     }
@@ -765,7 +763,7 @@ public class BeatProcessing
                 int dT = peakLocation - valleyLocation;
 
                 // calculate the contribution that the slope in valley-valley has on the amplitude
-                int offset = (int)((double)dT * slope);
+                int offset = (int) ((double) dT * slope);
 
                 //System.out.println();
                 //System.out.println("PA without offset = " + (peakAmplitude-valleyAmplitude) + " at " + (valleyLocation*0.02));
@@ -777,7 +775,7 @@ public class BeatProcessing
                 vl.value = valleyAmplitude + offset;
                 PatientInfo.getInstance().getRealtimeData().m_InterpolatedValleys.add(vl);
 
-                System.out.println("Int-Valley Loc = " + valleyLocation*0.02 + " Beat num = " + beatNum);
+                //System.out.println("Int-Valley Loc = " + valleyLocation * 0.02 + " Beat num = " + beatNum);
                 returnPA = peakAmplitude - valleyAmplitude - offset;
             }
         }
@@ -788,7 +786,7 @@ public class BeatProcessing
             {
                 valleyAmplitude = dataSet.get(valleyLocation).m_PPG;
                 peakAmplitude = dataSet.get(peakLocation).m_PPG;
-                System.out.println("Reg-Valley Loc = " + valleyLocation*0.02 + " Beat num = " + beatNum);
+                //System.out.println("Reg-Valley Loc = " + valleyLocation * 0.02 + " Beat num = " + beatNum);
                 returnPA = peakAmplitude - valleyAmplitude;
             }
         }

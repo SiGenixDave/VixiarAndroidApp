@@ -85,7 +85,7 @@ public class RealtimePeakValleyDetect
         PeaksAndValleys pv = new PeaksAndValleys();
         pv.peaks = m_PeaksIndexes;
         pv.valleys = m_ValleysIndexes;
-        System.out.println("Get Peaks and Valleys Returning " + pv.peaks.size() + " peaks and " + pv.valleys.size() + " valleys");
+        //System.out.println("Get Peaks and Valleys Returning " + pv.peaks.size() + " peaks and " + pv.valleys.size() + " valleys");
         return pv;
     }
 
@@ -231,13 +231,13 @@ public class RealtimePeakValleyDetect
                             // make sure this one is different than the last one
                             if (m_LastPotentialPeakIndex != m_PeaksIndexes.get(m_PeaksIndexes.size() - 1))
                             {
-                                System.out.println("Added peak 1 @ " + m_LastPotentialPeakIndex);
+                                //System.out.println("Added peak 1 @ " + m_LastPotentialPeakIndex);
                                 m_PeaksIndexes.add(m_LastPotentialPeakIndex);
                             }
                         }
                         else
                         {
-                            System.out.println("Added peak 2 @ " + m_LastPotentialPeakIndex);
+                            //System.out.println("Added peak 2 @ " + m_LastPotentialPeakIndex);
                             m_PeaksIndexes.add(m_LastPotentialPeakIndex);
                         }
                         m_State = ePVDStates.WAIT_BEFORE_LOOKING_FOR_VALLEY;
@@ -315,14 +315,14 @@ public class RealtimePeakValleyDetect
                                 // also make sure this valley is different than the last peak
                                 if (m_LastPotentialValleyIndex != m_PeaksIndexes.get(m_PeaksIndexes.size() - 1))
                                 {
-                                    System.out.println("Added valley 1 @ " + m_LastPotentialValleyIndex);
+                                    //System.out.println("Added valley 1 @ " + m_LastPotentialValleyIndex);
                                     m_ValleysIndexes.add(m_LastPotentialValleyIndex);
                                 }
                             }
                         }
                         else
                         {
-                            System.out.println("Added valley 2 @ " + m_LastPotentialValleyIndex);
+                            //System.out.println("Added valley 2 @ " + m_LastPotentialValleyIndex);
                             m_ValleysIndexes.add(m_LastPotentialValleyIndex);
                         }
                         m_State = VALIDATING_PEAK;

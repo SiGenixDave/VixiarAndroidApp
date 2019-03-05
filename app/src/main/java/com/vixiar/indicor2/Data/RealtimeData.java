@@ -210,6 +210,7 @@ public class RealtimeData
             pv.valleys.set(x, pv.valleys.get(x) - 7);
         }
         PeaksAndValleys pvRaw = PostPeakValleyDetect.getInstance().TransferPeaksAndValleysToOtherData(pv, PatientInfo.getInstance().getRealtimeData().GetRawData());
+        System.out.println("Here's the beats from baseline");
         ValueAndLocation minPAvl = BeatProcessing.getInstance().GetMinPAInRange(startIndex, PatientInfo.getInstance().getRealtimeData().GetRawData().size(), pvRaw, PatientInfo.getInstance().getRealtimeData().GetRawData());
         if(minPAvl.value < 300)
         {
