@@ -295,24 +295,16 @@ public class PatientInfo
     // test number is 0 relative
     public boolean CalculateResults(int testNumber)
     {
-        // run Harry's peak detection
+        // run Harry's peak detection on the highpass/lowpass filtered data
         PeaksAndValleys pv = PostPeakValleyDetect.getInstance().HarrySilberPeakDetection(testNumber, PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData(), false);
+
         // pv contains the peak and valley locations in the filtered data
         // the peaks and valleys don't necessarily line up with the raw data peaks and valleys
         // this function will search around the potential peak and valley and find the true one
 
-        // shift the peaks and valleys to correspond to the raw data
-        for (int x = 0; x < pv.peaks.size(); x++)
-        {
-            pv.peaks.set(x, pv.peaks.get(x) - 7);
-        }
-        for (int x = 0; x < pv.valleys.size(); x++)
-        {
-            pv.valleys.set(x, pv.valleys.get(x) - 7);
-        }
-        PeaksAndValleys pvRaw = PostPeakValleyDetect.getInstance().TransferPeaksAndValleysToOtherData(pv, PatientInfo.getInstance().getRealtimeData().GetRawData());
+        PeaksAndValleys pvFIR = PostPeakValleyDetect.getInstance().TransferPeaksAndValleysToOtherData(pv, PatientInfo.getInstance().getRealtimeData().GetLPFilteredData());
 
-        PostProcessing.getInstance().CalculatePostProcessingResults(testNumber, pvRaw, PatientInfo.getInstance().getRealtimeData().GetRawData(), false);
+        PostProcessing.getInstance().CalculatePostProcessingResults(testNumber, pvFIR, PatientInfo.getInstance().getRealtimeData().GetLPFilteredData(), false);
 
         m_aCalcLVEDP[testNumber] = PostProcessing.getInstance().getLVEDP(testNumber, m_height_Inches, m_diastolicBloodPressure, m_systolicBloodPressure, m_age_years);
 
