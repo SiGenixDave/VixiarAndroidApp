@@ -5,7 +5,7 @@ android {
     buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId 'com.vixiar.indicor2'
-        minSdkVersion 25
+        minSdkVersion 23
         targetSdkVersion 26
         versionCode 325
         versionName "3.01"
