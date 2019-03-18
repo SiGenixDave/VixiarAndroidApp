@@ -191,33 +191,117 @@ public class RealtimeData
 
     public boolean TestForWeakPulse(int startIndex)
     {
-        // this function will make sure the lowest PA during baseline was > 300 counts
+        // this function will make sure the average PA during baseline was > 300 counts
         boolean weakPulseDetected = false;
 
 
         // calculate the peaks and valleys for the baseline range
         int endIndex = PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData().size();
-        int startingIndex = endIndex - (AppConstants.SAMPLES_PER_SECOND * 10);
+        int startingIndex = endIndex - (AppConstants.SAMPLES_PER_SECOND * AppConstants.BASELINE_LENGTH_SEC);
 
         PeaksAndValleys pv = PostPeakValleyDetect.getInstance().DetectPeaksAndValleysForRegionHarryMethod(startingIndex, endIndex, AppConstants.BASELINE_SCALE_FACTOR, PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData(), PostPeakValleyDetect.eHarryPeakDetectionType.BASELINE);
         // shift the peaks and valleys to correspond to the raw data
         for (int x = 0; x < pv.peaks.size(); x++)
         {
-            pv.peaks.set(x, pv.peaks.get(x) - 7);
+            pv.peaks.set(x, pv.peaks.get(x) - AppConstants.FILTER_DELAY_SAMPLES);
         }
         for (int x = 0; x < pv.valleys.size(); x++)
         {
-            pv.valleys.set(x, pv.valleys.get(x) - 7);
+            pv.valleys.set(x, pv.valleys.get(x) - AppConstants.FILTER_DELAY_SAMPLES);
         }
         PeaksAndValleys pvRaw = PostPeakValleyDetect.getInstance().TransferPeaksAndValleysToOtherData(pv, PatientInfo.getInstance().getRealtimeData().GetRawData());
         System.out.println("Here's the beats from baseline");
-        ValueAndLocation minPAvl = BeatProcessing.getInstance().GetMinPAInRange(startIndex, PatientInfo.getInstance().getRealtimeData().GetRawData().size(), pvRaw, PatientInfo.getInstance().getRealtimeData().GetRawData());
-        if(minPAvl.value < 300)
+        double avgPA = BeatProcessing.getInstance().GetAvgPAInRange(startingIndex, endIndex, pvRaw, PatientInfo.getInstance().getRealtimeData().GetRawData());
+        if(avgPA < 300.0)
         {
             weakPulseDetected = true;
         }
 
         return weakPulseDetected;
+    }
+
+    public boolean TestForAmbientLight(int startIndex)
+    {
+        // this function will make sure that the average of the raw data signal during baseline was at least 15000 counts
+        // if it is below that, there's a chance that ambient light caused it
+        boolean ambientLightDetected = false;
+
+        // average all of the raw data for the time period
+        int endIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
+        int startingIndex = endIndex - (AppConstants.SAMPLES_PER_SECOND * AppConstants.BASELINE_LENGTH_SEC);
+
+        int dataSum = 0;
+
+        for (int i = startingIndex; i < endIndex; i++)
+        {
+            dataSum += PatientInfo.getInstance().getRealtimeData().GetRawData().get(i).m_PPG;
+        }
+
+        int avg = dataSum / (endIndex - startingIndex);
+
+        if (avg < AppConstants.LOW_LEVEL_BASELINE_FOR_AMBIENT_LIGHT)
+        {
+            ambientLightDetected = true;
+        }
+
+        return ambientLightDetected;
+    }
+
+    public boolean TestForUnStableBaseline(int startIndex)
+    {
+        // this function will make sure that the average of the raw data signal during baseline was at least 15000 counts
+        // if it is below that, there's a chance that ambient light caused it
+        boolean unstableBaselineDetected = false;
+
+        // average all of the raw data for the time period
+        int endIndex = PatientInfo.getInstance().getRealtimeData().GetRawData().size();
+        int startingIndex = endIndex - (AppConstants.SAMPLES_PER_SECOND * AppConstants.BASELINE_LENGTH_SEC);
+
+        PeaksAndValleys pv = PostPeakValleyDetect.getInstance().DetectPeaksAndValleysForRegionHarryMethod(startingIndex, endIndex, AppConstants.BASELINE_SCALE_FACTOR, PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData(), PostPeakValleyDetect.eHarryPeakDetectionType.BASELINE);
+        // shift the peaks and valleys to correspond to the raw data
+        for (int x = 0; x < pv.peaks.size(); x++)
+        {
+            pv.peaks.set(x, pv.peaks.get(x) - AppConstants.FILTER_DELAY_SAMPLES);
+        }
+        for (int x = 0; x < pv.valleys.size(); x++)
+        {
+            pv.valleys.set(x, pv.valleys.get(x) - AppConstants.FILTER_DELAY_SAMPLES);
+        }
+        PeaksAndValleys pvRaw = PostPeakValleyDetect.getInstance().TransferPeaksAndValleysToOtherData(pv, PatientInfo.getInstance().getRealtimeData().GetRawData());
+        double avgPA = BeatProcessing.getInstance().GetAvgPAInRange(startingIndex, endIndex, pvRaw, PatientInfo.getInstance().getRealtimeData().GetRawData());
+
+        int limit = (int)(avgPA * (double)AppConstants.MAX_SLOPE_FOR_UNSTABLE_BASELINE_PCT / 100.0);
+        int previousValley = 0;
+        int maxExceededCount = 0;
+        for (int i = 0; i < pvRaw.valleys.size(); i++)
+        {
+            int currentValley = PatientInfo.getInstance().getRealtimeData().GetRawData().get(pvRaw.valleys.get(i)).m_PPG;
+            if (i == 0)
+            {
+                previousValley = currentValley;
+            }
+            else
+            {
+                int delta = currentValley - previousValley;
+                System.out.println();
+                System.out.println("Delta=" + delta);
+                System.out.println("Limit=" + limit);
+                previousValley = currentValley;
+                if (Math.abs(delta) > limit)
+                {
+                    if (maxExceededCount++ >= 2)
+                    {
+                        unstableBaselineDetected = true;
+                    }
+                }
+                else
+                {
+                    maxExceededCount = 0;
+                }
+            }
+        }
+
+        return unstableBaselineDetected;
     }
 
     public boolean TestForHighFrequencyNoise(int startIndex)

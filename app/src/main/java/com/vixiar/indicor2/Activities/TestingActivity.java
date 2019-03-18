@@ -135,6 +135,9 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int DLG_ID_PPG_FLATLINE = 6;
     private final int DLG_ID_PPG_HF_NOISE = 7;
     private final int DLG_ID_PPG_WEAK_PULSE = 8;
+    private final int DLG_ID_AMBIENT_LIGHT = 9;
+    private final int DLG_ID_UNSTABLE_BASELINE = 10;
+
 
     // Timing constants
     private final int PPGGRAPH_AUTOSCALE_TIME_MS = 2000;
@@ -401,6 +404,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case DLG_ID_PPG_FLATLINE:
             case DLG_ID_PPG_HF_NOISE:
             case DLG_ID_PPG_WEAK_PULSE:
+            case DLG_ID_AMBIENT_LIGHT:
+            case DLG_ID_UNSTABLE_BASELINE:
 
                 // this is the "Try again" button, we need to restart this test
                 SwitchToStabilityView();
@@ -1042,19 +1047,31 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: BASELINE");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    // baseline is over, now check the signal for a good heart rate before proceeding
-                    if (!PatientInfo.getInstance().getRealtimeData().TestForHeartRateInRange(m_baselineStartIndex))
-                    {
-                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_hr_out_of_range), getString(R.string.dlg_msg_hr_out_of_range), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
-                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
-                    }
                     // baseline is over, now check the signal for a proper signal amplitude before proceeding
-                    else if (PatientInfo.getInstance().getRealtimeData().TestForWeakPulse(m_baselineStartIndex))
+                    if (PatientInfo.getInstance().getRealtimeData().TestForWeakPulse(m_baselineStartIndex))
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_weak_pulse), getString(R.string.dlg_msg_ppg_weak_pulse), "Yes", "End Test", this, DLG_ID_PPG_WEAK_PULSE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
-                    // baseline is over, now check the signal for high frequency noise before proceeding
+                    // now check the signal to determine if there's ambient light present
+                    else if (PatientInfo.getInstance().getRealtimeData().TestForAmbientLight(m_baselineStartIndex))
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ambient_light), getString(R.string.dlg_msg_ambient_light), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
+                    // now check the signal for an unstable baseline
+                    else if (PatientInfo.getInstance().getRealtimeData().TestForUnStableBaseline(m_baselineStartIndex))
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_baseline_unstable), getString(R.string.dlg_msg_baseline_unstable), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
+                    // now check the signal for a good heart rate before proceeding
+                    else if (!PatientInfo.getInstance().getRealtimeData().TestForHeartRateInRange(m_baselineStartIndex))
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_hr_out_of_range), getString(R.string.dlg_msg_hr_out_of_range), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
+                    // now check the signal for high frequency noise before proceeding
                     else if (PatientInfo.getInstance().getRealtimeData().TestForHighFrequencyNoise(m_baselineStartIndex))
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_hf_noise), getString(R.string.dlg_msg_ppg_hf_noise), "Yes", "End Test", this, DLG_ID_PPG_HF_NOISE, this);

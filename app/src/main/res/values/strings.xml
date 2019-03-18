@@ -145,6 +145,12 @@
     <string name="dlg_title_hr_out_of_range">HEART RATE OUT OF RANGE</string>
     <string name="dlg_msg_hr_out_of_range">Heart rate out of range.  Do you wish to try again? &end_test_warning1;</string>
 
+    <string name="dlg_title_ambient_light">AMBIENT LIGHT DETECTED</string>
+    <string name="dlg_msg_ambient_light">It appears that the sensor is being exposed to a significant amount of ambient light.  Please cover the sensor or move to a different location.  Do you wish to try again? &end_test_warning1;</string>
+
+    <string name="dlg_title_baseline_unstable">BASELINE NOT STABLE</string>
+    <string name="dlg_msg_baseline_unstable">The baseline PPG signal is not stable enough to proceed. Make sure you are breathing normally during the baseline period.  Do you wish to try again? &end_test_warning1;</string>
+
     <string name="dlg_title_ppg_flatline">PULSE NOT DETECTED</string>
     <string name="dlg_msg_ppg_flatline">Not detecting a pulse signal.  Ensure the sensor is completely on and has good contact with the finger.  Do you wish to try again? &end_test_warning1;</string>
 
