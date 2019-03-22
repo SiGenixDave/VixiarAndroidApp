@@ -165,6 +165,7 @@ public class BeatProcessing
     }
 
 
+
     // returns the current number of peaks detected between indices
     public List<Integer> GetItemsBetween(int startIndex, int endIndex, RealtimePeakValleyDetect.eSlopeZero type, PeaksAndValleys pv)
     {

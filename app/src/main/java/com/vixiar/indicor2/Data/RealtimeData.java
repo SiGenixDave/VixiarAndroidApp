@@ -450,7 +450,7 @@ public class RealtimeData
     public void AppendNewFileSample(Double PPGSample, Double pressureSample)
     {
         RealtimeDataSample pdIn = new RealtimeDataSample(PPGSample.intValue(), pressureSample.intValue());
-        //pdIn.m_PPG = 65535-pdIn.m_PPG;
+
         m_rawData.add(pdIn);
 
         // apply the FIR filter to the PPG

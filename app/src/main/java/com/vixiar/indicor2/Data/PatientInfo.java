@@ -293,9 +293,9 @@ public class PatientInfo
     }
 
     // test number is 0 relative
-    public boolean CalculateResults(int testNumber)
+    public boolean CalculateResultsAndroid(int testNumber)
     {
-        // run Harry's peak detection on the highpass/lowpass filtered data
+        // run Harry's peak detection
         PeaksAndValleys pv = PostPeakValleyDetect.getInstance().HarrySilberPeakDetection(testNumber, PatientInfo.getInstance().getRealtimeData().GetHPLPFilteredData(), false);
 
         // pv contains the peak and valley locations in the filtered data

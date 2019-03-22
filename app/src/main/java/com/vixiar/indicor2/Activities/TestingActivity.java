@@ -1226,7 +1226,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 //Log.i(TAG, "In state: LOADING_RESULTS");
                 if (event == Testing_Events.EVT_ONESHOT_TIMER_TIMEOUT)
                 {
-                    PatientInfo.getInstance().CalculateResults(m_nOneRelativeTestNumber - 1);
+                    PatientInfo.getInstance().CalculateResultsAndroid(m_nOneRelativeTestNumber - 1);
                     if (m_nOneRelativeTestNumber < 3)
                     {
                         SwitchToResultsView();
