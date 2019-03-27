@@ -67,6 +67,17 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/restString"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal|center_vertical"
+            android:textAlignment="center"
+            android:textColor="@color/colorTopBar"
+            android:textSize="64sp"
+            android:visibility="visible"
+            tools:text="Please rest" />
+
         <LinearLayout
             android:id="@+id/measurement1"
             android:layout_width="match_parent"
@@ -126,13 +137,13 @@
             android:visibility="gone"/>
 
         <ImageView
-            android:id="@+id/imageView2"
+            android:id="@+id/imgLine1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:paddingBottom="@dimen/main_screen_vertical_spacing"
             android:paddingTop="@dimen/main_screen_vertical_spacing"
-            android:src="@drawable/divider_line"/>
+            android:paddingBottom="@dimen/main_screen_vertical_spacing"
+            android:src="@drawable/divider_line" />
 
         <LinearLayout
             android:id="@+id/measurement2"
@@ -195,13 +206,13 @@
 
 
         <ImageView
-            android:id="@+id/imageView7"
+            android:id="@+id/imgLine2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:paddingBottom="@dimen/main_screen_vertical_spacing"
             android:paddingTop="@dimen/main_screen_vertical_spacing"
-            android:src="@drawable/divider_line"/>
+            android:paddingBottom="@dimen/main_screen_vertical_spacing"
+            android:src="@drawable/divider_line" />
 
         <LinearLayout
             android:id="@+id/measurement3"
@@ -263,13 +274,13 @@
 
 
         <ImageView
-            android:id="@+id/imageView5"
+            android:id="@+id/imgLine3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:paddingBottom="@dimen/main_screen_vertical_spacing"
             android:paddingTop="@dimen/main_screen_vertical_spacing"
-            android:src="@drawable/divider_line"/>
+            android:paddingBottom="@dimen/main_screen_vertical_spacing"
+            android:src="@drawable/divider_line" />
 
         <LinearLayout
             android:id="@+id/average"

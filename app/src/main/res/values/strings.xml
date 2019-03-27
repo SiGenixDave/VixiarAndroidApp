@@ -83,6 +83,8 @@
     <string name="test_complete">Test complete</string>
     <string name="test_will_resume">Test will resume in </string>
     <string name="results">Results</string>
+    <string name="pleaserest">Please rest</string>
+    <string name="rest">Rest</string>
     <string name="end_test">End Test</string>
 
     <!-- Messages -->

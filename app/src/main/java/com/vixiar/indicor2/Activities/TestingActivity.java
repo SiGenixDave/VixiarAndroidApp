@@ -84,6 +84,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private GraphView m_GraphViewResults1;
     private GraphView m_GraphViewResults2;
     private GraphView m_GraphViewResults3;
+    private TextView m_restString;
 
     Typeface m_robotoLightTypeface;
     Typeface m_robotoRegularTypeface;
@@ -100,6 +101,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         LOADING_RESULTS,
         RESULTS,
         COMPLETE,
+        REST,
         PRESSURE_ERROR,
     }
 
@@ -398,7 +400,6 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         switch (dialogID)
         {
             case DLG_ID_PRESSURE_ERROR_START:
-            case DLG_ID_PRESSURE_ERROR_RUNNING:
             case DLG_ID_HR_OUT_OF_RANGE:
             case DLG_ID_PPG_CLIPPING:
             case DLG_ID_PPG_FLATLINE:
@@ -419,6 +420,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case DLG_ID_CANCEL_TEST:
                 ExitToMainActivity();
+                break;
+
+            case DLG_ID_PRESSURE_ERROR_RUNNING:
+                SwitchToRestView();
+                m_periodicTimer.Start(this, ONE_SEC, false);
+                m_testingState = Testing_State.REST;
+                m_nCountdownSecLeft = NEXT_TEST_DELAY_SECONDS;
+                UpdateBottomCountdownNumber(m_nCountdownSecLeft);
                 break;
         }
     }
@@ -655,6 +664,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         m_GraphViewResults1 = findViewById(R.id.graphView1);
         m_GraphViewResults2 = findViewById(R.id.graphView2);
         m_GraphViewResults3 = findViewById(R.id.graphView3);
+        m_restString = findViewById(R.id.restString);
+        m_restString.setVisibility(View.GONE);
 
         m_imgRestIcon = findViewById(R.id.imgRestIcon);
         m_imgHomeButton = findViewById(R.id.imgHomeIcon);
@@ -719,6 +730,71 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
         }
     }
 
+    private void SwitchToRestView()
+    {
+        setContentView(R.layout.activity_testing_results);
+
+        m_lblBottomMessage = findViewById(R.id.txtMessage);
+        m_lblBottomMessageCentered = findViewById(R.id.txtMessageCentered);
+        m_lblBottomCountdownNumber = findViewById(R.id.txtCountdown);
+        m_imgResults1Checkbox = findViewById(R.id.imgMeasurement1Checkbox);
+        m_imgResults2Checkbox = findViewById(R.id.imgMeasurement2Checkbox);
+        m_imgResults3Checkbox = findViewById(R.id.imgMeasurement3Checkbox);
+        m_txtResults1 = findViewById(R.id.lblRes1);
+        m_txtResults2 = findViewById(R.id.lblRes2);
+        m_txtResults3 = findViewById(R.id.lblRes3);
+        m_ImageButtonGraph1 = findViewById(R.id.imgBtnGraph1);
+        m_ImageButtonGraph2 = findViewById(R.id.imgBtnGraph2);
+        m_ImageButtonGraph3 = findViewById(R.id.imgBtnGraph3);
+        m_GraphViewResults1 = findViewById(R.id.graphView1);
+        m_GraphViewResults2 = findViewById(R.id.graphView2);
+        m_GraphViewResults3 = findViewById(R.id.graphView3);
+        m_restString = findViewById(R.id.restString);
+        m_restString.setText(R.string.pleaserest);
+        m_restString.setTextSize(64);
+        m_restString.setVisibility(View.VISIBLE);
+
+        m_imgRestIcon = findViewById(R.id.imgRestIcon);
+        m_imgHomeButton = findViewById(R.id.imgHomeIcon);
+        m_lblRest = findViewById(R.id.lblRest);
+        m_lblPatID = findViewById(R.id.lblID);
+        m_txtPatID = findViewById(R.id.txtPatID);
+        m_txtDateTime = findViewById(R.id.txtDateTime);
+
+        m_lblRest.setTypeface(m_robotoLightTypeface);
+        m_lblBottomMessageCentered.setTypeface(m_robotoRegularTypeface);
+
+        m_txtPatID.setText(PatientInfo.getInstance().get_patientId());
+
+        m_txtDateTime.setText(PatientInfo.getInstance().get_testDateTime());
+
+        m_lblPatID.setVisibility(View.INVISIBLE);
+        m_txtPatID.setVisibility(View.INVISIBLE);
+        m_txtDateTime.setVisibility(View.INVISIBLE);
+
+        m_lblBottomMessageCentered.setText("");
+        m_imgHomeButton.setVisibility(View.INVISIBLE);
+
+        HeaderFooterControl.getInstance().SetTypefaces(this, this);
+        HeaderFooterControl.getInstance().SetScreenTitle(this, getString(R.string.rest));
+
+        HeaderFooterControl.getInstance().SetNavButtonTitle(this, getString(R.string.cancel));
+        HeaderFooterControl.getInstance().SetNavButtonListner(this, new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                UserRequestingToCancel();
+            }
+        });
+
+        // if the battery level was read at least once since the connection, display it, otherwise
+        // it will be updated when it comes back from the handheld
+        if (IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel() != -1)
+        {
+            HeaderFooterControl.getInstance().ShowBatteryIcon(this, IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel());
+        }
+    }
 
     boolean PlotResults(boolean state, GraphView graphView, int index)
     {
@@ -1275,6 +1351,33 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             m_periodicTimer.Cancel();
                             m_nOneRelativeTestNumber++;
 
+                            SwitchToStabilityView();
+                            ActivateBaselineView();
+                            m_baselineStartIndex = PatientInfo.getInstance().getRealtimeData().GetCurrentDataIndex();
+                            m_testingState = Testing_State.BASELINE;
+                        }
+                        else
+                        {
+                            UpdateBottomCountdownNumber(0);
+                        }
+                    }
+                }
+                break;
+
+            case REST:
+                if (event == Testing_Events.EVT_PERIODIC_TIMER_TICK)
+                {
+                    m_nCountdownSecLeft--;
+                    if (m_nCountdownSecLeft > 0)
+                    {
+                        UpdateBottomCountdownNumber(m_nCountdownSecLeft);
+                    }
+                    else
+                    {
+                        if (m_bIsConnected)
+                        {
+                            // starting next test
+                            m_periodicTimer.Cancel();
                             SwitchToStabilityView();
                             ActivateBaselineView();
                             m_baselineStartIndex = PatientInfo.getInstance().getRealtimeData().GetCurrentDataIndex();
