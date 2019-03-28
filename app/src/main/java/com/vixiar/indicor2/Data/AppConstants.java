@@ -14,7 +14,7 @@ public class AppConstants
     public static final int LOOKBACK_SECONDS_FOR_MOVEMENT = 2;
     public static final double PPG_LIMIT_FOR_FLATLINE = 200.0;
     public static final double HF_NOISE_LIMIT = 0.08;
-    public static final int LOW_LEVEL_BASELINE_FOR_AMBIENT_LIGHT = 15000;
+    public static final int LOW_LEVEL_BASELINE_FOR_AMBIENT_LIGHT = 10000;
     public static final int SECONDS_BEFORE_T0_FOR_RESULTS_GRAPH = 20;
     public static final int LENGTH_OF_RESULTS_GRAPH = 50;
     public static final double STD_DEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT = 3.5;
