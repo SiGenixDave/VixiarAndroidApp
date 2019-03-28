@@ -139,6 +139,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     private final int DLG_ID_PPG_WEAK_PULSE = 8;
     private final int DLG_ID_AMBIENT_LIGHT = 9;
     private final int DLG_ID_UNSTABLE_BASELINE = 10;
+    private final int DLG_ID_MOVEMENT_ERROR_VALSALVA = 11;
 
 
     // Timing constants
@@ -343,7 +344,15 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     TestingStateMachine(Testing_Events.EVT_PPG_FLATLINING);
                 }
 
-                // see if there is clipping in the ppg
+                // see if there is movement
+                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex))
+                {
+                    TestingStateMachine(Testing_Events.EVT_MOVEMENT_DETECTED);
+                }
+                break;
+
+            case BASELINE_GOOD_5SEC_COUNTDOWN:
+                // see if there is movement
                 if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex))
                 {
                     TestingStateMachine(Testing_Events.EVT_MOVEMENT_DETECTED);
@@ -358,6 +367,14 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 m_graphPressure.setBallPressure(m_nCurrentPressure);
 
                 TestingStateMachine(Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE);
+
+                // see if there is movement
+                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex))
+                {
+                    TestingStateMachine(Testing_Events.EVT_MOVEMENT_DETECTED);
+                }
+
+
                 break;
         }
     }
@@ -399,6 +416,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
     {
         switch (dialogID)
         {
+            default:
             case DLG_ID_PRESSURE_ERROR_START:
             case DLG_ID_HR_OUT_OF_RANGE:
             case DLG_ID_PPG_CLIPPING:
@@ -423,6 +441,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 break;
 
             case DLG_ID_PRESSURE_ERROR_RUNNING:
+            case DLG_ID_MOVEMENT_ERROR_VALSALVA:
                 SwitchToRestView();
                 m_periodicTimer.Start(this, ONE_SEC, false);
                 m_testingState = Testing_State.REST;
@@ -1132,13 +1151,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     // now check the signal to determine if there's ambient light present
                     else if (PatientInfo.getInstance().getRealtimeData().TestForAmbientLight(m_baselineStartIndex))
                     {
-                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ambient_light), getString(R.string.dlg_msg_ambient_light), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ambient_light), getString(R.string.dlg_msg_ambient_light), "Yes", "End Test", this, DLG_ID_AMBIENT_LIGHT, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // now check the signal for an unstable baseline
                     else if (PatientInfo.getInstance().getRealtimeData().TestForUnStableBaseline(m_baselineStartIndex))
                     {
-                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_baseline_unstable), getString(R.string.dlg_msg_baseline_unstable), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_baseline_unstable), getString(R.string.dlg_msg_baseline_unstable), "Yes", "End Test", this, DLG_ID_UNSTABLE_BASELINE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // now check the signal for a good heart rate before proceeding
@@ -1166,6 +1185,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 else if (event == Testing_Events.EVT_PPG_FLATLINING)
                 {
+                    m_periodicTimer.Cancel();
+                    m_pressureOutTimer.Cancel();
                     if (m_bIsConnected)
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_flatline), getString(R.string.dlg_msg_ppg_flatline), "Yes", "End Test", this, DLG_ID_PPG_FLATLINE, this);
@@ -1174,6 +1195,8 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
                 else if (event == Testing_Events.EVT_MOVEMENT_DETECTED)
                 {
+                    m_periodicTimer.Cancel();
+                    m_pressureOutTimer.Cancel();
                     if (m_bIsConnected)
                     {
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
@@ -1209,6 +1232,16 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                         }
                     }
                 }
+                else if (event == Testing_Events.EVT_MOVEMENT_DETECTED)
+                {
+                    m_periodicTimer.Cancel();
+                    m_pressureOutTimer.Cancel();
+                    if (m_bIsConnected)
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
+                }
                 break;
 
             case VALSALVA_WAIT_FOR_PRESSURE:
@@ -1232,6 +1265,16 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     DisplayPressureErrorOnStart();
                     m_testingState = Testing_State.PRESSURE_ERROR;
                     m_oneShotTimer.Cancel();
+                }
+                else if (event == Testing_Events.EVT_MOVEMENT_DETECTED)
+                {
+                    m_periodicTimer.Cancel();
+                    m_pressureOutTimer.Cancel();
+                    if (m_bIsConnected)
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
+                    }
                 }
                 break;
 
@@ -1294,6 +1337,16 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                                 m_oneShotTimer.Start(this, VALSALVA_LOADING_FINAL_RESULTS_DELAY_MS, true);
                             }
                         }
+                    }
+                }
+                else if (event == Testing_Events.EVT_MOVEMENT_DETECTED)
+                {
+                    m_periodicTimer.Cancel();
+                    m_pressureOutTimer.Cancel();
+                    if (m_bIsConnected)
+                    {
+                        CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_MOVEMENT_ERROR_VALSALVA, this);
+                        m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                 }
                 break;
