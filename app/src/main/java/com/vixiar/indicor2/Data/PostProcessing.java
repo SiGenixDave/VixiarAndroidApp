@@ -269,7 +269,12 @@ public class PostProcessing
                 PrintResultToConsole("VEnd", testNumber, vEndIndex);
 
                 int t0Index = FindT0FromVStart(vStartIndex, dataSet);
-                int t10Index = t0Index + (SAMPLES_PER_SECOND * 10);
+                // for t10, we're going to use t0 plus 10 seconds plus 1
+                // the extra plus 1 allows for very special cases where when we're using FIR filtered data for the
+                // post processing.  There are small cases where the filter delay can cause a peak that's right at
+                // t10 in the raw data to be 1 sample past t10 in the FIR filtered data.  This extra 1 sample added to
+                // t10 can avoid that from happening.
+                int t10Index = t0Index + (SAMPLES_PER_SECOND * 10 + 1) ;
                 PrintResultToConsole("t0", testNumber, t0Index);
                 PrintResultToConsole("t10", testNumber, t10Index);
 
