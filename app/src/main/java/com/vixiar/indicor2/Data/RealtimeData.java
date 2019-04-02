@@ -154,14 +154,10 @@ public class RealtimeData
         return isFlatlining;
     }
 
-    public boolean TestForMovement(int startIndex)
+    public boolean TestForMovement(int startIndex, boolean inValsalva)
     {
-        // this function will do 2 things, one, verify that there's no clipping
-        // second, it will make sure that the number of zero crossings over the last 2 seconds aren't too high
-        // for zero crossings, zero is defined as the mean of the data over the past 2 seconds
         boolean isMovement = false;
 
-        // make sure there is enough data collected based on the lookback window setting
         if ((m_HPLPfilteredData.size() - startIndex) > (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND))
         {
             int startCheckIndex = m_HPLPfilteredData.size() - (AppConstants.LOOKBACK_SECONDS_FOR_MOVEMENT * AppConstants.SAMPLES_PER_SECOND);
@@ -170,8 +166,16 @@ public class RealtimeData
             double mean = DataMath.getInstance().CalculateMean(startCheckIndex, endCheckIndex, m_HPLPfilteredData);
             double stdev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_HPLPfilteredData);
             double upperLimit = mean + (AppConstants.STD_DEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT * stdev);
-            double lowerLimit = mean - (AppConstants.STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT * stdev);
 
+            double lowerLimit;
+            if (inValsalva)
+            {
+                lowerLimit = mean - (AppConstants.STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT_VALSALVA * stdev);
+            }
+            else
+            {
+                lowerLimit = mean - (AppConstants.STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT_BASELINE * stdev);
+            }
             // see if the sample is within the limit
             int dataPoint = m_HPLPfilteredData.get(m_HPLPfilteredData.size() - 1).m_PPG;
             if (dataPoint > upperLimit || dataPoint < lowerLimit)
@@ -184,9 +188,7 @@ public class RealtimeData
             // there's not enough data yet to tell, just say everything is ok
             isMovement = false;
         }
-
         return isMovement;
-
     }
 
     public boolean TestForWeakPulse(int startIndex)

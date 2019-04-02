@@ -18,7 +18,8 @@ public class AppConstants
     public static final int SECONDS_BEFORE_T0_FOR_RESULTS_GRAPH = 20;
     public static final int LENGTH_OF_RESULTS_GRAPH = 50;
     public static final double STD_DEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT = 3.5;
-    public static final double STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT = 2.5;
+    public static final double STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT_BASELINE = 2.5;
+    public static final double STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT_VALSALVA = 3.5;
     public static final int MAX_SLOPE_FOR_UNSTABLE_BASELINE_PCT = 30;
     public static final int FILTER_DELAY_SAMPLES = 8;
     public static final double LIMIT_FOR_WEAK_PULSE = 300.0;

@@ -345,7 +345,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 }
 
                 // see if there is movement
-                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex))
+                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex, false))
                 {
                     TestingStateMachine(Testing_Events.EVT_MOVEMENT_DETECTED);
                 }
@@ -353,7 +353,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
 
             case BASELINE_GOOD_5SEC_COUNTDOWN:
                 // see if there is movement
-                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex))
+                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex, false))
                 {
                     TestingStateMachine(Testing_Events.EVT_MOVEMENT_DETECTED);
                 }
@@ -369,7 +369,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 TestingStateMachine(Testing_Events.EVT_VALSALVA_PRESSURE_UPDATE);
 
                 // see if there is movement
-                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex))
+                if (PatientInfo.getInstance().getRealtimeData().TestForMovement(m_baselineStartIndex, true))
                 {
                     TestingStateMachine(Testing_Events.EVT_MOVEMENT_DETECTED);
                 }
