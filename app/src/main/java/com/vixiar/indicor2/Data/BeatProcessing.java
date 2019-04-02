@@ -572,19 +572,26 @@ public class BeatProcessing
         // return number of valley to peak transitions are in the list
         int numBeats = 0;
 
-        // get the location of the first peak and valley
-        int firstPeakLocation = pvIn.peaks.get(0);
-        int firstValleyLocation = pvIn.valleys.get(0);
-
-        if (firstValleyLocation < firstPeakLocation)
+        if (pvIn.valleys.size() > 0 && pvIn.peaks.size() > 0)
         {
-            // the number of beats will be the number of peaks
-            numBeats = pvIn.peaks.size();
+            // get the location of the first peak and valley
+            int firstPeakLocation = pvIn.peaks.get(0);
+            int firstValleyLocation = pvIn.valleys.get(0);
+
+            if (firstValleyLocation < firstPeakLocation)
+            {
+                // the number of beats will be the number of peaks
+                numBeats = pvIn.peaks.size();
+            }
+            else
+            {
+                // the number of beats will be the number of peaks - 1
+                numBeats = pvIn.peaks.size() - 1;
+            }
         }
         else
         {
-            // the number of beats will be the number of peaks - 1
-            numBeats = pvIn.peaks.size() - 1;
+            numBeats = 0;
         }
         return numBeats;
     }
@@ -796,7 +803,7 @@ public class BeatProcessing
         vlpa.location = valleyLocation;
         vlpa.value = returnPA;
         PatientInfo.getInstance().getRealtimeData().GetCalculatedPAs().add(vlpa);
-
+        System.out.println(returnPA);
         return returnPA;
     }
 
