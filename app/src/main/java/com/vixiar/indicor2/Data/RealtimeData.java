@@ -212,7 +212,7 @@ public class RealtimeData
         PeaksAndValleys pvRaw = PostPeakValleyDetect.getInstance().TransferPeaksAndValleysToOtherData(pv, PatientInfo.getInstance().getRealtimeData().GetRawData());
         System.out.println("Here's the beats from baseline");
         double avgPA = BeatProcessing.getInstance().GetAvgPAInRange(startingIndex, endIndex, pvRaw, PatientInfo.getInstance().getRealtimeData().GetRawData());
-        if(avgPA < 300.0)
+        if(avgPA < AppConstants.LIMIT_FOR_WEAK_PULSE)
         {
             weakPulseDetected = true;
         }
@@ -283,9 +283,9 @@ public class RealtimeData
             else
             {
                 int delta = currentValley - previousValley;
-                System.out.println();
-                System.out.println("Delta=" + delta);
-                System.out.println("Limit=" + limit);
+                ///System.out.println();
+                //System.out.println("Delta=" + delta);
+                //System.out.println("Limit=" + limit);
                 previousValley = currentValley;
                 if (Math.abs(delta) > limit)
                 {

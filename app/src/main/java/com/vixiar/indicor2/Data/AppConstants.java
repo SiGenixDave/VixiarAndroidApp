@@ -21,4 +21,5 @@ public class AppConstants
     public static final double STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT = 2.5;
     public static final int MAX_SLOPE_FOR_UNSTABLE_BASELINE_PCT = 30;
     public static final int FILTER_DELAY_SAMPLES = 8;
+    public static final double LIMIT_FOR_WEAK_PULSE = 300.0;
 }
