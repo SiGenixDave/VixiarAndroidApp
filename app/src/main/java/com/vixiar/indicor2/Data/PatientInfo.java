@@ -528,10 +528,10 @@ public class PatientInfo
         writer.println("Battery Level, " + IndicorBLEServiceInterface.getInstance().GetLastReadBatteryLevel() + "%");
 
         // print all of markers
-        writer.println("Marker index, Type");
+        writer.println("Marker index, Type, Time");
         for (int i = 0; i < rtd.GetDataMarkers().size(); i++)
         {
-            writer.println(rtd.GetDataMarkers().get(i).dataIndex + ", " + rtd.GetDataMarkers().get(i).type);
+            writer.println(rtd.GetDataMarkers().get(i).dataIndex + ", " + rtd.GetDataMarkers().get(i).type + ", " + (double)rtd.GetDataMarkers().get(i).dataIndex / (double)SAMPLES_PER_SECOND);
         }
 
         // print all of the raw realtime data

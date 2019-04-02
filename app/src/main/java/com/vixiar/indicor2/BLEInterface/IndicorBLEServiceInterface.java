@@ -618,7 +618,7 @@ public class IndicorBLEServiceInterface implements TimerCallback, CustomDialogIn
             {
                 CleanupFromConnectionLoss();
 
-                PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR,
+                PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_COMMUNICATIONS_TIMEOUT,
                         PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
 
                 CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2,

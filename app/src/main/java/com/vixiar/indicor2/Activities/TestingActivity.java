@@ -200,7 +200,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                 DisplayPressureErrorRunning();
                 m_testingState = Testing_State.PRESSURE_ERROR;
                 // mark the error
-                PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+                PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_VALSALVA_PRESSURE, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                 break;
         }
     }
@@ -1145,30 +1145,35 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     // baseline is over, now check the signal for a proper signal amplitude before proceeding
                     if (PatientInfo.getInstance().getRealtimeData().TestForWeakPulse(m_baselineStartIndex))
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_WEAK_PULSE, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_weak_pulse), getString(R.string.dlg_msg_ppg_weak_pulse), "Yes", "End Test", this, DLG_ID_PPG_WEAK_PULSE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // now check the signal to determine if there's ambient light present
                     else if (PatientInfo.getInstance().getRealtimeData().TestForAmbientLight(m_baselineStartIndex))
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_AMBIENT_LIGHT, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ambient_light), getString(R.string.dlg_msg_ambient_light), "Yes", "End Test", this, DLG_ID_AMBIENT_LIGHT, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // now check the signal for an unstable baseline
                     else if (PatientInfo.getInstance().getRealtimeData().TestForUnStableBaseline(m_baselineStartIndex))
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_UNSATABLE_BASELINE, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_baseline_unstable), getString(R.string.dlg_msg_baseline_unstable), "Yes", "End Test", this, DLG_ID_UNSTABLE_BASELINE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // now check the signal for a good heart rate before proceeding
                     else if (!PatientInfo.getInstance().getRealtimeData().TestForHeartRateInRange(m_baselineStartIndex))
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_HR_OUT_OF_RANGE, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_hr_out_of_range), getString(R.string.dlg_msg_hr_out_of_range), "Yes", "End Test", this, DLG_ID_HR_OUT_OF_RANGE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
                     // now check the signal for high frequency noise before proceeding
                     else if (PatientInfo.getInstance().getRealtimeData().TestForHighFrequencyNoise(m_baselineStartIndex))
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_HF_NOISE, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_hf_noise), getString(R.string.dlg_msg_ppg_hf_noise), "Yes", "End Test", this, DLG_ID_PPG_HF_NOISE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
@@ -1189,6 +1194,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_pressureOutTimer.Cancel();
                     if (m_bIsConnected)
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_FLATLINE, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_ppg_flatline), getString(R.string.dlg_msg_ppg_flatline), "Yes", "End Test", this, DLG_ID_PPG_FLATLINE, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
@@ -1199,6 +1205,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_pressureOutTimer.Cancel();
                     if (m_bIsConnected)
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_MOVEMENT_DETECTED, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
@@ -1238,6 +1245,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_pressureOutTimer.Cancel();
                     if (m_bIsConnected)
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_MOVEMENT_DETECTED, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
@@ -1272,6 +1280,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_pressureOutTimer.Cancel();
                     if (m_bIsConnected)
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_MOVEMENT_DETECTED, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_PPG_CLIPPING, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
@@ -1302,7 +1311,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                             DisplayPressureErrorRunning();
                             m_testingState = Testing_State.PRESSURE_ERROR;
                             // mark the error
-                            PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_TEST_ERROR, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
+                            PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_VALSALVA_PRESSURE, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         }
                     }
                     else
@@ -1345,6 +1354,7 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
                     m_pressureOutTimer.Cancel();
                     if (m_bIsConnected)
                     {
+                        PatientInfo.getInstance().getRealtimeData().CreateMarker(RealtimeDataMarker.Marker_Type.MARKER_MOVEMENT_DETECTED, PatientInfo.getInstance().getRealtimeData().GetRawData().size() - 1);
                         CustomAlertDialog.getInstance().showConfirmDialog(CustomAlertDialog.Custom_Dialog_Type.DIALOG_TYPE_WARNING, 2, getString(R.string.dlg_title_movement_detected), getString(R.string.dlg_msg_movement_detected), "Yes", "End Test", this, DLG_ID_MOVEMENT_ERROR_VALSALVA, this);
                         m_testingState = Testing_State.BASELINE_WITH_ERROR_DIALOG_DISPLAYING;
                     }
