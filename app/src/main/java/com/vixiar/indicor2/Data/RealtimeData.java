@@ -165,15 +165,16 @@ public class RealtimeData
 
             double mean = DataMath.getInstance().CalculateMean(startCheckIndex, endCheckIndex, m_HPLPfilteredData);
             double stdev = DataMath.getInstance().CalculateStdev(startCheckIndex, endCheckIndex, m_HPLPfilteredData);
-            double upperLimit = mean + (AppConstants.STD_DEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT * stdev);
 
-            double lowerLimit;
+            double lowerLimit, upperLimit;
             if (inValsalva)
             {
+                upperLimit = mean + (AppConstants.STD_DEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT_VALSALVA * stdev);
                 lowerLimit = mean - (AppConstants.STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT_VALSALVA * stdev);
             }
             else
             {
+                upperLimit = mean + (AppConstants.STD_DEVS_ABOVE_MEAN_LIMIT_FOR_MOVEMENT_BASELINE * stdev);
                 lowerLimit = mean - (AppConstants.STD_DEVS_BELOW_MEAN_LIMIT_FOR_MOVEMENT_BASELINE * stdev);
             }
             // see if the sample is within the limit
