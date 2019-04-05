@@ -7,7 +7,7 @@ android {
         applicationId 'com.vixiar.indicor2'
         minSdkVersion 25
         targetSdkVersion 26
-        versionCode 331
+        versionCode 333
         versionName "3.02"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
