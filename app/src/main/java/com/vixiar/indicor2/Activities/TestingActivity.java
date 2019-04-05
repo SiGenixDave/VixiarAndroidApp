@@ -460,9 +460,13 @@ public class TestingActivity extends Activity implements IndicorBLEServiceInterf
             case DLG_ID_HR_OUT_OF_RANGE:
             case DLG_ID_PRESSURE_ERROR_START:
             case DLG_ID_PRESSURE_ERROR_RUNNING:
+            case DLG_ID_MOVEMENT_ERROR_VALSALVA:
             case DLG_ID_PPG_CLIPPING:
             case DLG_ID_PPG_FLATLINE:
             case DLG_ID_PPG_HF_NOISE:
+            case DLG_ID_PPG_WEAK_PULSE:
+            case DLG_ID_AMBIENT_LIGHT:
+            case DLG_ID_UNSTABLE_BASELINE:
                 ExitToMainActivity();
                 break;
         }
