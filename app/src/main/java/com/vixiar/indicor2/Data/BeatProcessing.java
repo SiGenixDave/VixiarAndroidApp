@@ -705,104 +705,107 @@ public class BeatProcessing
     {
         int returnPA = -1;
 
-        // get the location of the first peak and valley
-        int firstPeakLocation = pvIn.peaks.get(0);
-        int firstValleyLocation = pvIn.valleys.get(0);
-
-        int valleyLocation = -1;
-        int peakLocation = -1;
-        int secondValleyLocation = -1;
-        int secondValleyAmplitude;
-        int valleyAmplitude;
-        int peakAmplitude;
-
-        // see if we have a starting valley, and there are enough valleys, we can do the calculation
-        if (firstValleyLocation < firstPeakLocation)
+        if (pvIn.peaks.size() > 0 && pvIn.valleys.size() > 0)
         {
-            // the list starts with a valley, there must be beatnum+1 peaks in order to do the calc
-            if (pvIn.peaks.size() >= beatNum + 1)
+            // get the location of the first peak and valley
+            int firstPeakLocation = pvIn.peaks.get(0);
+            int firstValleyLocation = pvIn.valleys.get(0);
+
+            int valleyLocation = -1;
+            int peakLocation = -1;
+            int secondValleyLocation = -1;
+            int secondValleyAmplitude;
+            int valleyAmplitude;
+            int peakAmplitude;
+
+            // see if we have a starting valley, and there are enough valleys, we can do the calculation
+            if (firstValleyLocation < firstPeakLocation)
             {
-                valleyLocation = pvIn.valleys.get(beatNum);
-                peakLocation = pvIn.peaks.get(beatNum);
+                // the list starts with a valley, there must be beatnum+1 peaks in order to do the calc
+                if (pvIn.peaks.size() >= beatNum + 1 && pvIn.valleys.size() >= beatNum + 1)
+                {
+                    valleyLocation = pvIn.valleys.get(beatNum);
+                    peakLocation = pvIn.peaks.get(beatNum);
+                }
+                else
+                {
+                    System.out.println("Starting with valley, not enough peaks @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
+                }
             }
             else
             {
-                System.out.println("Starting with valley, not enough peaks @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
+                // the list starts with a peak, there must be beatnum+2 peaks in order to do the calc
+                if (pvIn.peaks.size() >= beatNum + 2 && pvIn.valleys.size() >= beatNum + 1)
+                {
+                    valleyLocation = pvIn.valleys.get(beatNum);
+                    peakLocation = pvIn.peaks.get(beatNum + 1);
+                }
+                else
+                {
+                    System.out.println("Starting with peak, not enough peaks @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
+                }
             }
-        }
-        else
-        {
-            // the list starts with a peak, there must be beatnum+2 peaks in order to do the calc
-            if (pvIn.peaks.size() >= beatNum + 2)
+
+            // see if there's enough valleys to to the interpolated calculation
+            if (pvIn.valleys.size() >= beatNum + 2)
             {
-                valleyLocation = pvIn.valleys.get(beatNum);
-                peakLocation = pvIn.peaks.get(beatNum + 1);
+                secondValleyLocation = pvIn.valleys.get(beatNum + 1);
             }
             else
             {
-                System.out.println("Starting with peak, not enough peaks @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
+                System.out.println("Not enough valleys to interpolate @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
             }
-        }
 
-        // see if there's enough valleys to to the interpolated calculation
-        if (pvIn.valleys.size() >= beatNum + 2)
-        {
-            secondValleyLocation = pvIn.valleys.get(beatNum + 1);
-        }
-        else
-        {
-            System.out.println("Not enough valleys to interpolate @ " + firstPeakLocation * .02 + " beatnum=" + beatNum);
-        }
-
-        // see if we can do the interpolated calculation
-        if (secondValleyLocation != -1)
-        {
-            secondValleyAmplitude = dataSet.get(secondValleyLocation).m_PPG;
-
-            if (peakLocation != -1 && valleyLocation != -1)
+            // see if we can do the interpolated calculation
+            if (secondValleyLocation != -1)
             {
-                valleyAmplitude = dataSet.get(valleyLocation).m_PPG;
-                peakAmplitude = dataSet.get(peakLocation).m_PPG;
+                secondValleyAmplitude = dataSet.get(secondValleyLocation).m_PPG;
 
-                // calculate the slope between the first and second valleys
-                double slope = (secondValleyAmplitude - valleyAmplitude) / (secondValleyLocation - valleyLocation);
+                if (peakLocation != -1 && valleyLocation != -1)
+                {
+                    valleyAmplitude = dataSet.get(valleyLocation).m_PPG;
+                    peakAmplitude = dataSet.get(peakLocation).m_PPG;
 
-                // calculate the time (counts) from the valley to the peak
-                int dT = peakLocation - valleyLocation;
+                    // calculate the slope between the first and second valleys
+                    double slope = (secondValleyAmplitude - valleyAmplitude) / (secondValleyLocation - valleyLocation);
 
-                // calculate the contribution that the slope in valley-valley has on the amplitude
-                int offset = (int) ((double) dT * slope);
+                    // calculate the time (counts) from the valley to the peak
+                    int dT = peakLocation - valleyLocation;
 
-                //System.out.println();
-                //System.out.println("PA without offset = " + (peakAmplitude-valleyAmplitude) + " at " + (valleyLocation*0.02));
-                //System.out.println("PA with offset = " + (peakAmplitude-valleyAmplitude-offset));
+                    // calculate the contribution that the slope in valley-valley has on the amplitude
+                    int offset = (int) ((double) dT * slope);
 
-                // save the location of the interpolated valley for plotting
-                ValueAndLocation vl = new ValueAndLocation();
-                vl.location = peakLocation;
-                vl.value = valleyAmplitude + offset;
-                PatientInfo.getInstance().getRealtimeData().m_InterpolatedValleys.add(vl);
+                    //System.out.println();
+                    //System.out.println("PA without offset = " + (peakAmplitude-valleyAmplitude) + " at " + (valleyLocation*0.02));
+                    //System.out.println("PA with offset = " + (peakAmplitude-valleyAmplitude-offset));
 
-                //System.out.println("Int-Valley Loc = " + valleyLocation * 0.02 + " Beat num = " + beatNum);
-                returnPA = peakAmplitude - valleyAmplitude - offset;
+                    // save the location of the interpolated valley for plotting
+                    ValueAndLocation vl = new ValueAndLocation();
+                    vl.location = peakLocation;
+                    vl.value = valleyAmplitude + offset;
+                    PatientInfo.getInstance().getRealtimeData().m_InterpolatedValleys.add(vl);
+
+                    //System.out.println("Int-Valley Loc = " + valleyLocation * 0.02 + " Beat num = " + beatNum);
+                    returnPA = peakAmplitude - valleyAmplitude - offset;
+                }
             }
-        }
-        else
-        {
-            // do the normal PA calculation
-            if (peakLocation != -1 && valleyLocation != -1)
+            else
             {
-                valleyAmplitude = dataSet.get(valleyLocation).m_PPG;
-                peakAmplitude = dataSet.get(peakLocation).m_PPG;
-                //System.out.println("Reg-Valley Loc = " + valleyLocation * 0.02 + " Beat num = " + beatNum);
-                returnPA = peakAmplitude - valleyAmplitude;
+                // do the normal PA calculation
+                if (peakLocation != -1 && valleyLocation != -1)
+                {
+                    valleyAmplitude = dataSet.get(valleyLocation).m_PPG;
+                    peakAmplitude = dataSet.get(peakLocation).m_PPG;
+                    //System.out.println("Reg-Valley Loc = " + valleyLocation * 0.02 + " Beat num = " + beatNum);
+                    returnPA = peakAmplitude - valleyAmplitude;
+                }
             }
+            // save the location of the valley and the calculated PA
+            ValueAndLocation vlpa = new ValueAndLocation();
+            vlpa.location = valleyLocation;
+            vlpa.value = returnPA;
+            PatientInfo.getInstance().getRealtimeData().GetCalculatedPAs().add(vlpa);
         }
-        // save the location of the valley and the calculated PA
-        ValueAndLocation vlpa = new ValueAndLocation();
-        vlpa.location = valleyLocation;
-        vlpa.value = returnPA;
-        PatientInfo.getInstance().getRealtimeData().GetCalculatedPAs().add(vlpa);
         System.out.println(returnPA);
         return returnPA;
     }
