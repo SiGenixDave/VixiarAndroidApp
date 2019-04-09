@@ -8,14 +8,13 @@ import java.util.List;
 
 import static com.vixiar.indicor2.Data.AppConstants.BASELINE_END_BEFORE_VSTART_SEC;
 import static com.vixiar.indicor2.Data.AppConstants.BASELINE_LENGTH_SEC;
+import static com.vixiar.indicor2.Data.AppConstants.DESKTOP_TOOL_VERSION;
 import static com.vixiar.indicor2.Data.AppConstants.SAMPLES_PER_SECOND;
 
 
 public class PostProcessing
 {
     private static final PostProcessing ourInstance = new PostProcessing();
-
-    private final double desktopToolSoftwareVersion = 2.1;
 
     private final int NUM_TESTS = 3;
     private String filename;
@@ -145,7 +144,7 @@ public class PostProcessing
         return (FindVStart(testNumber, dataSet) - (SAMPLES_PER_SECOND * (BASELINE_END_BEFORE_VSTART_SEC + BASELINE_LENGTH_SEC)));
     }
 
-    public int FindBaselineEnd(int testNumber, ArrayList<RealtimeDataSample> dataSet)
+    public int  FindBaselineEnd(int testNumber, ArrayList<RealtimeDataSample> dataSet)
     {
         return (FindBaselineStart(testNumber, dataSet) + (SAMPLES_PER_SECOND * BASELINE_LENGTH_SEC));
     }
@@ -194,7 +193,7 @@ public class PostProcessing
 
     private void PrintResultToConsole(String label, int testNumber, double value)
     {
-        //System.out.println(label + " " + "[" + (testNumber + 1) + "]" + ": " + value);
+        System.out.println(label + " " + "[" + (testNumber + 1) + "]" + ": " + value);
     }
 
     public void ClearAllCalculatedData()
@@ -646,7 +645,7 @@ public class PostProcessing
 
     private void WriteCSVContentsDesktopTool(PrintWriter writer)
     {
-        writer.println("Filename, " + filename + ", " + "Desktop Tool Software Version, " + desktopToolSoftwareVersion);
+        writer.println("Filename, " + filename + ", " + "Desktop Tool Software Version, " + DESKTOP_TOOL_VERSION);
         writer.println("Subject ID, " + PatientInfo.getInstance().get_patientId() + ", Date, " + PatientInfo.getInstance().get_testDateTime());
         writer.println("Calculated values-Trial, 1, 2, 3, Mean");
 

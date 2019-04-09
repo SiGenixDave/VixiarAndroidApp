@@ -2,6 +2,7 @@ package com.vixiar.indicor2.Data;
 
 public class AppConstants
 {
+    public static final double DESKTOP_TOOL_VERSION = 3.11;
     public static final double BASELINE_SCALE_FACTOR = 0.7;
     public static final double VALSALVA_SCALE_FACTOR = 0.8;
     public static final double POST_VALSALVA_SCALE_FACTOR = 1.0;
