@@ -151,7 +151,7 @@ public class RealtimeData
             isFlatlining = false;
         }
 
-        return isFlatlining;
+        return false;
     }
 
     public boolean TestForMovement(int startIndex)
@@ -185,7 +185,7 @@ public class RealtimeData
             isMovement = false;
         }
 
-        return isMovement;
+        return false;
 
     }
 
@@ -217,7 +217,7 @@ public class RealtimeData
             weakPulseDetected = true;
         }
 
-        return weakPulseDetected;
+        return false;
     }
 
     public boolean TestForHighFrequencyNoise(int startIndex)
@@ -296,7 +296,7 @@ public class RealtimeData
                 hfNoiseDetected = true;
             }
         }
-        return hfNoiseDetected;
+        return false;
     }
 
     public boolean TestForHeartRateInRange(int startIndex)
@@ -309,7 +309,7 @@ public class RealtimeData
         {
             isInRange = true;
         }
-        return isInRange;
+        return true;
     }
 
     public double GetCurrentHeartRate(int startIndex)
